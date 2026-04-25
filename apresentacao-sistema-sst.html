@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Integrado de Gestão de SST — EngMarq</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --primary-dark: #0f2744;
+            --secondary-color: #f5a623;
+            --secondary-dark: #e09112;
+            --accent-color: #10b981;
+            --accent-light: #d1fae5;
+            --danger-color: #ef4444;
+            --danger-light: #fee2e2;
+            --warning-color: #f59e0b;
+            --warning-light: #fef3c7;
+            --info-color: #3b82f6;
+            --info-light: #dbeafe;
+            --dark-color: #1f2937;
+            --gray-color: #6b7280;
+            --gray-light: #e5e7eb;
+            --light-color: #f8fafc;
+            --white-color: #ffffff;
+            --font-primary: 'Montserrat', sans-serif;
+            --font-secondary: 'Open Sans', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-secondary);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            padding: 30px 0;
+            min-height: 100vh;
+        }
+
+        .slide {
+            width: 297mm;
+            height: 210mm;
+            background: var(--white-color);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+            padding: 35px 45px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .slide-logo {
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .slide-number {
+            font-family: var(--font-primary);
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--primary-color);
+            background: linear-gradient(135deg, #e8eef5, #f0f4f8);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .slide-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 10px 45px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            font-family: var(--font-secondary);
+        }
+
+        .slide-footer a { color: var(--secondary-color); text-decoration: none; }
+
+        .section-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+            color: white;
+            padding: 5px 16px;
+            border-radius: 20px;
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .section-title {
+            font-family: var(--font-primary);
+            font-weight: 800;
+            font-size: 26px;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
+
+        .section-subtitle {
+            font-family: var(--font-secondary);
+            font-size: 13px;
+            color: var(--gray-color);
+            margin-bottom: 22px;
+            line-height: 1.5;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        /* ===== COVER SLIDE ===== */
+        .slide-cover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 60%, #0a1628 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 50px 80px;
+            position: relative;
+        }
+
+        .slide-cover::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(245,166,35,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(16,185,129,0.06) 0%, transparent 50%);
+        }
+
+        .slide-cover * { position: relative; z-index: 1; }
+
+        .cover-logo {
+            height: 55px;
+            margin-bottom: 30px;
+            filter: brightness(0) invert(1);
+            animation: fadeInUp 0.8s ease both;
+        }
+
+        .cover-badge {
+            display: inline-block;
+            background: rgba(245,166,35,0.15);
+            border: 1px solid rgba(245,166,35,0.3);
+            color: var(--secondary-color);
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .cover-title {
+            font-family: var(--font-primary);
+            font-weight: 800;
+            font-size: 36px;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .cover-title span { color: var(--secondary-color); }
+
+        .cover-subtitle {
+            font-family: var(--font-secondary);
+            font-size: 16px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .cover-meta {
+            display: flex;
+            gap: 30px;
+            animation: fadeInUp 0.8s ease 0.5s both;
+        }
+
+        .cover-meta-item {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            font-family: var(--font-secondary);
+        }
+
+        .cover-meta-item i { color: var(--secondary-color); margin-right: 6px; }
+
+        .cover-line {
+            width: 60px;
+            height: 3px;
+            background: var(--secondary-color);
+            border-radius: 3px;
+            margin: 0 auto 20px;
+            animation: fadeInUp 0.8s ease 0.25s both;
+        }
+
+        /* ===== CONTENT GRIDS ===== */
+        .content-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            flex: 1;
+        }
+
+        .content-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .content-grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 14px;
+            flex: 1;
+        }
+
+        /* ===== CARDS ===== */
+        .content-card {
+            background: var(--light-color);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid var(--primary-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .content-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .content-card .card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .content-card h4 {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--dark-color);
+            margin-bottom: 6px;
+        }
+
+        .content-card p {
+            font-size: 11px;
+            color: var(--gray-color);
+            line-height: 1.5;
+        }
+
+        .card-icon.blue { background: var(--info-light); color: var(--info-color); }
+        .card-icon.green { background: var(--accent-light); color: var(--accent-color); }
+        .card-icon.orange { background: var(--warning-light); color: var(--warning-color); }
+        .card-icon.red { background: var(--danger-light); color: var(--danger-color); }
+        .card-icon.navy { background: #e8eef5; color: var(--primary-color); }
+
+        .card-border-orange { border-left-color: var(--secondary-color); }
+        .card-border-green { border-left-color: var(--accent-color); }
+        .card-border-red { border-left-color: var(--danger-color); }
+        .card-border-blue { border-left-color: var(--info-color); }
+
+        /* ===== MAPA VISUAL DO SISTEMA ===== */
+        .system-map {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .map-level {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-box {
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--primary-color);
+            text-align: center;
+            min-width: 130px;
+            position: relative;
+        }
+
+        .map-box i { margin-right: 5px; font-size: 12px; }
+
+        .map-box.primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border-color: var(--primary-color);
+            font-size: 12px;
+            padding: 12px 24px;
+        }
+
+        .map-box.accent {
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .map-box.green-box {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .map-box.blue-box {
+            border-color: var(--info-color);
+            color: var(--info-color);
+        }
+
+        .map-box.orange-box {
+            border-color: var(--warning-color);
+            color: var(--warning-color);
+        }
+
+        .map-connector {
+            width: 2px;
+            height: 14px;
+            background: var(--primary-color);
+            margin: 0 auto;
+        }
+
+        .map-connector-h {
+            width: 100%;
+            height: 2px;
+            background: var(--gray-light);
+            position: relative;
+        }
+
+        .map-arrow {
+            color: var(--primary-color);
+            font-size: 16px;
+            text-align: center;
+        }
+
+        /* ===== FLOW ===== */
+        .flow-horizontal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex: 1;
+        }
+
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            max-width: 130px;
+        }
+
+        .flow-step-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin: 0 auto 8px;
+            color: white;
+        }
+
+        .flow-step-title {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 10px;
+            color: var(--dark-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .flow-step-desc {
+            font-size: 9px;
+            color: var(--gray-color);
+            line-height: 1.4;
+        }
+
+        .flow-arrow {
+            color: var(--secondary-color);
+            font-size: 18px;
+            flex-shrink: 0;
+            margin: 0 4px;
+            margin-top: -20px;
+        }
+
+        /* ===== TECH STACK ===== */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            flex: 1;
+            align-content: center;
+        }
+
+        .tech-card {
+            background: var(--light-color);
+            border-radius: 12px;
+            padding: 18px 14px;
+            text-align: center;
+            border: 1px solid var(--gray-light);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .tech-card .tech-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin: 0 auto 10px;
+        }
+
+        .tech-card h4 {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--dark-color);
+            margin-bottom: 3px;
+        }
+
+        .tech-card p {
+            font-size: 10px;
+            color: var(--gray-color);
+        }
+
+        /* ===== ARCHITECTURE ===== */
+        .arch-container {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            align-items: stretch;
+        }
+
+        .arch-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .arch-box {
+            background: var(--light-color);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--gray-light);
+            flex: 1;
+        }
+
+        .arch-box h4 {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .arch-box h4 i {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .arch-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .arch-box li {
+            font-size: 11px;
+            color: var(--gray-color);
+            padding: 3px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .arch-box li i { color: var(--accent-color); font-size: 9px; }
+
+        .arch-arrow-col {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .arch-arrow-col i {
+            color: var(--secondary-color);
+            font-size: 22px;
+        }
+
+        /* ===== PHASE SLIDES ===== */
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .phase-number {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-primary);
+            font-weight: 800;
+            font-size: 22px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .phase-info h2 {
+            font-family: var(--font-primary);
+            font-weight: 800;
+            font-size: 22px;
+            color: var(--primary-color);
+        }
+
+        .phase-info p {
+            font-size: 12px;
+            color: var(--gray-color);
+        }
+
+        .phase-badge {
+            margin-left: auto;
+            background: var(--danger-light);
+            color: var(--danger-color);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .phase-badge.parallel {
+            background: var(--info-light);
+            color: var(--info-color);
+        }
+
+        .phase-badge.depends {
+            background: var(--warning-light);
+            color: var(--warning-color);
+        }
+
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            flex: 1;
+            align-content: start;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: var(--light-color);
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--gray-light);
+        }
+
+        .check-item .check-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .check-item h5 {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--dark-color);
+            margin-bottom: 2px;
+        }
+
+        .check-item p {
+            font-size: 10px;
+            color: var(--gray-color);
+            line-height: 1.4;
+        }
+
+        /* ===== SEMAPHORE ===== */
+        .semaphore-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .semaphore-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-family: var(--font-primary);
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .semaphore-green { background: var(--accent-light); color: #065f46; }
+        .semaphore-yellow { background: var(--warning-light); color: #92400e; }
+        .semaphore-red { background: var(--danger-light); color: #991b1b; }
+
+        .semaphore-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .semaphore-green .semaphore-dot { background: var(--accent-color); }
+        .semaphore-yellow .semaphore-dot { background: var(--warning-color); }
+        .semaphore-red .semaphore-dot { background: var(--danger-color); }
+
+        /* ===== MATRIX ===== */
+        .matrix-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--gray-light);
+        }
+
+        .matrix-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 8px 10px;
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .matrix-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--gray-light);
+            text-align: center;
+        }
+
+        .matrix-table tr:nth-child(even) { background: var(--light-color); }
+
+        .matrix-check { color: var(--accent-color); font-weight: bold; }
+        .matrix-x { color: var(--gray-light); }
+
+        /* ===== DASHBOARD PREVIEW ===== */
+        .dashboard-preview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .kpi-card {
+            background: var(--light-color);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            border: 1px solid var(--gray-light);
+        }
+
+        .kpi-card .kpi-value {
+            font-family: var(--font-primary);
+            font-weight: 800;
+            font-size: 28px;
+            color: var(--primary-color);
+        }
+
+        .kpi-card .kpi-label {
+            font-size: 10px;
+            color: var(--gray-color);
+            font-weight: 600;
+        }
+
+        .kpi-card .kpi-icon {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        /* ===== TIMELINE ROADMAP ===== */
+        .timeline-roadmap {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 0;
+            margin: 20px 0 10px;
+        }
+
+        .timeline-phase {
+            text-align: center;
+            position: relative;
+            flex: 1;
+        }
+
+        .timeline-dot {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-primary);
+            font-weight: 800;
+            font-size: 14px;
+            color: white;
+            margin: 0 auto 8px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-phase::after {
+            content: '';
+            position: absolute;
+            top: 19px;
+            left: 50%;
+            width: 100%;
+            height: 3px;
+            background: var(--gray-light);
+            z-index: 1;
+        }
+
+        .timeline-phase:last-child::after { display: none; }
+
+        .timeline-phase-label {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 10px;
+            color: var(--dark-color);
+            margin-bottom: 2px;
+        }
+
+        .timeline-phase-desc {
+            font-size: 9px;
+            color: var(--gray-color);
+            line-height: 1.3;
+        }
+
+        .timeline-parallel {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        /* ===== FUTURE MODULES ===== */
+        .future-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .future-card {
+            background: var(--light-color);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            border: 1px dashed var(--gray-light);
+            opacity: 0.85;
+        }
+
+        .future-card i {
+            font-size: 22px;
+            color: var(--gray-color);
+            margin-bottom: 6px;
+        }
+
+        .future-card h5 {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--dark-color);
+            margin-bottom: 3px;
+        }
+
+        .future-card p {
+            font-size: 9px;
+            color: var(--gray-color);
+            line-height: 1.3;
+        }
+
+        /* ===== CTA SLIDE ===== */
+        .slide-cta {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 60%, #0a1628 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 60px 80px;
+            position: relative;
+        }
+
+        .slide-cta::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(245,166,35,0.06) 0%, transparent 60%);
+        }
+
+        .slide-cta * { position: relative; z-index: 1; }
+
+        .cta-icon {
+            font-size: 48px;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .cta-title {
+            font-family: var(--font-primary);
+            font-weight: 800;
+            font-size: 32px;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .cta-title span { color: var(--secondary-color); }
+
+        .cta-subtitle {
+            font-size: 15px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 30px;
+        }
+
+        .cta-action {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+            color: white;
+            padding: 12px 36px;
+            border-radius: 30px;
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .cta-action i { margin-right: 8px; }
+
+        /* ===== ROLE BADGES ===== */
+        .roles-row {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .role-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--gray-light);
+            background: white;
+        }
+
+        .role-badge i {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: white;
+        }
+
+        .role-badge h5 {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--dark-color);
+        }
+
+        .role-badge p {
+            font-size: 9px;
+            color: var(--gray-color);
+        }
+
+        /* ===== ALERT BOX ===== */
+        .alert-box {
+            background: linear-gradient(135deg, rgba(245,166,35,0.08), rgba(245,166,35,0.02));
+            border: 1px solid rgba(245,166,35,0.2);
+            border-radius: 10px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .alert-box i { color: var(--secondary-color); font-size: 18px; flex-shrink: 0; }
+
+        .alert-box p {
+            font-size: 11px;
+            color: var(--dark-color);
+            line-height: 1.4;
+        }
+
+        .alert-box strong { font-family: var(--font-primary); }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInLeft { 0% { opacity: 0; transform: translateX(-20px); } 100% { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInRight { 0% { opacity: 0; transform: translateX(20px); } 100% { opacity: 1; transform: translateX(0); } }
+        @keyframes scaleIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .anim-1 { animation: fadeInUp 0.5s ease 0.1s both; }
+        .anim-2 { animation: fadeInUp 0.5s ease 0.2s both; }
+        .anim-3 { animation: fadeInUp 0.5s ease 0.3s both; }
+        .anim-4 { animation: fadeInUp 0.5s ease 0.4s both; }
+        .anim-5 { animation: fadeInUp 0.5s ease 0.5s both; }
+        .anim-6 { animation: fadeInUp 0.5s ease 0.6s both; }
+        .anim-7 { animation: fadeInUp 0.5s ease 0.7s both; }
+        .anim-8 { animation: fadeInUp 0.5s ease 0.8s both; }
+
+        /* ===== PDF CONTROLS ===== */
+        .pdf-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+
+        .pdf-btn {
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(245,166,35,0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .pdf-btn:hover { transform: translateY(-2px); }
+
+        /* ===== PRINT ===== */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                gap: 0;
+            }
+
+            .pdf-controls { display: none !important; }
+
+            .slide {
+                box-shadow: none;
+                page-break-after: always;
+                page-break-inside: avoid;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        @page { size: A4 landscape; margin: 0; }
+    </style>
+</head>
+<body>
+
+<!-- PDF Controls -->
+<div class="pdf-controls">
+    <button class="pdf-btn" onclick="window.print()">
+        <i class="fas fa-file-pdf"></i> Exportar PDF
+    </button>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 01 — CAPA -->
+<!-- ============================== -->
+<div class="slide slide-cover">
+    <img src="assets/logoengmarq.png" alt="EngMarq" class="cover-logo">
+    <div class="cover-line"></div>
+    <div class="cover-badge">Plano Técnico de Implementação</div>
+    <h1 class="cover-title">Sistema Integrado de<br>Gestão de <span>SST</span></h1>
+    <p class="cover-subtitle">Arquitetura, fases de desenvolvimento e roadmap técnico</p>
+    <div class="cover-meta">
+        <span class="cover-meta-item"><i class="fas fa-calendar-alt"></i> Abril 2026</span>
+        <span class="cover-meta-item"><i class="fas fa-users"></i> Reunião Técnica</span>
+        <span class="cover-meta-item"><i class="fas fa-lock"></i> Confidencial</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 02 — O PROPÓSITO -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">02</span>
+    </div>
+
+    <span class="section-badge">Propósito</span>
+    <h2 class="section-title">O Que Vamos Construir</h2>
+    <p class="section-subtitle">Um sistema web onde o cliente entra, vê tudo de SST num lugar só, e toma decisão com base em dados reais</p>
+
+    <div class="content-grid-2" style="margin-bottom: 16px;">
+        <!-- ANTES -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="background: var(--danger-light); border-radius: 12px; padding: 16px 20px; border-left: 4px solid var(--danger-color);">
+                <h4 style="font-family: var(--font-primary); font-weight: 800; font-size: 14px; color: var(--danger-color); margin-bottom: 12px;"><i class="fas fa-times-circle" style="margin-right: 8px;"></i>HOJE (sem o sistema)</h4>
+                <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+                    <li style="font-size: 12px; color: #991b1b; display: flex; align-items: center; gap: 8px;"><i class="fas fa-times" style="font-size: 10px;"></i> Documentos espalhados em pastas, emails e WhatsApp</li>
+                    <li style="font-size: 12px; color: #991b1b; display: flex; align-items: center; gap: 8px;"><i class="fas fa-times" style="font-size: 10px;"></i> Treinamentos controlados em planilhas manuais</li>
+                    <li style="font-size: 12px; color: #991b1b; display: flex; align-items: center; gap: 8px;"><i class="fas fa-times" style="font-size: 10px;"></i> Ninguém sabe o que está vencido até ser tarde</li>
+                    <li style="font-size: 12px; color: #991b1b; display: flex; align-items: center; gap: 8px;"><i class="fas fa-times" style="font-size: 10px;"></i> Gestor não tem visão geral — pede relatório e espera</li>
+                    <li style="font-size: 12px; color: #991b1b; display: flex; align-items: center; gap: 8px;"><i class="fas fa-times" style="font-size: 10px;"></i> Cada implantação começa do zero para cada cliente</li>
+                </ul>
+            </div>
+        </div>
+        <!-- DEPOIS -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="background: var(--accent-light); border-radius: 12px; padding: 16px 20px; border-left: 4px solid var(--accent-color);">
+                <h4 style="font-family: var(--font-primary); font-weight: 800; font-size: 14px; color: #065f46; margin-bottom: 12px;"><i class="fas fa-check-circle" style="margin-right: 8px;"></i>COM O SISTEMA</h4>
+                <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+                    <li style="font-size: 12px; color: #065f46; display: flex; align-items: center; gap: 8px;"><i class="fas fa-check" style="font-size: 10px;"></i> Tudo num lugar só — documentos, treinamentos, colaboradores</li>
+                    <li style="font-size: 12px; color: #065f46; display: flex; align-items: center; gap: 8px;"><i class="fas fa-check" style="font-size: 10px;"></i> Semáforo automático — verde, amarelo, vermelho</li>
+                    <li style="font-size: 12px; color: #065f46; display: flex; align-items: center; gap: 8px;"><i class="fas fa-check" style="font-size: 10px;"></i> Alertas de vencimento antes que o problema aconteça</li>
+                    <li style="font-size: 12px; color: #065f46; display: flex; align-items: center; gap: 8px;"><i class="fas fa-check" style="font-size: 10px;"></i> Dashboard com indicadores em tempo real para o gestor</li>
+                    <li style="font-size: 12px; color: #065f46; display: flex; align-items: center; gap: 8px;"><i class="fas fa-check" style="font-size: 10px;"></i> Replicável — mesmo sistema para qualquer novo cliente</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- O que é na prática -->
+    <div style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 12px; padding: 18px 24px; display: flex; align-items: center; gap: 20px;">
+        <div style="flex-shrink: 0; width: 50px; height: 50px; border-radius: 14px; background: rgba(245,166,35,0.2); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-laptop" style="color: var(--secondary-color); font-size: 22px;"></i>
+        </div>
+        <div>
+            <h4 style="font-family: var(--font-primary); font-weight: 800; font-size: 14px; color: white; margin-bottom: 4px;">Na prática: o cliente abre o navegador e tem tudo</h4>
+            <p style="font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5;">Login → Dashboard com visão geral → Clica em Documentos e vê o que está vencendo → Clica em Treinamentos e vê quem precisa reciclar → Toma decisão baseado em dados, não em achismo.</p>
+        </div>
+    </div>
+
+    <div class="alert-box" style="margin-top: 12px;">
+        <i class="fas fa-gem"></i>
+        <p><strong>Posicionamento:</strong> Não é "fazemos SST". É: "Implementamos um sistema completo de gestão de segurança com controle, indicadores e tomada de decisão" — isso vira produto.</p>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 03 — O PROBLEMA -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">03</span>
+    </div>
+
+    <span class="section-badge">Contexto</span>
+    <h2 class="section-title">O Problema Atual</h2>
+    <p class="section-subtitle">Desafios que impedem a escalabilidade e qualidade da gestão de SST nos clientes</p>
+
+    <div class="content-grid-2">
+        <div class="content-card card-border-red anim-1">
+            <div class="card-icon red"><i class="fas fa-eye-slash"></i></div>
+            <h4>Falta de Visão Integrada</h4>
+            <p>Cada área de SST funciona isolada. Não existe um lugar centralizado onde o gestor veja o cenário completo de segurança da empresa.</p>
+        </div>
+        <div class="content-card card-border-orange anim-2">
+            <div class="card-icon orange"><i class="fas fa-puzzle-piece"></i></div>
+            <h4>Processos Isolados</h4>
+            <p>Documentos em uma pasta, treinamentos em outra planilha, EPIs no caderno. Zero rastreabilidade e cruzamento de informações.</p>
+        </div>
+        <div class="content-card card-border-blue anim-3">
+            <div class="card-icon blue"><i class="fas fa-random"></i></div>
+            <h4>Falta de Padrão</h4>
+            <p>Cada cliente é atendido de um jeito. Sem padronização, a qualidade varia e a equipe depende de conhecimento individual.</p>
+        </div>
+        <div class="content-card anim-4">
+            <div class="card-icon navy"><i class="fas fa-expand-arrows-alt"></i></div>
+            <h4>Dificuldade de Escalar</h4>
+            <p>O modelo atual não permite replicar para novos clientes de forma rápida. Cada implantação começa do zero.</p>
+        </div>
+    </div>
+
+    <div class="alert-box anim-5">
+        <i class="fas fa-lightbulb"></i>
+        <p><strong>Oportunidade:</strong> Um sistema padronizado resolve todos esses problemas e vira um diferencial comercial — produto replicável para qualquer cliente.</p>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 04 — MAPA VISUAL DO SISTEMA -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">04</span>
+    </div>
+
+    <span class="section-badge">Visão Geral</span>
+    <h2 class="section-title">Mapa do Sistema</h2>
+    <p class="section-subtitle">Estrutura completa — de baixo para cima, dos dados brutos até a tomada de decisão</p>
+
+    <div class="system-map">
+        <!-- Nível 1: Diretoria -->
+        <div class="map-level anim-1">
+            <div class="map-box primary"><i class="fas fa-building"></i> DIRETORIA / GESTÃO</div>
+        </div>
+        <div class="map-arrow anim-2"><i class="fas fa-arrow-up"></i></div>
+
+        <!-- Nível 2: Dashboard -->
+        <div class="map-level anim-2">
+            <div class="map-box accent"><i class="fas fa-chart-line"></i> DASHBOARD GERENCIAL</div>
+        </div>
+        <div class="map-arrow anim-3"><i class="fas fa-arrow-up"></i></div>
+
+        <!-- Nível 3: Indicadores / NC / Acidentes -->
+        <div class="map-level anim-3">
+            <div class="map-box green-box"><i class="fas fa-chart-bar"></i> Indicadores</div>
+            <div class="map-box orange-box"><i class="fas fa-exclamation-triangle"></i> Não Conformidades</div>
+            <div class="map-box" style="border-color: var(--danger-color); color: var(--danger-color);"><i class="fas fa-ambulance"></i> Acidentes</div>
+        </div>
+        <div class="map-arrow anim-4"><i class="fas fa-arrow-up"></i></div>
+
+        <!-- Nível 4: Inspeções / Investigações -->
+        <div class="map-level anim-4">
+            <div class="map-box blue-box"><i class="fas fa-search"></i> Inspeções</div>
+            <div class="map-box" style="border-color: #8b5cf6; color: #8b5cf6;"><i class="fas fa-clipboard-list"></i> Investigações</div>
+        </div>
+        <div class="map-arrow anim-5"><i class="fas fa-arrow-up"></i></div>
+
+        <!-- Nível 5: Checklists -->
+        <div class="map-level anim-5">
+            <div class="map-box"><i class="fas fa-tasks"></i> CHECKLISTS</div>
+        </div>
+        <div class="map-arrow anim-6"><i class="fas fa-arrow-up"></i></div>
+
+        <!-- Nível 6: Documentos / Treinamentos / EPI -->
+        <div class="map-level anim-6">
+            <div class="map-box"><i class="fas fa-folder-open"></i> Documentos</div>
+            <div class="map-box"><i class="fas fa-graduation-cap"></i> Treinamentos</div>
+            <div class="map-box"><i class="fas fa-hard-hat"></i> EPI / DPI</div>
+        </div>
+        <div class="map-arrow anim-7"><i class="fas fa-arrow-up"></i></div>
+
+        <!-- Nível 7: Base -->
+        <div class="map-level anim-7">
+            <div class="map-box primary" style="background: linear-gradient(135deg, var(--accent-color), #059669);"><i class="fas fa-users"></i> COLABORADORES / OPERAÇÃO (BASE)</div>
+        </div>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 05 — FLUXO DO SISTEMA -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">05</span>
+    </div>
+
+    <span class="section-badge">Fluxo Inteligente</span>
+    <h2 class="section-title">Como o Sistema Funciona</h2>
+    <p class="section-subtitle">Fluxo contínuo — da entrada de dados até a tomada de decisão estratégica</p>
+
+    <div class="flow-horizontal">
+        <div class="flow-step anim-1">
+            <div class="flow-step-icon" style="background: linear-gradient(135deg, var(--accent-color), #059669);"><i class="fas fa-users"></i></div>
+            <div class="flow-step-title">Entradas</div>
+            <div class="flow-step-desc">Colaboradores<br>Funções<br>Ambientes</div>
+        </div>
+        <div class="flow-arrow anim-1"><i class="fas fa-chevron-right"></i></div>
+
+        <div class="flow-step anim-2">
+            <div class="flow-step-icon" style="background: linear-gradient(135deg, var(--info-color), #2563eb);"><i class="fas fa-folder-open"></i></div>
+            <div class="flow-step-title">Controle</div>
+            <div class="flow-step-desc">Documentos<br>Treinamentos<br>EPIs</div>
+        </div>
+        <div class="flow-arrow anim-2"><i class="fas fa-chevron-right"></i></div>
+
+        <div class="flow-step anim-3">
+            <div class="flow-step-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);"><i class="fas fa-clipboard-check"></i></div>
+            <div class="flow-step-title">Campo</div>
+            <div class="flow-step-desc">Checklists<br>Inspeções</div>
+        </div>
+        <div class="flow-arrow anim-3"><i class="fas fa-chevron-right"></i></div>
+
+        <div class="flow-step anim-4">
+            <div class="flow-step-icon" style="background: linear-gradient(135deg, var(--danger-color), #dc2626);"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="flow-step-title">Desvios</div>
+            <div class="flow-step-desc">Não Conformidades<br>Acidentes</div>
+        </div>
+        <div class="flow-arrow anim-4"><i class="fas fa-chevron-right"></i></div>
+
+        <div class="flow-step anim-5">
+            <div class="flow-step-icon" style="background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));"><i class="fas fa-wrench"></i></div>
+            <div class="flow-step-title">Ações</div>
+            <div class="flow-step-desc">Plano 5W2H<br>Correções<br>Prevenção</div>
+        </div>
+        <div class="flow-arrow anim-5"><i class="fas fa-chevron-right"></i></div>
+
+        <div class="flow-step anim-6">
+            <div class="flow-step-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);"><i class="fas fa-chart-pie"></i></div>
+            <div class="flow-step-title">Indicadores</div>
+            <div class="flow-step-desc">Performance<br>Riscos<br>Tendências</div>
+        </div>
+        <div class="flow-arrow anim-6"><i class="fas fa-chevron-right"></i></div>
+
+        <div class="flow-step anim-7">
+            <div class="flow-step-icon" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));"><i class="fas fa-chess-king"></i></div>
+            <div class="flow-step-title">Decisão</div>
+            <div class="flow-step-desc">Diretoria<br>Gestão<br>Estratégia</div>
+        </div>
+    </div>
+
+    <div class="alert-box anim-8">
+        <i class="fas fa-sync-alt"></i>
+        <p><strong>Ciclo contínuo:</strong> Inspeção → gera não conformidade → gera plano de ação → vira indicador → suporta decisão → melhoria contínua</p>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 06 — STACK TÉCNICA -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">06</span>
+    </div>
+
+    <span class="section-badge">Tecnologia</span>
+    <h2 class="section-title">Stack Técnica</h2>
+    <p class="section-subtitle">Tecnologias modernas, escaláveis e com ecossistema robusto — uma instância por cliente</p>
+
+    <div class="tech-grid">
+        <div class="tech-card anim-1">
+            <div class="tech-icon" style="background: #dbeafe; color: #2563eb;"><i class="fab fa-react"></i></div>
+            <h4>React 18</h4>
+            <p>Interface do usuário</p>
+        </div>
+        <div class="tech-card anim-2">
+            <div class="tech-icon" style="background: #dbeafe; color: #3178c6;"><i class="fas fa-code"></i></div>
+            <h4>TypeScript</h4>
+            <p>Tipagem e segurança</p>
+        </div>
+        <div class="tech-card anim-3">
+            <div class="tech-icon" style="background: #fef3c7; color: #d97706;"><i class="fas fa-bolt"></i></div>
+            <h4>Vite</h4>
+            <p>Build ultrarrápido</p>
+        </div>
+        <div class="tech-card anim-4">
+            <div class="tech-icon" style="background: #dbeafe; color: #0ea5e9;"><i class="fas fa-wind"></i></div>
+            <h4>Tailwind CSS</h4>
+            <p>Estilização utilitária</p>
+        </div>
+        <div class="tech-card anim-5">
+            <div class="tech-icon" style="background: #f3e8ff; color: #7c3aed;"><i class="fas fa-palette"></i></div>
+            <h4>Shadcn/ui</h4>
+            <p>Componentes prontos</p>
+        </div>
+        <div class="tech-card anim-6">
+            <div class="tech-icon" style="background: #d1fae5; color: #059669;"><i class="fas fa-database"></i></div>
+            <h4>Supabase</h4>
+            <p>Auth + DB + Storage</p>
+        </div>
+        <div class="tech-card anim-7">
+            <div class="tech-icon" style="background: #fce7f3; color: #db2777;"><i class="fas fa-chart-area"></i></div>
+            <h4>Recharts</h4>
+            <p>Gráficos do dashboard</p>
+        </div>
+        <div class="tech-card anim-8">
+            <div class="tech-icon" style="background: #f1f5f9; color: #1f2937;"><i class="fas fa-cloud-upload-alt"></i></div>
+            <h4>Vercel</h4>
+            <p>Deploy e hosting</p>
+        </div>
+    </div>
+
+    <div class="alert-box">
+        <i class="fas fa-shield-alt"></i>
+        <p><strong>Modelo por cliente:</strong> Cada empresa terá seu próprio projeto Supabase (banco isolado) + deploy independente. Dados 100% separados, segurança total.</p>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 07 — ARQUITETURA -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">07</span>
+    </div>
+
+    <span class="section-badge">Arquitetura</span>
+    <h2 class="section-title">Estrutura e Controle de Acesso</h2>
+    <p class="section-subtitle">Frontend conectado ao Supabase com autenticação, banco de dados com RLS e storage para arquivos</p>
+
+    <div class="arch-container">
+        <!-- Frontend -->
+        <div class="arch-col anim-1">
+            <div class="arch-box" style="border-left: 4px solid var(--info-color);">
+                <h4><i style="background: var(--info-light); color: var(--info-color);"><i class="fab fa-react"></i></i> Frontend (React)</h4>
+                <ul>
+                    <li><i class="fas fa-circle"></i> SPA com React Router v6</li>
+                    <li><i class="fas fa-circle"></i> React Hook Form + Zod</li>
+                    <li><i class="fas fa-circle"></i> Shadcn/ui components</li>
+                    <li><i class="fas fa-circle"></i> Recharts (dashboard)</li>
+                    <li><i class="fas fa-circle"></i> Proteção de rotas por role</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="arch-arrow-col anim-2"><i class="fas fa-exchange-alt"></i></div>
+
+        <!-- Supabase -->
+        <div class="arch-col anim-3">
+            <div class="arch-box" style="border-left: 4px solid var(--accent-color);">
+                <h4><i style="background: var(--accent-light); color: var(--accent-color);"><i class="fas fa-shield-alt"></i></i> Supabase Auth</h4>
+                <ul>
+                    <li><i class="fas fa-circle"></i> Login email/senha</li>
+                    <li><i class="fas fa-circle"></i> Sessão persistente</li>
+                    <li><i class="fas fa-circle"></i> Convite por email</li>
+                </ul>
+            </div>
+            <div class="arch-box" style="border-left: 4px solid var(--secondary-color);">
+                <h4><i style="background: var(--warning-light); color: var(--warning-color);"><i class="fas fa-database"></i></i> PostgreSQL + RLS</h4>
+                <ul>
+                    <li><i class="fas fa-circle"></i> Tabelas por módulo</li>
+                    <li><i class="fas fa-circle"></i> Views para indicadores</li>
+                    <li><i class="fas fa-circle"></i> Row Level Security</li>
+                </ul>
+            </div>
+            <div class="arch-box" style="border-left: 4px solid #8b5cf6;">
+                <h4><i style="background: #f3e8ff; color: #8b5cf6;"><i class="fas fa-file-upload"></i></i> Storage</h4>
+                <ul>
+                    <li><i class="fas fa-circle"></i> Bucket: documentos</li>
+                    <li><i class="fas fa-circle"></i> Bucket: certificados</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles -->
+    <div class="roles-row anim-5" style="margin-top: 12px;">
+        <div class="role-badge">
+            <i style="background: linear-gradient(135deg, var(--danger-color), #dc2626);"><i class="fas fa-crown"></i></i>
+            <div>
+                <h5>Admin</h5>
+                <p>Acesso total + gestão de usuários</p>
+            </div>
+        </div>
+        <div class="role-badge">
+            <i style="background: linear-gradient(135deg, var(--info-color), #2563eb);"><i class="fas fa-chart-bar"></i></i>
+            <div>
+                <h5>Gestor</h5>
+                <p>Leitura total + edição parcial</p>
+            </div>
+        </div>
+        <div class="role-badge">
+            <i style="background: linear-gradient(135deg, var(--accent-color), #059669);"><i class="fas fa-hard-hat"></i></i>
+            <div>
+                <h5>Operacional</h5>
+                <p>Preenche dados + leitura limitada</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 08 — FASE 1: O QUE SERÁ ENTREGUE -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">08</span>
+    </div>
+
+    <div class="phase-header">
+        <div class="phase-number" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));">1</div>
+        <div class="phase-info">
+            <h2>Fase 1 — Fundação</h2>
+            <p>Construir a base: o usuário já vai conseguir acessar o sistema e navegar</p>
+        </div>
+        <div class="phase-badge">Primeira entrega</div>
+    </div>
+
+    <!-- Propósito da fase -->
+    <div style="background: linear-gradient(135deg, rgba(26,54,93,0.06), rgba(26,54,93,0.02)); border: 1px solid rgba(26,54,93,0.12); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 14px;" class="anim-1">
+        <div style="flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-bullseye" style="color: var(--secondary-color); font-size: 18px;"></i>
+        </div>
+        <div>
+            <h4 style="font-family: var(--font-primary); font-weight: 800; font-size: 13px; color: var(--primary-color); margin-bottom: 4px;">Objetivo desta fase</h4>
+            <p style="font-size: 12px; color: var(--gray-color); line-height: 1.6;">Montar toda a estrutura que sustenta o sistema. É como construir os alicerces de uma casa — nada é visível para o cliente final ainda, mas sem isso nenhuma funcionalidade de verdade funciona. <strong>No final desta fase, o sistema já abre no navegador, tem login, e mostra o esqueleto das telas.</strong></p>
+        </div>
+    </div>
+
+    <div class="content-grid-2" style="gap: 14px; flex: 1;">
+        <!-- Esquerda: O que o usuário vai VER -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <h4 style="font-family: var(--font-primary); font-weight: 700; font-size: 11px; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fas fa-eye" style="margin-right: 6px;"></i> O que já vai existir de visível
+            </h4>
+            <div class="check-item anim-2" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--accent-light); color: var(--accent-color); width: 26px; height: 26px;"><i class="fas fa-sign-in-alt" style="font-size: 11px;"></i></div>
+                <div>
+                    <h5>Tela de Login</h5>
+                    <p>Usuário entra com email e senha. Cada pessoa tem seu perfil (admin, gestor ou operacional).</p>
+                </div>
+            </div>
+            <div class="check-item anim-3" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--info-light); color: var(--info-color); width: 26px; height: 26px;"><i class="fas fa-bars" style="font-size: 11px;"></i></div>
+                <div>
+                    <h5>Menu Lateral (Sidebar)</h5>
+                    <p>Navegação com os módulos: Dashboard, Colaboradores, Documentos, Treinamentos. Clicou, abriu a página.</p>
+                </div>
+            </div>
+            <div class="check-item anim-4" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--warning-light); color: var(--warning-color); width: 26px; height: 26px;"><i class="fas fa-user-circle" style="font-size: 11px;"></i></div>
+                <div>
+                    <h5>Header com Dados do Usuário</h5>
+                    <p>Nome do usuário logado, nome da empresa, e identificação do perfil de acesso.</p>
+                </div>
+            </div>
+            <div class="check-item anim-5" style="padding: 10px;">
+                <div class="check-icon" style="background: #f3e8ff; color: #7c3aed; width: 26px; height: 26px;"><i class="fas fa-lock" style="font-size: 11px;"></i></div>
+                <div>
+                    <h5>Controle de Acesso</h5>
+                    <p>Admin vê tudo. Gestor vê relatórios + edita. Operacional só preenche o que é dele. Cada um vê só o que pode.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direita: O que estará pronto por baixo -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <h4 style="font-family: var(--font-primary); font-weight: 700; font-size: 11px; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fas fa-cogs" style="margin-right: 6px;"></i> O que estará pronto por baixo (infraestrutura)
+            </h4>
+            <div class="check-item anim-2" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--info-light); color: var(--info-color); width: 26px; height: 26px;"><i class="fas fa-code-branch" style="font-size: 11px;"></i></div>
+                <div>
+                    <h5>Repositório do Projeto</h5>
+                    <p>Código-fonte organizado, versionado, com estrutura de pastas pronta para todos os módulos.</p>
+                </div>
+            </div>
+            <div class="check-item anim-3" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--accent-light); color: var(--accent-color); width: 26px; height: 26px;"><i class="fas fa-database" style="font-size: 11px;"></i></div>
+                <div>
+                    <h5>Banco de Dados Configurado</h5>
+                    <p>Todas as tabelas criadas no Supabase: empresa, usuários, setores, funções, ambientes, colaboradores.</p>
+                </div>
+            </div>
+            <div class="check-item anim-4" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--danger-light); color: var(--danger-color); width: 26px; height: 26px;"><i class="fas fa-shield-alt" style="font-size: 11px;"></i></div>
+                <div>
+                    <h5>Segurança por Perfil (RLS)</h5>
+                    <p>O banco de dados garante que cada perfil só acessa os dados que pode. Segurança no nível do servidor.</p>
+                </div>
+            </div>
+            <div class="check-item anim-5" style="padding: 10px;">
+                <div class="check-icon" style="background: #fce7f3; color: #db2777; width: 26px; height: 26px;"><i class="fas fa-palette" style="font-size: 11px;"></i></div>
+                <div>
+                    <h5>Componentes Visuais Base</h5>
+                    <p>Botões, inputs, modais, tabelas — todos no padrão visual EngMarq, prontos para usar em qualquer módulo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert-box anim-6">
+        <i class="fas fa-flag-checkered"></i>
+        <p><strong>Resultado:</strong> Ao final da Fase 1, o sistema já abre no navegador, o usuário faz login, vê o menu com os módulos e navega entre as telas (ainda vazias). É o esqueleto funcional sobre o qual tudo será construído.</p>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 09 — FASE 2: COLABORADORES -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">09</span>
+    </div>
+
+    <div class="phase-header">
+        <div class="phase-number" style="background: linear-gradient(135deg, var(--accent-color), #059669);">2</div>
+        <div class="phase-info">
+            <h2>Colaboradores — Base do Sistema</h2>
+            <p>Cadastro de colaboradores, setores, funções e ambientes de trabalho</p>
+        </div>
+    </div>
+
+    <div class="content-grid-2" style="gap: 14px;">
+        <!-- Lado esquerdo: O que inclui -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="content-card card-border-green anim-1" style="padding: 14px;">
+                <div class="card-icon green"><i class="fas fa-users"></i></div>
+                <h4>CRUD de Colaboradores</h4>
+                <p>Nome, CPF (validado), função, setor, data de admissão, contato, status ativo/inativo. Tabela com busca e filtros.</p>
+            </div>
+            <div class="content-card card-border-blue anim-2" style="padding: 14px;">
+                <div class="card-icon blue"><i class="fas fa-sitemap"></i></div>
+                <h4>Setores e Funções</h4>
+                <p>Gestão de setores com funções vinculadas. Cada função tem lista de riscos associados que alimenta o módulo de treinamentos.</p>
+            </div>
+            <div class="content-card card-border-orange anim-3" style="padding: 14px;">
+                <div class="card-icon orange"><i class="fas fa-building"></i></div>
+                <h4>Ambientes de Trabalho</h4>
+                <p>Cadastro de ambientes vinculados a setores, com descrição de riscos. Base para checklists e inspeções futuras.</p>
+            </div>
+        </div>
+
+        <!-- Lado direito: Componentes + Preview -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="arch-box anim-4" style="border-left: 4px solid var(--accent-color); flex: 1;">
+                <h4 style="font-size: 11px;"><i style="background: var(--accent-light); color: var(--accent-color);"><i class="fas fa-cube"></i></i> Componentes Reutilizáveis</h4>
+                <ul>
+                    <li><i class="fas fa-circle"></i> <strong>DataTable</strong> — Tabela com busca, filtro, paginação</li>
+                    <li><i class="fas fa-circle"></i> <strong>FormDialog</strong> — Modal de cadastro/edição</li>
+                    <li><i class="fas fa-circle"></i> <strong>StatusBadge</strong> — Badge ativo/inativo/vencido</li>
+                    <li><i class="fas fa-circle"></i> <strong>ConfirmDialog</strong> — Confirmação de ações</li>
+                    <li><i class="fas fa-circle"></i> <strong>SearchInput</strong> — Busca com debounce</li>
+                    <li><i class="fas fa-circle"></i> <strong>FilterSelect</strong> — Filtro por setor/função</li>
+                </ul>
+            </div>
+            <div class="alert-box anim-5" style="margin-top: 0;">
+                <i class="fas fa-puzzle-piece"></i>
+                <p><strong>Todos os componentes</strong> criados aqui serão reutilizados em todos os módulos seguintes. É o investimento mais importante.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 10 — FASE 3: DOCUMENTOS -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">10</span>
+    </div>
+
+    <div class="phase-header">
+        <div class="phase-number" style="background: linear-gradient(135deg, var(--info-color), #2563eb);">3</div>
+        <div class="phase-info">
+            <h2>Documentos de SST</h2>
+            <p>Controle de documentos com vencimento, upload de arquivos e semáforo visual</p>
+        </div>
+        <div class="phase-badge parallel">Paralelo com Fase 2</div>
+    </div>
+
+    <!-- Tipos de documento -->
+    <div class="content-grid-4 anim-1" style="margin-bottom: 14px; flex: 0;">
+        <div class="content-card" style="padding: 12px; text-align: center; border-left: 4px solid var(--accent-color);">
+            <h4 style="font-size: 18px; color: var(--primary-color);">PGR</h4>
+            <p>Programa de Gerenciamento de Riscos</p>
+        </div>
+        <div class="content-card" style="padding: 12px; text-align: center; border-left: 4px solid var(--info-color);">
+            <h4 style="font-size: 18px; color: var(--primary-color);">PCMSO</h4>
+            <p>Programa de Controle Médico</p>
+        </div>
+        <div class="content-card" style="padding: 12px; text-align: center; border-left: 4px solid var(--secondary-color);">
+            <h4 style="font-size: 18px; color: var(--primary-color);">LTCAT</h4>
+            <p>Laudo Técnico de Condições Ambientais</p>
+        </div>
+        <div class="content-card" style="padding: 12px; text-align: center; border-left: 4px solid #8b5cf6;">
+            <h4 style="font-size: 18px; color: var(--primary-color);">APR/PT</h4>
+            <p>Análise de Risco / Permissão de Trabalho</p>
+        </div>
+    </div>
+
+    <!-- Semáforo -->
+    <div class="semaphore-row anim-2">
+        <div class="semaphore-item semaphore-green">
+            <div class="semaphore-dot"></div>
+            <span>Vigente (&gt; 60 dias)</span>
+        </div>
+        <div class="semaphore-item semaphore-yellow">
+            <div class="semaphore-dot"></div>
+            <span>Atenção (30-60 dias)</span>
+        </div>
+        <div class="semaphore-item semaphore-red">
+            <div class="semaphore-dot"></div>
+            <span>Vencido ou &lt; 30 dias</span>
+        </div>
+    </div>
+
+    <!-- Funcionalidades -->
+    <div class="content-grid-3 anim-3" style="flex: 1;">
+        <div class="content-card card-border-green" style="padding: 14px;">
+            <div class="card-icon green"><i class="fas fa-file-upload"></i></div>
+            <h4>Upload de Arquivos</h4>
+            <p>Upload direto para Supabase Storage. Bucket dedicado com políticas de acesso por role. Download e visualização inline.</p>
+        </div>
+        <div class="content-card card-border-orange" style="padding: 14px;">
+            <div class="card-icon orange"><i class="fas fa-bell"></i></div>
+            <h4>Alertas de Vencimento</h4>
+            <p>Sistema identifica automaticamente documentos próximos do vencimento. Lista priorizada por urgência no dashboard.</p>
+        </div>
+        <div class="content-card card-border-blue" style="padding: 14px;">
+            <div class="card-icon blue"><i class="fas fa-history"></i></div>
+            <h4>Histórico de Versões</h4>
+            <p>Cada renovação gera nova versão. Histórico completo mantido com soft delete. Rastreabilidade total.</p>
+        </div>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 11 — FASE 4: TREINAMENTOS -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">11</span>
+    </div>
+
+    <div class="phase-header">
+        <div class="phase-number" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">4</div>
+        <div class="phase-info">
+            <h2>Treinamentos</h2>
+            <p>Matriz por função, controle de validade, certificados e reciclagem</p>
+        </div>
+        <div class="phase-badge depends">Depende da Fase 2</div>
+    </div>
+
+    <div class="content-grid-2" style="gap: 16px;">
+        <!-- Esquerda: Matriz -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <h4 style="font-family: var(--font-primary); font-weight: 700; font-size: 12px; color: var(--primary-color);">
+                <i class="fas fa-th" style="margin-right: 6px;"></i> Matriz de Treinamentos (exemplo)
+            </h4>
+            <table class="matrix-table anim-1">
+                <tr>
+                    <th>Função</th>
+                    <th>NR-06</th>
+                    <th>NR-10</th>
+                    <th>NR-12</th>
+                    <th>NR-33</th>
+                    <th>NR-35</th>
+                </tr>
+                <tr>
+                    <td style="text-align: left; font-weight: 600;">Eletricista</td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-x">—</td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; font-weight: 600;">Operador de Máquina</td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-x">—</td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-x">—</td>
+                    <td class="matrix-x">—</td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; font-weight: 600;">Técnico SST</td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; font-weight: 600;">Administrativo</td>
+                    <td class="matrix-check"><i class="fas fa-check"></i></td>
+                    <td class="matrix-x">—</td>
+                    <td class="matrix-x">—</td>
+                    <td class="matrix-x">—</td>
+                    <td class="matrix-x">—</td>
+                </tr>
+            </table>
+
+            <div class="semaphore-row anim-2" style="margin: 0;">
+                <div class="semaphore-item semaphore-green" style="padding: 6px 12px; font-size: 10px;">
+                    <div class="semaphore-dot"></div> Válido
+                </div>
+                <div class="semaphore-item semaphore-yellow" style="padding: 6px 12px; font-size: 10px;">
+                    <div class="semaphore-dot"></div> Vencendo
+                </div>
+                <div class="semaphore-item semaphore-red" style="padding: 6px 12px; font-size: 10px;">
+                    <div class="semaphore-dot"></div> Vencido / Pendente
+                </div>
+            </div>
+        </div>
+
+        <!-- Direita: Funcionalidades -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="check-item anim-3">
+                <div class="check-icon" style="background: #f3e8ff; color: #7c3aed;"><i class="fas fa-th"></i></div>
+                <div>
+                    <h5>Matriz Configurável</h5>
+                    <p>Define quais treinamentos cada função precisa. Marca obrigatórios vs recomendados.</p>
+                </div>
+            </div>
+            <div class="check-item anim-4">
+                <div class="check-icon" style="background: var(--accent-light); color: var(--accent-color);"><i class="fas fa-certificate"></i></div>
+                <div>
+                    <h5>Registro + Certificado</h5>
+                    <p>Registrar treinamento realizado: data, instrutor, entidade, carga horária. Upload do certificado.</p>
+                </div>
+            </div>
+            <div class="check-item anim-5">
+                <div class="check-icon" style="background: var(--warning-light); color: var(--warning-color);"><i class="fas fa-clock"></i></div>
+                <div>
+                    <h5>Controle de Reciclagem</h5>
+                    <p>Alertas automáticos de treinamentos próximos do vencimento. Validade calculada pela NR.</p>
+                </div>
+            </div>
+            <div class="check-item anim-6">
+                <div class="check-icon" style="background: var(--info-light); color: var(--info-color);"><i class="fas fa-user-check"></i></div>
+                <div>
+                    <h5>Vista por Colaborador</h5>
+                    <p>Ao abrir um colaborador, ver todos os treinamentos realizados e os que faltam (gaps).</p>
+                </div>
+            </div>
+            <div class="check-item anim-7">
+                <div class="check-icon" style="background: var(--danger-light); color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i></div>
+                <div>
+                    <h5>Indicador de Conformidade</h5>
+                    <p>% de colaboradores com todos os treinamentos obrigatórios em dia. Alimenta o dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 12 — FASE 5+6: DASHBOARD + DEPLOY -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">12</span>
+    </div>
+
+    <div class="phase-header">
+        <div class="phase-number" style="background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));">5<span style="font-size: 12px; font-weight: 400;">+</span>6</div>
+        <div class="phase-info">
+            <h2>Dashboard Gerencial + Deploy</h2>
+            <p>Indicadores visuais para tomada de decisão e primeiro deploy de produção</p>
+        </div>
+    </div>
+
+    <!-- KPI Preview -->
+    <div class="dashboard-preview anim-1">
+        <div class="kpi-card">
+            <div class="kpi-icon" style="color: var(--info-color);"><i class="fas fa-users"></i></div>
+            <div class="kpi-value">127</div>
+            <div class="kpi-label">Colaboradores Ativos</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="color: var(--accent-color);"><i class="fas fa-file-check"></i></div>
+            <div class="kpi-value" style="color: var(--accent-color);">89%</div>
+            <div class="kpi-label">Documentos em Dia</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="color: var(--warning-color);"><i class="fas fa-graduation-cap"></i></div>
+            <div class="kpi-value" style="color: var(--warning-color);">74%</div>
+            <div class="kpi-label">Treinamentos em Dia</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="kpi-value" style="color: var(--danger-color);">12</div>
+            <div class="kpi-label">Alertas Urgentes</div>
+        </div>
+    </div>
+
+    <div class="content-grid-2 anim-2" style="flex: 1; gap: 14px;">
+        <!-- Dashboard features -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <h4 style="font-family: var(--font-primary); font-weight: 700; font-size: 12px; color: var(--primary-color); margin-bottom: 2px;">
+                <i class="fas fa-chart-line" style="margin-right: 6px;"></i> Dashboard (Fase 5)
+            </h4>
+            <div class="check-item" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--info-light); color: var(--info-color); width: 24px; height: 24px;"><i class="fas fa-chart-pie" style="font-size: 10px;"></i></div>
+                <div>
+                    <h5>Gráfico Donut</h5>
+                    <p>Distribuição de status dos documentos (vigente/atenção/vencido)</p>
+                </div>
+            </div>
+            <div class="check-item" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--accent-light); color: var(--accent-color); width: 24px; height: 24px;"><i class="fas fa-chart-bar" style="font-size: 10px;"></i></div>
+                <div>
+                    <h5>Gráfico de Barras</h5>
+                    <p>Treinamentos por setor — em dia vs pendentes vs vencidos</p>
+                </div>
+            </div>
+            <div class="check-item" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--danger-light); color: var(--danger-color); width: 24px; height: 24px;"><i class="fas fa-bell" style="font-size: 10px;"></i></div>
+                <div>
+                    <h5>Tabela de Alertas</h5>
+                    <p>Itens mais urgentes: vencendo em 7/15/30 dias, ordenados por prioridade</p>
+                </div>
+            </div>
+            <div class="check-item" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--warning-light); color: var(--warning-color); width: 24px; height: 24px;"><i class="fas fa-stream" style="font-size: 10px;"></i></div>
+                <div>
+                    <h5>Timeline</h5>
+                    <p>Últimas atividades registradas no sistema (inserções, atualizações)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deploy features -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <h4 style="font-family: var(--font-primary); font-weight: 700; font-size: 12px; color: var(--primary-color); margin-bottom: 2px;">
+                <i class="fas fa-rocket" style="margin-right: 6px;"></i> Deploy + Config (Fase 6)
+            </h4>
+            <div class="check-item" style="padding: 10px;">
+                <div class="check-icon" style="background: #f3e8ff; color: #7c3aed; width: 24px; height: 24px;"><i class="fas fa-cog" style="font-size: 10px;"></i></div>
+                <div>
+                    <h5>Configuração da Empresa</h5>
+                    <p>Admin define logo, razão social, CNPJ na tela de configurações</p>
+                </div>
+            </div>
+            <div class="check-item" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--info-light); color: var(--info-color); width: 24px; height: 24px;"><i class="fas fa-user-plus" style="font-size: 10px;"></i></div>
+                <div>
+                    <h5>Gestão de Usuários</h5>
+                    <p>Convite por email, atribuição de roles, ativação/desativação</p>
+                </div>
+            </div>
+            <div class="check-item" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--accent-light); color: var(--accent-color); width: 24px; height: 24px;"><i class="fas fa-cloud-upload-alt" style="font-size: 10px;"></i></div>
+                <div>
+                    <h5>Deploy Vercel</h5>
+                    <p>Headers de segurança (CSP, HSTS), build otimizado, processo documentado</p>
+                </div>
+            </div>
+            <div class="check-item" style="padding: 10px;">
+                <div class="check-icon" style="background: var(--warning-light); color: var(--warning-color); width: 24px; height: 24px;"><i class="fas fa-seedling" style="font-size: 10px;"></i></div>
+                <div>
+                    <h5>Script de Seed</h5>
+                    <p>Dados iniciais: tipos de documento (PGR, PCMSO...), tipos de treinamento (NRs), config base</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 13 — ROADMAP + FUTURO + CTA -->
+<!-- ============================== -->
+<div class="slide">
+    <div class="slide-header">
+        <img src="assets/logoengmarq.png" alt="EngMarq" class="slide-logo">
+        <span class="slide-number">13</span>
+    </div>
+
+    <span class="section-badge">Roadmap</span>
+    <h2 class="section-title">Cronograma de Fases + Evolução</h2>
+    <p class="section-subtitle">Linha do tempo de implementação do MVP e módulos futuros do sistema</p>
+
+    <!-- Timeline -->
+    <div class="timeline-roadmap anim-1">
+        <div class="timeline-phase">
+            <div class="timeline-dot" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));">1</div>
+            <div class="timeline-phase-label">Fundação</div>
+            <div class="timeline-phase-desc">Repo, Auth<br>Layout, SQL</div>
+        </div>
+        <div class="timeline-phase">
+            <div class="timeline-dot" style="background: linear-gradient(135deg, var(--accent-color), #059669);">2</div>
+            <div class="timeline-phase-label">Colaboradores</div>
+            <div class="timeline-phase-desc">CRUD, Setores<br>Funções, Ambientes</div>
+        </div>
+        <div class="timeline-phase">
+            <div class="timeline-dot" style="background: linear-gradient(135deg, var(--info-color), #2563eb);">3</div>
+            <div class="timeline-phase-label">Documentos</div>
+            <div class="timeline-phase-desc">PGR, PCMSO<br>Semáforo, Upload</div>
+        </div>
+        <div class="timeline-phase">
+            <div class="timeline-dot" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">4</div>
+            <div class="timeline-phase-label">Treinamentos</div>
+            <div class="timeline-phase-desc">Matriz, Validade<br>Certificados</div>
+        </div>
+        <div class="timeline-phase">
+            <div class="timeline-dot" style="background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));">5</div>
+            <div class="timeline-phase-label">Dashboard</div>
+            <div class="timeline-phase-desc">KPIs, Gráficos<br>Alertas</div>
+        </div>
+        <div class="timeline-phase">
+            <div class="timeline-dot" style="background: linear-gradient(135deg, var(--danger-color), #dc2626);">6</div>
+            <div class="timeline-phase-label">Deploy</div>
+            <div class="timeline-phase-desc">Config, Seed<br>Produção</div>
+        </div>
+    </div>
+
+    <div class="alert-box anim-2" style="margin-bottom: 14px;">
+        <i class="fas fa-info-circle"></i>
+        <p><strong>Fases 2 e 3 rodam em paralelo.</strong> Fase 4 depende da 2 (treinamentos precisam de colaboradores/funções). Fase 5 depende de 2+3+4 (precisa de dados). Fase 6 finaliza tudo.</p>
+    </div>
+
+    <!-- Módulos Futuros -->
+    <h4 style="font-family: var(--font-primary); font-weight: 700; font-size: 12px; color: var(--gray-color); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;" class="anim-3">
+        <i class="fas fa-road" style="margin-right: 6px;"></i> Módulos Futuros (pós-MVP)
+    </h4>
+
+    <div class="future-grid anim-4">
+        <div class="future-card">
+            <i class="fas fa-hard-hat"></i>
+            <h5>EPI / DPI</h5>
+            <p>Entrega, controle, substituição e rastreio</p>
+        </div>
+        <div class="future-card">
+            <i class="fas fa-clipboard-check"></i>
+            <h5>Checklists + Inspeções</h5>
+            <p>Formulários de campo customizáveis</p>
+        </div>
+        <div class="future-card">
+            <i class="fas fa-exclamation-circle"></i>
+            <h5>NC + Plano de Ação</h5>
+            <p>Não conformidades com 5W2H integrado</p>
+        </div>
+        <div class="future-card">
+            <i class="fas fa-ambulance"></i>
+            <h5>Acidentes</h5>
+            <p>Registro, investigação e ações corretivas</p>
+        </div>
+    </div>
+
+    <div class="slide-footer">
+        <span>EngMarq Soluções em Engenharia</span>
+        <span>Sistema Integrado de Gestão de SST — Plano Técnico</span>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- SLIDE 14 — CTA FINAL -->
+<!-- ============================== -->
+<div class="slide slide-cta">
+    <div class="cta-icon"><i class="fas fa-rocket"></i></div>
+    <h2 class="cta-title">Próximo Passo: <span>Iniciar Fase 1</span></h2>
+    <p class="cta-subtitle">Fundação do sistema — repositório, autenticação, layout e schema SQL</p>
+    <div class="cta-action"><i class="fas fa-play"></i> Vamos Construir</div>
+
+    <div style="margin-top: 40px; display: flex; gap: 40px;">
+        <span class="cover-meta-item" style="color: rgba(255,255,255,0.4); font-size: 11px;">
+            <i class="fas fa-layer-group" style="color: var(--secondary-color);"></i> 6 fases planejadas
+        </span>
+        <span class="cover-meta-item" style="color: rgba(255,255,255,0.4); font-size: 11px;">
+            <i class="fas fa-cubes" style="color: var(--secondary-color);"></i> 4 módulos no MVP
+        </span>
+        <span class="cover-meta-item" style="color: rgba(255,255,255,0.4); font-size: 11px;">
+            <i class="fas fa-shield-alt" style="color: var(--secondary-color);"></i> Instância por cliente
+        </span>
+        <span class="cover-meta-item" style="color: rgba(255,255,255,0.4); font-size: 11px;">
+            <i class="fas fa-expand-arrows-alt" style="color: var(--secondary-color);"></i> Produto replicável
+        </span>
+    </div>
+</div>
+
+</body>
+</html>
