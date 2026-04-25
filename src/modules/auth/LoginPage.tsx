@@ -1,15 +1,21 @@
-﻿import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/modules/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { ShieldCheck, Eye, EyeOff, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const { session } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (session) navigate('/', { replace: true })
+  }, [session, navigate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -18,10 +24,10 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError('Email ou senha invalidos. Verifique suas credenciais.')
-    } else {
-      navigate('/')
+      setLoading(false)
     }
-    setLoading(false)
+    // Se deu certo, o onAuthStateChange no AuthProvider vai atualizar a sessão
+    // e o ProtectedRoute vai redirecionar automaticamente — não precisa de navigate
   }
 
   return (

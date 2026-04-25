@@ -33,32 +33,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      if (session?.user) {
-        const p = await loadProfile(session.user.id)
-        setProfile(p)
-      }
-      setLoading(false)
-    })
+    // 1. Carrega sessão existente imediatamente (sem await loadProfile aqui)
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // 2. Escuta mudanças (login, logout) - SEM await dentro do callback
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (session?.user) {
-        const p = await loadProfile(session.user.id)
-        setProfile(p)
-      } else {
-        setProfile(null)
-      }
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
+  // Carrega o profile sempre que a sessão mudar (em effect separado para evitar deadlock)
+  useEffect(() => {
+    if (!session?.user) {
+      setProfile(null)
+      return
+    }
+    let cancelled = false
+    loadProfile(session.user.id).then(p => {
+      if (!cancelled) setProfile(p)
+    })
+    return () => { cancelled = true }
+  }, [session?.user?.id])
+
   async function signOut() {
     await supabase.auth.signOut()
-    setProfile(null)
   }
 
   return (

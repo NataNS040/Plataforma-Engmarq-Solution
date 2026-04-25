@@ -5,49 +5,26 @@ interface HeaderProps {
   title: string
 }
 
-const roleLabel: Record<string, string> = {
-  admin: "Administrador",
-  gestor: "Gestor",
-  operacional: "Operacional",
-}
+export function Header({ title: _title }: HeaderProps) {
+  const { profile: _profile } = useAuth()
 
-const roleColors: Record<string, string> = {
-  admin: "bg-red-100 text-red-700",
-  gestor: "bg-blue-100 text-blue-700",
-  operacional: "bg-green-100 text-green-700",
-}
-
-export function Header({ title }: HeaderProps) {
-  const { profile } = useAuth()
   return (
-    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0 shadow-sm">
-      <div>
-        <h1 className="text-lg font-black text-gray-900 leading-tight">{title}</h1>
+    <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
+      <div className="flex items-center gap-3 flex-1 max-w-md">
+        <div className="relative w-full">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar..."
+            className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#1a365d] focus:bg-white transition-all"
+          />
+        </div>
       </div>
       <div className="flex items-center gap-2">
-        <button className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">
-          <Search size={18} />
+        <button className="relative w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+          <Bell size={17} />
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#f5a623] ring-2 ring-white" />
         </button>
-        <button className="relative w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#f5a623] border-2 border-white" />
-        </button>
-        <div className="w-px h-6 bg-gray-200 mx-1" />
-        {profile && (
-          <div className="flex items-center gap-2.5 pl-1">
-            <div className="w-9 h-9 rounded-xl bg-[#1a365d] flex items-center justify-center shadow-sm">
-              <span className="text-xs font-black text-[#f5a623]">
-                {profile.full_name.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-xs font-bold text-gray-800 leading-tight">{profile.full_name}</p>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${roleColors[profile.role]}`}>
-                {roleLabel[profile.role]}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   )

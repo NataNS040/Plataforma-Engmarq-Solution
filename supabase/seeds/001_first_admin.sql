@@ -15,18 +15,21 @@
 INSERT INTO empresas (id, razao_social, cnpj)
 VALUES (
   gen_random_uuid(),
-  'Nome da Empresa Ltda',    -- <ALTERAR> Razão social do cliente
-  '00.000.000/0001-00'       -- <ALTERAR> CNPJ do cliente
+  'EngMarq Solucoes em Engenharia',
+  '12.345.678/0001-99'
 )
 ON CONFLICT DO NOTHING;
 
 -- PASSO 2: Criar o perfil do admin
--- Substitua o UUID abaixo pelo UUID do usuário criado no Auth
+-- ⚠️ ÚNICA COISA QUE VOCÊ PRECISA MUDAR:
+--    1. Vá em Authentication → Users → "Add user"
+--    2. Email: admin@engmarq.com  |  Senha: Admin@123456
+--    3. Copie o UUID gerado e cole no lugar abaixo
 INSERT INTO user_profiles (id, email, full_name, role, empresa_id)
 VALUES (
-  'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',  -- <ALTERAR> UUID do usuário (Authentication → Users)
-  'admin@empresa.com',                      -- <ALTERAR> Email do usuário
-  'Administrador',                          -- <ALTERAR> Nome completo
+  '1e021eea-2970-4345-b652-228b829690d1',
+  'natan@engmarq.com.br',
+  'Administrador',
   'admin',
   (SELECT id FROM empresas ORDER BY created_at DESC LIMIT 1)
 )
