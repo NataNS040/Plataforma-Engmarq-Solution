@@ -25,7 +25,7 @@ const ADMIN_NAV: NavGroup[] = [
     group: "Principal",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/empresas", label: "Empresas", icon: Building2, badge: 24, soon: true },
+      { to: "/empresas", label: "Empresas", icon: Building2, badge: 24 },
       { to: "/colaboradores", label: "Colaboradores", icon: Users },
     ],
   },
@@ -34,8 +34,8 @@ const ADMIN_NAV: NavGroup[] = [
     items: [
       { to: "/treinamentos", label: "Treinamentos", icon: GraduationCap },
       { to: "/documentos", label: "Documentos", icon: FileText },
-      { to: "/exames", label: "Exames", icon: Heart, soon: true },
-      { to: "/relatorios", label: "Relatórios", icon: BarChart3, badge: 3, badgeDanger: true, soon: true },
+      { to: "/exames", label: "Exames", icon: Heart },
+      { to: "/relatorios", label: "Relatórios", icon: BarChart3, badge: 3, badgeDanger: true },
     ],
   },
   {
@@ -59,8 +59,8 @@ const EMPRESA_NAV: NavGroup[] = [
     items: [
       { to: "/treinamentos", label: "Treinamentos NR", icon: GraduationCap },
       { to: "/documentos", label: "Documentos", icon: FileText },
-      { to: "/exames", label: "Exames", icon: Heart, badge: 8, badgeDanger: true, soon: true },
-      { to: "/relatorios", label: "Relatórios", icon: BarChart3, soon: true },
+      { to: "/exames", label: "Exames", icon: Heart, badge: 8, badgeDanger: true },
+      { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
     ],
   },
   {
