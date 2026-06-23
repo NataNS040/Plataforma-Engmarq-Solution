@@ -41,7 +41,7 @@ const ADMIN_NAV: NavGroup[] = [
   {
     group: "Sistema",
     items: [
-      { to: "/configuracoes", label: "Configurações", icon: Settings, soon: true },
+      { to: "/configuracoes", label: "Configurações", icon: Settings },
     ],
   },
 ]
@@ -66,7 +66,7 @@ const EMPRESA_NAV: NavGroup[] = [
   {
     group: "Sistema",
     items: [
-      { to: "/configuracoes", label: "Minha empresa", icon: Building2, soon: true },
+      { to: "/configuracoes", label: "Minha empresa", icon: Building2 },
     ],
   },
 ]

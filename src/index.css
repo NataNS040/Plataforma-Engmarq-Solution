@@ -2623,3 +2623,207 @@ html, body {
   font-size: 11px;
   color: var(--ink-500);
 }
+
+/* ============================================================
+   CONFIGURAÇÕES — tabs navigation
+   ============================================================ */
+.mp-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.mp-tabs::-webkit-scrollbar { display: none; }
+.mp-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: 9px 9px 0 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-500);
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, background .15s;
+}
+.mp-tab:hover { color: var(--ink-900); background: var(--bg-tint-1); }
+.mp-tab.on {
+  color: var(--navy-700, #3730A3);
+  font-weight: 600;
+  border-bottom-color: var(--navy-700, #3730A3);
+  background: transparent;
+}
+
+/* ============================================================
+   CONFIGURAÇÕES — mp-card + field extras
+   ============================================================ */
+.mp-card { }
+.mp-card h3 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0 0 14px;
+}
+.mp-card-tint { background: var(--bg-tint-1); }
+.mp-card-sub {
+  font-size: 12.5px;
+  color: var(--ink-500);
+  line-height: 1.5;
+}
+.mp-card-foot {
+  font-size: 11.5px;
+  color: var(--ink-400);
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.mp-input-static {
+  background: var(--bg-tint-1) !important;
+  color: var(--ink-700);
+  cursor: default;
+  pointer-events: none;
+}
+.mp-hint {
+  font-size: 11.5px;
+  color: var(--ink-500);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   CONFIGURAÇÕES — mp-status-grid + mp-mini
+   ============================================================ */
+.mp-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.mp-mini-l {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-400);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 3px;
+}
+.mp-mini-v {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--ink-900);
+}
+
+/* ============================================================
+   CONFIGURAÇÕES — permissões list
+   ============================================================ */
+.mp-perm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.mp-perm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.mp-perm-row:last-child { border-bottom: none; }
+.mp-perm-l { color: var(--ink-700); }
+.mp-perm-flag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.mp-perm-flag.on { color: var(--green-600); }
+.mp-perm-flag.off { color: var(--ink-400); }
+
+/* ============================================================
+   CONFIGURAÇÕES — cfg-role-pill
+   ============================================================ */
+.cfg-role-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--navy-50, #EEF2FF);
+  color: var(--navy-700, #3730A3);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   CONFIGURAÇÕES — cfg-grid (integration cards)
+   ============================================================ */
+.cfg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ============================================================
+   CONFIGURAÇÕES — plan card
+   ============================================================ */
+.cfg-plan {
+  background: linear-gradient(135deg, var(--navy-900, #0B1426) 0%, var(--navy-800, #1E3A5F) 100%);
+  color: #fff;
+  border: none;
+}
+.cfg-plan h3 { color: #fff; }
+.cfg-plan-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,.55);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 4px;
+}
+.cfg-plan-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.cfg-plan-sub {
+  font-size: 12.5px;
+  color: rgba(255,255,255,.65);
+}
+.cfg-plan-price {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+.cfg-plan-price span {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,.65);
+}
+.cfg-plan .tbtn {
+  background: rgba(255,255,255,.15);
+  border-color: rgba(255,255,255,.25);
+  color: #fff;
+}
+.cfg-plan .tbtn:hover { background: rgba(255,255,255,.25); }
+.cfg-plan .tbtn.primary {
+  background: var(--orange-500);
+  border-color: var(--orange-500);
+  color: #fff;
+}
+.cfg-plan .mp-status-grid .mp-mini-l { color: rgba(255,255,255,.5); }
+.cfg-plan .mp-status-grid .mp-mini-v { color: #fff; }

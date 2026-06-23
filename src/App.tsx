@@ -10,6 +10,7 @@ import TreinamentosPage from '@/modules/treinamentos/TreinamentosPage'
 import ExamesPage from '@/modules/exames/ExamesPage'
 import RelatoriosPage from '@/modules/relatorios/RelatoriosPage'
 import EmpresasPage from '@/modules/empresas/EmpresasPage'
+import ConfiguracoesPage from '@/modules/configuracoes/ConfiguracoesPage'
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="exames" element={<ExamesPage />} />
             <Route path="relatorios" element={<RelatoriosPage />} />
             <Route path="empresas" element={<EmpresasPage />} />
+            <Route path="configuracoes" element={<ConfiguracoesPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
