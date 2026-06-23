@@ -1,151 +1,150 @@
-﻿import { NavLink, useLocation } from "react-router-dom"
+import { NavLink } from "react-router-dom"
 import { useAuth } from "@/modules/auth/AuthProvider"
-import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard, Users, FolderOpen, GraduationCap,
-  ShieldCheck, ClipboardCheck, BarChart3, FileCheck,
-  Settings, ChevronDown, ChevronUp, LogOut, Crown,
+  LayoutDashboard, Building2, Users, GraduationCap,
+  FileText, Heart, BarChart3, Settings, LogOut, ShieldCheck,
 } from "lucide-react"
-import { useState } from "react"
 
-const mainNav = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard", exact: true },
-  { to: "/colaboradores", icon: Users, label: "Colaboradores" },
-  { to: "/documentos", icon: FolderOpen, label: "Documentos" },
-  { to: "/treinamentos", icon: GraduationCap, label: "Treinamentos" },
-]
-
-const gestaoNav = [
-  { to: "/auditorias", icon: ClipboardCheck, label: "Auditorias", soon: true },
-  { to: "/relatorios", icon: BarChart3, label: "Relatorios", soon: true },
-  { to: "/conformidade", icon: FileCheck, label: "Conformidade", soon: true },
-]
-
-const roleColors: Record<string, string> = {
-  admin: "bg-red-100 text-red-700",
-  gestor: "bg-blue-100 text-blue-700",
-  operacional: "bg-emerald-100 text-emerald-700",
+type NavItem = {
+  to: string
+  label: string
+  icon: React.ElementType
+  exact?: boolean
+  badge?: number
+  badgeDanger?: boolean
+  soon?: boolean
 }
 
-const roleLabel: Record<string, string> = {
-  admin: "Administrador",
-  gestor: "Gestor",
-  operacional: "Operacional",
+type NavGroup = {
+  group: string
+  items: NavItem[]
 }
+
+const ADMIN_NAV: NavGroup[] = [
+  {
+    group: "Principal",
+    items: [
+      { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/empresas", label: "Empresas", icon: Building2, badge: 24, soon: true },
+      { to: "/colaboradores", label: "Colaboradores", icon: Users },
+    ],
+  },
+  {
+    group: "Conformidade",
+    items: [
+      { to: "/treinamentos", label: "Treinamentos", icon: GraduationCap },
+      { to: "/documentos", label: "Documentos", icon: FileText },
+      { to: "/exames", label: "Exames", icon: Heart, soon: true },
+      { to: "/relatorios", label: "Relatórios", icon: BarChart3, badge: 3, badgeDanger: true, soon: true },
+    ],
+  },
+  {
+    group: "Sistema",
+    items: [
+      { to: "/configuracoes", label: "Configurações", icon: Settings, soon: true },
+    ],
+  },
+]
+
+const EMPRESA_NAV: NavGroup[] = [
+  {
+    group: "Principal",
+    items: [
+      { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/colaboradores", label: "Colaboradores", icon: Users, badge: 247 },
+    ],
+  },
+  {
+    group: "Conformidade",
+    items: [
+      { to: "/treinamentos", label: "Treinamentos NR", icon: GraduationCap },
+      { to: "/documentos", label: "Documentos", icon: FileText },
+      { to: "/exames", label: "Exames", icon: Heart, badge: 8, badgeDanger: true, soon: true },
+      { to: "/relatorios", label: "Relatórios", icon: BarChart3, soon: true },
+    ],
+  },
+  {
+    group: "Sistema",
+    items: [
+      { to: "/configuracoes", label: "Minha empresa", icon: Building2, soon: true },
+    ],
+  },
+]
 
 export function Sidebar() {
   const { profile, signOut } = useAuth()
-  const location = useLocation()
-  const [configOpen, setConfigOpen] = useState(false)
 
-  const renderNav = (items: typeof mainNav, isExact = false) =>
-    items.map(({ to, icon: Icon, label, ...rest }) => {
-      const exact = (rest as any).exact ?? isExact
-      const soon = (rest as any).soon
-      const active = exact ? location.pathname === to : location.pathname.startsWith(to)
-      return (
-        <NavLink
-          key={to}
-          to={soon ? "#" : to}
-          onClick={soon ? (e) => e.preventDefault() : undefined}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-            active
-              ? "bg-[#1a365d] text-white shadow-sm"
-              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-            soon && "opacity-50 cursor-not-allowed hover:bg-transparent"
-          )}
-        >
-          <Icon size={17} className="flex-shrink-0" />
-          <span className="flex-1">{label}</span>
-          {soon && <span className="text-[9px] font-bold bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded">EM BREVE</span>}
-        </NavLink>
-      )
-    })
+  const navGroups = profile?.role === "admin" ? ADMIN_NAV : EMPRESA_NAV
+
+  const initials = profile?.full_name
+    ? profile.full_name.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()
+    : "?"
+  const roleLabel = profile?.role === "admin" ? "EngMarq · Admin" : "Empresa"
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen flex-shrink-0">
-      {/* Logo */}
-      <div className="px-6 py-5 flex items-center gap-2.5 border-b border-gray-100">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1a365d] to-[#0f2744] flex items-center justify-center shadow-md">
-          <ShieldCheck size={19} className="text-[#f5a623]" strokeWidth={2.5} />
+    <aside className="sidebar">
+      {/* Brand */}
+      <div className="sb-brand">
+        <div className="brand-mark">
+          <ShieldCheck size={20} color="#0B1426" strokeWidth={2.5} />
         </div>
-        <div className="leading-tight">
-          <p className="font-black text-base text-gray-900">EngMarq <span className="text-[#f5a623]">SST</span></p>
+        <div>
+          <div className="brand-name">EngMarq Vision</div>
+          <div className="brand-tag">Gestão SST</div>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        <div>
-          <p className="px-3 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Menu</p>
-          <div className="space-y-0.5">{renderNav(mainNav)}</div>
-        </div>
-
-        <div>
-          <p className="px-3 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gestao</p>
-          <div className="space-y-0.5">{renderNav(gestaoNav)}</div>
-        </div>
-
-        {profile?.role === "admin" && (
-          <div>
-            <button
-              onClick={() => setConfigOpen(o => !o)}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-            >
-              <Settings size={17} />
-              <span className="flex-1 text-left">Configuracoes</span>
-              {configOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-            </button>
-            {configOpen && (
-              <div className="ml-4 mt-1 pl-4 border-l border-gray-200 space-y-0.5">
-                <button className="w-full text-left px-3 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100">Empresa</button>
-                <button className="w-full text-left px-3 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100">Usuarios</button>
-                <button className="w-full text-left px-3 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100">Setores e Funcoes</button>
-              </div>
-            )}
+      {/* Navigation */}
+      <nav className="sb-nav">
+        {navGroups.map(({ group, items }) => (
+          <div key={group}>
+            <div className="sb-section-label">{group}</div>
+            {items.map(({ to, label, icon: Icon, exact, badge, badgeDanger, soon }) => (
+              <NavLink
+                key={to}
+                to={soon ? "#" : to}
+                end={exact}
+                onClick={soon ? (e) => e.preventDefault() : undefined}
+                className={({ isActive }) =>
+                  "nav-item" + (isActive && !soon ? " active" : "")
+                }
+              >
+                <Icon size={16} />
+                <span style={{ flex: 1 }}>{label}</span>
+                {badge !== undefined && (
+                  <span className={"nav-badge" + (badgeDanger ? " danger" : "")}>
+                    {badge}
+                  </span>
+                )}
+              </NavLink>
+            ))}
           </div>
-        )}
+        ))}
       </nav>
 
-      {/* Upgrade banner */}
-      <div className="px-3 pb-3">
-        <div className="bg-gradient-to-br from-[#1a365d] to-[#0f2744] rounded-xl p-3 text-center shadow-md">
-          <Crown size={18} className="text-[#f5a623] mx-auto mb-1.5" />
-          <p className="text-xs font-bold text-white mb-1">Plano Profissional</p>
-          <p className="text-[10px] text-white/60 mb-2">Desbloqueie todos os modulos</p>
-          <button className="w-full bg-[#f5a623] hover:bg-[#e09010] text-[#0f2744] text-xs font-bold py-1.5 rounded-lg transition-colors">
-            Saiba mais
-          </button>
-        </div>
+      {/* Footer CTA */}
+      <div className="sb-footer">
+        <h4>{profile?.role === "admin" ? "Auditoria 2026" : "Suporte EngMarq"}</h4>
+        <p>
+          {profile?.role === "admin"
+            ? "3 empresas precisam de atenção esta semana."
+            : "Tire dúvidas com os profissionais de SST."}
+        </p>
+        <button className="cta">
+          {profile?.role === "admin" ? "Ver alertas" : "Falar com SST"}
+        </button>
       </div>
 
-      {/* User card */}
-      <div className="border-t border-gray-100 p-3">
-        <div className="flex items-center gap-3 px-2 py-2">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1a365d] to-[#0f2744] flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-black text-[#f5a623]">
-              {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-gray-900 truncate">{profile?.full_name ?? "Usuario"}</p>
-            <p className="text-[10px] text-gray-500 truncate">{profile?.email}</p>
-          </div>
-          <button
-            onClick={signOut}
-            title="Sair"
-            className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-          >
-            <LogOut size={15} />
-          </button>
+      {/* User strip */}
+      <div className="sb-user">
+        <div className="sb-ava">{initials}</div>
+        <div className="sb-user-info">
+          <div className="sb-user-name">{profile?.full_name ?? "Usuário"}</div>
+          <div className="sb-user-role">{roleLabel}</div>
         </div>
-        {profile && (
-          <span className={cn("ml-12 inline-block text-[9px] font-bold px-2 py-0.5 rounded-full", roleColors[profile.role])}>
-            {roleLabel[profile.role]}
-          </span>
-        )}
-        <p className="text-center text-[9px] text-gray-300 mt-2">v0.1.0</p>
+        <button className="sb-logout" onClick={signOut} title="Sair">
+          <LogOut size={15} />
+        </button>
       </div>
     </aside>
   )
