@@ -13,10 +13,41 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+// ---------------------------------------------------------------------------
+// Dev bypass — apenas em `npm run dev` (import.meta.env.DEV = false em build)
+// Troque o `role` para 'gestor' ou 'operacional' para testar outras views.
+// ---------------------------------------------------------------------------
+const DEV_MODE = import.meta.env.DEV
+
+const DEV_PROFILE: UserProfile = {
+  id: 'dev-0000-0000-0000-0000',
+  email: 'admin@engmarq.com.br',
+  full_name: 'Dev Admin',
+  role: 'admin',
+  empresa_id: 'dev-empresa-0000',
+  active: true,
+  created_at: new Date().toISOString(),
+}
+
+const DEV_SESSION = {
+  access_token: 'dev-token',
+  token_type: 'bearer',
+  user: {
+    id: DEV_PROFILE.id,
+    email: DEV_PROFILE.email,
+    app_metadata: {},
+    user_metadata: {},
+    aud: 'authenticated',
+    created_at: DEV_PROFILE.created_at,
+  },
+} as unknown as Session
+
+// ---------------------------------------------------------------------------
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [session, setSession] = useState<Session | null>(DEV_MODE ? DEV_SESSION : null)
+  const [profile, setProfile] = useState<UserProfile | null>(DEV_MODE ? DEV_PROFILE : null)
+  const [loading, setLoading] = useState(!DEV_MODE)
 
   async function loadProfile(userId: string) {
     const { data, error } = await supabase
@@ -33,7 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // 1. Carrega sessão existente imediatamente (sem await loadProfile aqui)
+    if (DEV_MODE) return
+
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         setSession(session)
@@ -41,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => setLoading(false))
 
-    // 2. Escuta mudanças (login, logout) - SEM await dentro do callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
@@ -49,8 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Carrega o profile sempre que a sessão mudar (em effect separado para evitar deadlock)
   useEffect(() => {
+    if (DEV_MODE) return
+
     if (!session?.user) {
       setProfile(null)
       return
@@ -63,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session?.user?.id])
 
   async function signOut() {
+    if (DEV_MODE) return
     await supabase.auth.signOut()
   }
 

@@ -1403,3 +1403,272 @@ html, body {
   min-width: 24px;
   text-align: right;
 }
+
+/* ---- Card — alias de .glass sem inset shadow ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  box-shadow: var(--glass-shadow);
+}
+
+/* ---- Status chip extra ---- */
+.chip.neutral { background: var(--bg); color: var(--ink-400); }
+
+/* ---- Botão ativo (paginação) ---- */
+.tbtn.active {
+  background: var(--navy-700);
+  border-color: var(--navy-700);
+  color: white;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  padding: 24px;
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-2xl);
+  width: 100%;
+  max-width: 760px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px -12px rgba(15, 23, 42, 0.30), 0 8px 20px -6px rgba(15, 23, 42, 0.15);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.modal-head h2 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink-900);
+  letter-spacing: -0.3px;
+}
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   NR STRIP — chips de saúde por norma
+   ============================================================ */
+.nr-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.nr-chip {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.nr-chip:hover { border-color: var(--border-strong); background: var(--surface); }
+.nr-chip.active {
+  border-color: var(--navy-700);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(26, 41, 66, 0.08);
+}
+.nr-chip-bar {
+  height: 5px;
+  background: var(--border);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  display: flex;
+  margin-top: 8px;
+}
+.nr-chip-bar > div { height: 100%; }
+.nr-chip-alert { font-size: 10.5px; font-weight: 600; color: var(--red-500); margin-top: 5px; }
+
+/* ============================================================
+   NR RANKING — painel lateral
+   ============================================================ */
+.nr-rank-row {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+}
+.nr-rank-row:hover { border-color: var(--border-strong); background: var(--surface); }
+.nr-rank-row.active { border-color: var(--navy-700); background: var(--surface); }
+
+/* ============================================================
+   MATRIX TABLE — coluna em destaque
+   ============================================================ */
+.col-active { background: rgba(26, 41, 66, 0.03) !important; }
+
+/* ============================================================
+   PROFILE MODAL
+   ============================================================ */
+.prof-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg);
+  border-radius: var(--r-lg);
+  flex-wrap: wrap;
+}
+.prof-hero .avb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+}
+.prof-hero h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink-900);
+  letter-spacing: -0.2px;
+}
+.prof-hero .meta {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--ink-500);
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+.prof-hero .meta span { display: flex; align-items: center; gap: 4px; }
+.prof-hero .right-stat { margin-left: auto; text-align: right; }
+.prof-hero .right-stat .v {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ink-900);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.prof-hero .right-stat .l { font-size: 11px; color: var(--ink-500); margin-top: 3px; }
+
+.prof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.prof-section h4 {
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-400);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+.prof-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.prof-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.prof-row:last-child { border-bottom: none; }
+.prof-row .lbl { font-size: 12.5px; color: var(--ink-500); }
+.prof-row .val { font-size: 12.5px; font-weight: 600; color: var(--ink-900); }
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+}
+.f-lbl { font-size: 10.5px; font-weight: 700; color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.f-val { font-size: 13px; font-weight: 600; color: var(--ink-900); margin-top: 3px; }
+
+/* ============================================================
+   MODAL FORM FIELDS
+   ============================================================ */
+.mp-form { display: flex; flex-direction: column; gap: 4px; }
+.mp-field { display: flex; flex-direction: column; gap: 5px; }
+.mp-field label { font-size: 12px; font-weight: 600; color: var(--ink-700); }
+.mp-input {
+  height: 36px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--ink-900);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.mp-input:focus { border-color: var(--navy-600); }
+
+/* ============================================================
+   NR TOGGLE (switch de aplicabilidade)
+   ============================================================ */
+.nr-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: var(--r-full);
+  background: var(--ink-300);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+.nr-toggle.on { background: var(--green-500); }
+.nr-toggle .knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.20);
+}
+.nr-toggle.on .knob { transform: translateX(16px); }
