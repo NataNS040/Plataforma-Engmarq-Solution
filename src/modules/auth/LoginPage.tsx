@@ -1,33 +1,54 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
+import { handleSupabaseError } from '@/lib/errors'
 import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, HardHat } from 'lucide-react'
+
+const schema = z.object({
+  email: z.string().min(1, 'Informe o e-mail').email('E-mail inválido'),
+  password: z.string().min(6, 'A senha deve ter ao menos 6 caracteres'),
+})
+
+type FormValues = z.infer<typeof schema>
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', password: '' },
+  })
 
   useEffect(() => {
     if (session) navigate('/', { replace: true })
   }, [session, navigate])
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+  async function onSubmit(values: FormValues) {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: values.email,
+      password: values.password,
+    })
     if (error) {
-      setError('Email ou senha inválidos. Verifique suas credenciais.')
-      setLoading(false)
+      const app = handleSupabaseError(error, 'Não foi possível autenticar.')
+      const msg = error.message?.toLowerCase().includes('invalid')
+        ? 'E-mail ou senha inválidos.'
+        : app.message
+      setError('password', { message: msg })
+      toast.error(msg)
     }
-    // Se autenticou com sucesso, o AuthProvider detecta a sessão
-    // e o ProtectedRoute redireciona automaticamente para o dashboard
+    // sucesso: AuthProvider detecta sessão, useEffect redireciona
   }
 
   return (
@@ -111,7 +132,7 @@ export default function LoginPage() {
             <h1>Acessar plataforma</h1>
             <p className="sub">Entre com suas credenciais para acessar a plataforma.</p>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
               {/* Campo: E-mail */}
               <div className="field">
@@ -121,13 +142,17 @@ export default function LoginPage() {
                   <input
                     id="login-email"
                     type="email"
-                    value={email}
                     placeholder="seu@email.com.br"
                     autoComplete="email"
-                    required
-                    onChange={e => setEmail(e.target.value)}
+                    aria-invalid={!!errors.email}
+                    {...register('email')}
                   />
                 </div>
+                {errors.email && (
+                  <span className="field-error" role="alert" style={{ color: 'var(--red-600, #dc2626)', fontSize: 12, marginTop: 4, display: 'block' }}>
+                    {errors.email.message}
+                  </span>
+                )}
               </div>
 
               {/* Campo: Senha */}
@@ -138,10 +163,9 @@ export default function LoginPage() {
                   <input
                     id="login-password"
                     type={showPassword ? 'text' : 'password'}
-                    value={password}
                     autoComplete="current-password"
-                    required
-                    onChange={e => setPassword(e.target.value)}
+                    aria-invalid={!!errors.password}
+                    {...register('password')}
                   />
                   <button
                     type="button"
@@ -152,6 +176,11 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
+                {errors.password && (
+                  <span className="field-error" role="alert" style={{ color: 'var(--red-600, #dc2626)', fontSize: 12, marginTop: 4, display: 'block' }}>
+                    {errors.password.message}
+                  </span>
+                )}
               </div>
 
               {/* Manter conectado + Esqueci senha */}
@@ -163,21 +192,13 @@ export default function LoginPage() {
                 <a href="#">Esqueci minha senha</a>
               </div>
 
-              {/* Mensagem de erro (só aparece se houver erro) */}
-              {error && (
-                <div className="login-error">
-                  <span className="err-icon">!</span>
-                  <span>{error}</span>
-                </div>
-              )}
-
               {/* Botão de submit */}
-              <button type="submit" className="btn-primary orange" disabled={loading}>
-                {loading
+              <button type="submit" className="btn-primary orange" disabled={isSubmitting}>
+                {isSubmitting
                   ? <Loader2 size={15} className="btn-spinner" />
                   : null}
-                {loading ? 'Entrando...' : 'Entrar'}
-                {!loading && <ArrowRight size={15} />}
+                {isSubmitting ? 'Entrando...' : 'Entrar'}
+                {!isSubmitting && <ArrowRight size={15} />}
               </button>
 
             </form>

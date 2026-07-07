@@ -4,6 +4,8 @@ import {
   Eye, Trash2, X, Search, Stethoscope, Filter, MapPin,
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/AuthProvider'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
+import { useExames } from '@/hooks/queries/useExames'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -58,17 +60,7 @@ const RESULTADOS = ['Apto', 'Apto com restrição', 'Inapto']
 const RES_KEY: Record<string, AsoStatusKey> = { 'Apto': 'ok', 'Apto com restrição': 'warn', 'Inapto': 'crit' }
 
 interface AsoSeed { id: string; colab: string; tipo: string; realizado: string; validade: string; resultado: string }
-const ASO_SEED: AsoSeed[] = [
-  { id:'a1', colab:'Carlos M. Soares',   tipo:'Periódico',           realizado:'2025-06-12', validade:'2026-06-12', resultado:'Apto com restrição' },
-  { id:'a2', colab:'Pedro H. Almeida',   tipo:'Periódico',           realizado:'2024-05-20', validade:'2026-05-20', resultado:'Apto' },
-  { id:'a3', colab:'João V. Mendes',     tipo:'Mudança de risco',    realizado:'2025-11-08', validade:'2026-11-08', resultado:'Apto' },
-  { id:'a4', colab:'Renata Camargo',     tipo:'Periódico',           realizado:'2025-12-01', validade:'2026-12-01', resultado:'Apto' },
-  { id:'a5', colab:'Marina S. Oliveira', tipo:'Periódico',           realizado:'2024-04-18', validade:'2026-04-18', resultado:'Apto' },
-  { id:'a6', colab:'Tiago Ferreira',     tipo:'Admissional',         realizado:'2026-02-10', validade:'2027-02-10', resultado:'Apto' },
-  { id:'a7', colab:'Juliana Prado',      tipo:'Periódico',           realizado:'2025-06-25', validade:'2026-06-25', resultado:'Apto' },
-  { id:'a8', colab:'Beatriz Nunes',      tipo:'Retorno ao trabalho', realizado:'2025-09-30', validade:'2026-09-30', resultado:'Apto' },
-  { id:'a9', colab:'Carlos M. Soares',   tipo:'Mudança de risco',    realizado:'2024-03-12', validade:'2026-05-30', resultado:'Inapto' },
-]
+// ASO_SEED removido — dados vêm do Supabase via useExames()
 
 const COMPLEMENTARES = [
   { exame: 'Audiometria',        risco: 'Ruído ocupacional',    previstos: 84, realizados: 76 },
@@ -347,7 +339,7 @@ function ConfirmDelete({ row, onCancel, onConfirm }: { row: AsoSeed; onCancel: (
 // ---------------------------------------------------------------------------
 // AgendaCalendar
 // ---------------------------------------------------------------------------
-function AgendaCalendar({ agenda, onNew }: { agenda: AgendaItem[]; onNew: () => void }) {
+function AgendaCalendar({ agenda, onNew: _onNew }: { agenda: AgendaItem[]; onNew: () => void }) {
   const year = 2026, month = 5 // junho
   const today = 6
   const startDow = new Date(year, month, 1).getDay()
@@ -425,14 +417,35 @@ function AgendaCalendar({ agenda, onNew }: { agenda: AgendaItem[]; onNew: () => 
 // ExamesEmpresa
 // ---------------------------------------------------------------------------
 function ExamesEmpresa() {
-  const [asos, setAsos] = useState(ASO_SEED)
-  const [agenda] = useState(AGENDA_SEED)
+  const { empresaId } = useCurrentProfile()
+  const asosQuery = useExames(empresaId)
+  const asosBanco = asosQuery.data ?? []
+
+  // Adaptar dados do banco para o shape que a UI usa
+  const asos = useMemo(() => asosBanco.map(a => ({
+    id: a.id,
+    colab: a.colaborador?.nome ?? a.titulo,
+    tipo: a.subtipo_exame
+      ? ({
+          admissional:     'Admissional',
+          periodico:       'Periódico',
+          mudanca_risco:   'Mudança de risco',
+          retorno_trabalho:'Retorno ao trabalho',
+          demissional:     'Demissional',
+        }[a.subtipo_exame] ?? 'Periódico')
+      : 'Periódico',
+    realizado: a.emissao ?? '',
+    validade:  a.vencimento ?? '',
+    resultado: a.observacoes ?? 'Apto',
+  })), [asosBanco])
+
+  const agenda = AGENDA_SEED
   const [fTipo, setFTipo] = useState('Todos')
   const [fStatus, setFStatus] = useState('all')
   const [q, setQ] = useState('')
   const [newOpen, setNewOpen] = useState(false)
   const [schedOpen, setSchedOpen] = useState(false)
-  const [confirmDel, setConfirmDel] = useState<AsoSeed | null>(null)
+  const [confirmDel, setConfirmDel] = useState<typeof asos[number] | null>(null)
   const [prefill, setPrefill] = useState<string | null>(null)
 
   const rows = useMemo(() => asos.map(a => ({ ...a, ...byName(a.colab), st: asoStatus(a.validade) })), [asos])
@@ -452,7 +465,7 @@ function ExamesEmpresa() {
     [rows, fTipo, fStatus, q]
   )
 
-  const doDelete = (row: AsoSeed) => { setAsos(s => s.filter(x => x.id !== row.id)); setConfirmDel(null) }
+  const doDelete = (_row: typeof asos[number]) => { setConfirmDel(null) }
   const openSchedFor = (nome: string) => { setPrefill(nome); setSchedOpen(true) }
 
   const pcmsoAno = (PCMSO_DOC.emissao ?? '').slice(0, 4) || '2026'
@@ -662,7 +675,7 @@ function ExamesEmpresa() {
         </div>
       </div>
 
-      {newOpen && <NewAsoModal onClose={() => setNewOpen(false)} onSave={a => { setAsos(s => [a, ...s]); setNewOpen(false) }}/>}
+      {newOpen && <NewAsoModal onClose={() => setNewOpen(false)} onSave={() => setNewOpen(false)}/>}
       {schedOpen && <ScheduleModal prefill={prefill} onClose={() => setSchedOpen(false)}/>}
       {confirmDel && <ConfirmDelete row={confirmDel} onCancel={() => setConfirmDel(null)} onConfirm={() => doDelete(confirmDel)}/>}
     </div>

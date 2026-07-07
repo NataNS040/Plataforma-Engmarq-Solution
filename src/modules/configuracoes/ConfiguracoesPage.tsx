@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import {
   Building2, Users, Shield, LayoutGrid, Star, MapPin,
   Plus, Download, Pencil, CheckCircle2, Clock, MoreHorizontal,
-  Activity, FileText, Calendar, Mail, HelpCircle,
+  Activity, FileText, Calendar, Mail, HelpCircle, Layers,
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/AuthProvider'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
+import { CatalogosTab } from './CatalogosTab'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -195,6 +197,7 @@ const ENG_INVOICES = [
 const ADMIN_TABS = [
   { id:'conta',       label:'Conta',               icon:Building2 },
   { id:'equipe',      label:'Equipe',              icon:Users },
+  { id:'catalogos',   label:'Catálogos',           icon:Layers },
   { id:'papeis',      label:'Papéis e permissões', icon:Shield },
   { id:'integracoes', label:'Integrações',         icon:LayoutGrid },
   { id:'plano',       label:'Plano e faturamento', icon:Star },
@@ -455,6 +458,7 @@ const EMP_INTEGRATIONS: IntCardProps[] = [
 const EMP_TABS = [
   { id:'dados',       label:'Dados da empresa',      icon:Building2 },
   { id:'unidades',    label:'Unidades',              icon:MapPin },
+  { id:'catalogos',   label:'Catálogos',             icon:Layers },
   { id:'equipe',      label:'Equipe e acessos',      icon:Users },
   { id:'contrato',    label:'Contrato EngMarq',      icon:Shield },
   { id:'integracoes', label:'eSocial e integrações', icon:LayoutGrid },
@@ -676,6 +680,7 @@ function MinhaEmpresa({ tab, editing }: { tab: string; editing: boolean }) {
 // ---------------------------------------------------------------------------
 export default function ConfiguracoesPage() {
   const { profile } = useAuth()
+  const { empresaId } = useCurrentProfile()
   const isAdmin = profile?.role === 'admin'
   const tabs = isAdmin ? ADMIN_TABS : EMP_TABS
   const [tab, setTab] = useState(tabs[0].id)
@@ -688,6 +693,7 @@ export default function ConfiguracoesPage() {
 
   const dataTab = isAdmin ? 'conta' : 'dados'
   const onDataTab = tab === dataTab
+  const onCatalogosTab = tab === 'catalogos'
 
   return (
     <div className="content">
@@ -713,9 +719,11 @@ export default function ConfiguracoesPage() {
 
       <Tabs tabs={tabs} tab={tab} setTab={setTab}/>
 
-      {isAdmin
-        ? <ConfiguracoesAdmin tab={tab} editing={editing}/>
-        : <MinhaEmpresa tab={tab} editing={editing}/>}
+      {onCatalogosTab
+        ? <CatalogosTab empresaId={empresaId} />
+        : isAdmin
+          ? <ConfiguracoesAdmin tab={tab} editing={editing}/>
+          : <MinhaEmpresa tab={tab} editing={editing}/>}
     </div>
   )
 }

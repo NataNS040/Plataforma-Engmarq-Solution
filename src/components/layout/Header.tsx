@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/modules/auth/AuthProvider"
+import { useCurrentProfile } from "@/hooks/useCurrentProfile"
+import { useDashboardAlertas } from "@/hooks/queries/useDashboard"
 import {
   Search, Bell, HelpCircle, User, Settings,
   Activity, ShieldCheck, ChevronRight, LogOut,
@@ -33,7 +35,7 @@ const NOTIFS_EMPRESA: Notification[] = [
 ]
 
 function useClickOutside<T extends HTMLElement>(
-  ref: React.RefObject<T>,
+  ref: React.RefObject<T | null>,
   onClose: () => void
 ) {
   useEffect(() => {
@@ -54,7 +56,12 @@ function useClickOutside<T extends HTMLElement>(
 
 export function Header() {
   const { profile, signOut } = useAuth()
+  const { empresaId, isAdmin } = useCurrentProfile()
   const navigate = useNavigate()
+
+  // Alertas reais do banco como notificações
+  const alertasQuery = useDashboardAlertas(isAdmin ? 'all' : empresaId, 5)
+  const alertasReais = alertasQuery.data ?? []
 
   const [openNotif, setOpenNotif] = useState(false)
   const [openProfile, setOpenProfile] = useState(false)
@@ -64,8 +71,22 @@ export function Header() {
   const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setNotifs(profile?.role === "admin" ? NOTIFS_ADMIN : NOTIFS_EMPRESA)
-  }, [profile?.role])
+    if (alertasReais.length > 0) {
+      setNotifs(alertasReais.map((a, i) => ({
+        id: i + 1,
+        tone: a.status === 'vencido' ? 'crit' : 'warn',
+        title: a.nome_envolvido
+          ? `${a.nome_envolvido} — ${a.titulo}`
+          : a.titulo,
+        meta: a.vencimento
+          ? `vence ${new Date(a.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}`
+          : '',
+        unread: true,
+      })))
+    } else {
+      setNotifs(profile?.role === "admin" ? NOTIFS_ADMIN : NOTIFS_EMPRESA)
+    }
+  }, [alertasReais.length, profile?.role])
 
   useClickOutside(notifRef, () => setOpenNotif(false))
   useClickOutside(profileRef, () => setOpenProfile(false))

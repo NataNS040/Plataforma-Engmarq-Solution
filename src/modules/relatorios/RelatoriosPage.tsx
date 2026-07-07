@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   BarChart3, Download, FileText, Calendar, TrendingUp,
-  TrendingDown, AlertTriangle, CheckCircle2, Users,
+  TrendingDown, AlertTriangle,
   GraduationCap, Heart, Shield, ChevronDown, Eye,
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/AuthProvider'

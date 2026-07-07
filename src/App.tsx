@@ -32,7 +32,14 @@ export default function App() {
             <Route path="treinamentos" element={<TreinamentosPage />} />
             <Route path="exames" element={<ExamesPage />} />
             <Route path="relatorios" element={<RelatoriosPage />} />
-            <Route path="empresas" element={<EmpresasPage />} />
+            <Route
+              path="empresas"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <EmpresasPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="configuracoes" element={<ConfiguracoesPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

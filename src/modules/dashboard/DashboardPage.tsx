@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { useAuth } from "@/modules/auth/AuthProvider"
+import { useCurrentProfile } from "@/hooks/useCurrentProfile"
+import { useDashboardKpis } from "@/hooks/queries/useDashboard"
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, ResponsiveContainer, PieChart, Pie, Cell,
@@ -73,6 +75,8 @@ const EMPRESA_COLORS = ["#1F2A44","#10B981","#3B82F6","#8B5CF6","#F59E0B"]
 
 function DashboardAdmin() {
   const [range, setRange] = useState("12m")
+  const kpisQuery = useDashboardKpis('all')
+  const kpis = kpisQuery.data
 
   return (
     <div className="content">
@@ -98,10 +102,9 @@ function DashboardAdmin() {
             <span>Empresas ativas</span>
             <span className="kpi-ic blue"><Building2 size={15} /></span>
           </div>
-          <div className="kpi-value">24</div>
+          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-delta up"><TrendingUp size={11} /> +2 este mês</span>
-            <span className="kpi-foot">vs. jan</span>
+            <span className="kpi-foot">cadastradas</span>
           </div>
         </div>
 
@@ -110,10 +113,9 @@ function DashboardAdmin() {
             <span>Colaboradores monitorados</span>
             <span className="kpi-ic violet"><Users size={15} /></span>
           </div>
-          <div className="kpi-value">5.847</div>
+          <div className="kpi-value">{kpis ? kpis.totalColaboradores.toLocaleString('pt-BR') : '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-delta up"><TrendingUp size={11} /> +312</span>
-            <span className="kpi-foot">último mês</span>
+            <span className="kpi-foot">ativos</span>
           </div>
         </div>
 
@@ -122,9 +124,8 @@ function DashboardAdmin() {
             <span>Compliance médio</span>
             <span className="kpi-ic green"><ShieldCheck size={15} /></span>
           </div>
-          <div className="kpi-value">94,2%</div>
+          <div className="kpi-value">{kpis ? `${kpis.compliancePct}%` : '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-delta up"><TrendingUp size={11} /> +1,6 p.p.</span>
             <span className="kpi-foot">meta 95%</span>
           </div>
         </div>
@@ -134,10 +135,11 @@ function DashboardAdmin() {
             <span>Alertas críticos</span>
             <span className="kpi-ic red"><AlertTriangle size={15} /></span>
           </div>
-          <div className="kpi-value" style={{ color: "var(--red-500)" }}>12</div>
+          <div className="kpi-value" style={{ color: (kpis?.docsVencidos ?? 0) + (kpis?.treinamentosVencidos ?? 0) > 0 ? "var(--red-500)" : undefined }}>
+            {kpis ? kpis.docsVencidos + kpis.treinamentosVencidos : '—'}
+          </div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-delta down"><TrendingDown size={11} /> 3 novos</span>
-            <span className="kpi-foot">hoje</span>
+            <span className="kpi-foot">docs + trein. vencidos</span>
           </div>
         </div>
       </div>
@@ -173,7 +175,7 @@ function DashboardAdmin() {
               <YAxis domain={[78, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
               <Tooltip
                 contentStyle={{ borderRadius: 10, border: "1px solid #E5E8F0", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-                formatter={(v: number, name: string) => [`${v}%`, name === "v" ? "2025-26" : "Período anterior"]}
+                formatter={((v: unknown, name: unknown) => [`${v}%`, name === "v" ? "2025-26" : "Período anterior"]) as never}
               />
               <ReferenceLine y={95} stroke="#10B981" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: "Meta 95%", position: "right", fontSize: 10, fill: "#10B981" }} />
               <Line type="monotone" dataKey="prev" stroke="#CBD5E1" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
@@ -408,6 +410,9 @@ const COMPLIANCE_TARGET = 95
 
 function DashboardEmpresa() {
   const [range, setRange] = useState("12m")
+  const { empresaId } = useCurrentProfile()
+  const kpisQuery = useDashboardKpis(empresaId)
+  const kpis = kpisQuery.data
 
   return (
     <div className="content">
@@ -440,46 +445,44 @@ function DashboardEmpresa() {
             <span>Colaboradores ativos</span>
             <span className="kpi-ic blue"><Users size={15} /></span>
           </div>
-          <div className="kpi-value">247</div>
+          <div className="kpi-value">{kpis ? kpis.totalColaboradores.toLocaleString('pt-BR') : '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-delta up"><TrendingUp size={11} /> +8 este mês</span>
-            <span className="kpi-foot">3 admissões</span>
+            <span className="kpi-foot">ativos</span>
           </div>
         </div>
 
         <div className="glass kpi">
           <div className="kpi-label">
-            <span>Treinamentos válidos</span>
+            <span>Compliance geral</span>
             <span className="kpi-ic orange"><GraduationCap size={15} /></span>
           </div>
-          <div className="kpi-value">89%</div>
+          <div className="kpi-value">{kpis ? `${kpis.compliancePct}%` : '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-delta up"><TrendingUp size={11} /> +3 p.p.</span>
             <span className="kpi-foot">meta 95%</span>
           </div>
         </div>
 
         <div className="glass kpi">
           <div className="kpi-label">
-            <span>ASOs em dia</span>
+            <span>Docs + Trein. vencendo</span>
             <span className="kpi-ic green"><Heart size={15} /></span>
           </div>
-          <div className="kpi-value">94%</div>
+          <div className="kpi-value">{kpis ? kpis.docsVencendo + kpis.treinamentosVencendo : '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-delta down"><TrendingDown size={11} /> -1 p.p.</span>
-            <span className="kpi-foot">14 vencendo</span>
+            <span className="kpi-foot">próximos 30d</span>
           </div>
         </div>
 
         <div className="glass kpi">
           <div className="kpi-label">
-            <span>Documentos vencendo</span>
+            <span>Alertas críticos</span>
             <span className="kpi-ic red"><FileText size={15} /></span>
           </div>
-          <div className="kpi-value">12</div>
+          <div className="kpi-value" style={{ color: (kpis?.docsVencidos ?? 0) + (kpis?.treinamentosVencidos ?? 0) > 0 ? "var(--red-500)" : undefined }}>
+            {kpis ? kpis.docsVencidos + kpis.treinamentosVencidos : '—'}
+          </div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-delta down"><TrendingDown size={11} /> 3 novos</span>
-            <span className="kpi-foot">próximos 30d</span>
+            <span className="kpi-foot">vencidos</span>
           </div>
         </div>
       </div>
@@ -511,7 +514,7 @@ function DashboardEmpresa() {
               <YAxis domain={[60, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
               <Tooltip
                 contentStyle={{ borderRadius: 10, border: "1px solid #E5E8F0", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-                formatter={(v: number) => [`${v}%`, "Compliance"]}
+                formatter={((v: unknown) => [`${v}%`, "Compliance"]) as never}
               />
               <ReferenceLine y={COMPLIANCE_TARGET} stroke="#10B981" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: "Meta 95%", position: "right", fontSize: 10, fill: "#10B981" }} />
               <Bar dataKey="v" fill="#F59E0B" radius={[4, 4, 0, 0]} maxBarSize={28} />

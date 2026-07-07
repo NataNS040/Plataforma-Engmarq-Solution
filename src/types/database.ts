@@ -17,6 +17,13 @@ export interface Empresa {
   razao_social: string
   cnpj: string
   logo_url: string | null
+  setor: string | null
+  cidade: string | null
+  uf: string | null
+  responsavel: string | null
+  email: string | null
+  telefone: string | null
+  status: 'ativa' | 'pendente' | 'suspensa'
   created_at: string
 }
 
@@ -70,6 +77,8 @@ export interface DocumentoTipo {
   validade_meses: number | null
 }
 
+export type SubtipoExame = 'admissional' | 'periodico' | 'mudanca_risco' | 'retorno_trabalho' | 'demissional'
+
 export interface Documento {
   id: string
   empresa_id: string
@@ -81,6 +90,8 @@ export interface Documento {
   arquivo_url: string | null
   status: DocStatus
   observacoes: string | null
+  colaborador_id: string | null
+  subtipo_exame: SubtipoExame | null
   created_at: string
   tipo?: DocumentoTipo
 }
@@ -120,22 +131,64 @@ export interface Treinamento {
 }
 
 // Supabase Database type stub (to be expanded as tables are created)
+// supabase-js exige que Row satisfaça Record<string,unknown> e Relationships
+// seja um array do formato correto. Usamos interseção para manter a interface
+// tipada sem precisar de index-signature em cada entidade.
+type GenericRel = {
+  foreignKeyName: string
+  columns: string[]
+  isOneToOne?: boolean
+  referencedRelation: string
+  referencedColumns: string[]
+}
+
+type TableDef<T> = {
+  Row: T & Record<string, unknown>
+  Insert: Partial<T> & Record<string, unknown>
+  Update: Partial<T> & Record<string, unknown>
+  Relationships: GenericRel[]
+}
+
 export interface Database {
   public: {
     Tables: {
-      user_profiles: { Row: UserProfile; Insert: Omit<UserProfile, 'created_at'>; Update: Partial<UserProfile> }
-      empresas: { Row: Empresa; Insert: Omit<Empresa, 'created_at'>; Update: Partial<Empresa> }
-      setores: { Row: Setor; Insert: Omit<Setor, 'id'>; Update: Partial<Setor> }
-      funcoes: { Row: Funcao; Insert: Omit<Funcao, 'id'>; Update: Partial<Funcao> }
-      ambientes: { Row: Ambiente; Insert: Omit<Ambiente, 'id'>; Update: Partial<Ambiente> }
-      colaboradores: { Row: Colaborador; Insert: Omit<Colaborador, 'id' | 'created_at'>; Update: Partial<Colaborador> }
-      documento_tipos: { Row: DocumentoTipo; Insert: Omit<DocumentoTipo, 'id'>; Update: Partial<DocumentoTipo> }
-      documentos: { Row: Documento; Insert: Omit<Documento, 'id' | 'created_at'>; Update: Partial<Documento> }
-      treinamento_tipos: { Row: TreinamentoTipo; Insert: Omit<TreinamentoTipo, 'id'>; Update: Partial<TreinamentoTipo> }
-      matriz_treinamentos: { Row: MatrizTreinamento; Insert: Omit<MatrizTreinamento, 'id'>; Update: Partial<MatrizTreinamento> }
-      treinamentos: { Row: Treinamento; Insert: Omit<Treinamento, 'id' | 'created_at'>; Update: Partial<Treinamento> }
+      user_profiles:       TableDef<UserProfile>
+      empresas:            TableDef<Empresa>
+      setores:             TableDef<Setor>
+      funcoes:             TableDef<Funcao>
+      ambientes:           TableDef<Ambiente>
+      colaboradores:       TableDef<Colaborador>
+      documento_tipos:     TableDef<DocumentoTipo>
+      documentos:          TableDef<Documento>
+      treinamento_tipos:   TableDef<TreinamentoTipo>
+      matriz_treinamentos: TableDef<MatrizTreinamento>
+      treinamentos:        TableDef<Treinamento>
     }
-    Views: Record<string, never>
+    Views: {
+      vw_dashboard_documentos: {
+        Row: {
+          empresa_id: string
+          tipo_nome: string
+          titulo: string
+          vencimento: string | null
+          status_calculado: DocStatus
+          dias_restantes: number | null
+        } & Record<string, unknown>
+        Relationships: GenericRel[]
+      }
+      vw_dashboard_treinamentos: {
+        Row: {
+          empresa_id: string
+          colaborador_id: string
+          colaborador_nome: string
+          treinamento_nome: string
+          data_vencimento: string | null
+          status_calculado: TreinamentoStatus
+          dias_restantes: number | null
+        } & Record<string, unknown>
+        Relationships: GenericRel[]
+      }
+    }
     Functions: Record<string, never>
     Enums: {
       user_role: UserRole

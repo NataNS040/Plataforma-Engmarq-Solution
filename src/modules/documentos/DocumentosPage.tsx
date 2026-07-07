@@ -1,10 +1,16 @@
 import { useState, useMemo } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import {
   Shield, Heart, FileText, LayoutGrid, GraduationCap, HardHat,
   Download, Calendar, Plus, CheckCircle2, Clock, AlertTriangle,
-  Search, Eye, Trash2, X, Pencil,
+  Search, Eye, Trash2, X, Loader2, Pencil,
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/AuthProvider'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
+import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento } from '@/hooks/queries/useDocumentos'
+import type { DocStatus as DbDocStatus } from '@/types/database'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -105,27 +111,7 @@ const CAT_LABEL: Record<string, string> = {
   inventario: 'Inventário de risco', cert: 'Certificado de treinamento', epi: 'Ficha de EPI',
 }
 
-const DOCS_EMPRESA: EmpresaDoc[] = [
-  { id: 'd1', cat: 'pgr',        nome: 'PGR — Programa de Gerenciamento de Riscos', versao: 'v3', emissao: '2026-01-15', validade: '2027-01-15', resp: 'Eng. Marcelo Tannous', size: '4,2 MB' },
-  { id: 'd2', cat: 'pcmso',      nome: 'PCMSO — Programa de Controle Médico',        versao: 'v2', emissao: '2026-02-01', validade: '2027-02-01', resp: 'Dra. Helena Vasquez',  size: '1,8 MB' },
-  { id: 'd3', cat: 'ltcat',      nome: 'LTCAT — Laudo Técnico de Cond. Ambientais',  versao: 'v1', emissao: '2024-06-20', validade: '2026-06-20', resp: 'Eng. Marcelo Tannous', size: '3,1 MB' },
-  { id: 'd4', cat: 'laudos',     nome: 'Laudo de Insalubridade — Produção',          versao: 'v2', emissao: '2024-05-18', validade: '2026-05-18', resp: 'Eng. Ana Becker',     size: '2,4 MB' },
-  { id: 'd5', cat: 'laudos',     nome: 'Laudo Ergonômico (AET) — consolidado',       versao: 'v1', emissao: '2025-12-10', validade: '2026-12-10', resp: 'Fisio. Rui Campos',   size: '5,0 MB' },
-  { id: 'd6', cat: 'laudos',     nome: 'Laudo de Periculosidade — Logística',        versao: 'v1', emissao: '2024-06-28', validade: '2026-06-28', resp: 'Eng. Ana Becker',     size: '1,9 MB' },
-  { id: 'd7', cat: 'inventario', nome: 'Inventário de Riscos Ocupacionais',          versao: 'v3', emissao: '2026-01-15', validade: '2027-01-15', resp: 'Eng. Marcelo Tannous', size: '2,7 MB' },
-]
-
-const REG_COLAB: ColabReg[] = [
-  { id: 'c1', cat: 'cert', colab: 'Carlos M. Soares',  cor: '#2563EB', item: 'NR-35 · Trabalho em altura',  realizado: '2024-03-12', validade: '2026-03-12' },
-  { id: 'c2', cat: 'cert', colab: 'Carlos M. Soares',  cor: '#2563EB', item: 'NR-11 · Empilhadeira',        realizado: '2025-07-22', validade: '2027-07-22' },
-  { id: 'c3', cat: 'cert', colab: 'Pedro H. Almeida',  cor: '#7C3AED', item: 'NR-33 · Espaço confinado',    realizado: '2024-05-15', validade: '2026-05-15' },
-  { id: 'c4', cat: 'cert', colab: 'Renata Camargo',    cor: '#0891B2', item: 'NR-10 · Segurança elétrica',  realizado: '2025-06-30', validade: '2027-06-30' },
-  { id: 'c5', cat: 'cert', colab: 'Marina S. Oliveira', cor: '#DB2777', item: 'NR-06 · EPI',                realizado: '2025-12-01', validade: '2026-06-20' },
-  { id: 'e1', cat: 'epi',  colab: 'Carlos M. Soares',   cor: '#2563EB', item: 'Cinto talabarte duplo',       ca: '38.241',           realizado: '2025-09-10', validade: '2026-09-10' },
-  { id: 'e2', cat: 'epi',  colab: 'Pedro H. Almeida',   cor: '#7C3AED', item: 'Protetor auricular + capacete', ca: '26.910 / 31.469', realizado: '2025-05-02', validade: '2026-05-02' },
-  { id: 'e3', cat: 'epi',  colab: 'João V. Mendes',     cor: '#059669', item: 'Luvas + botina de segurança', ca: '44.102 / 39.880',  realizado: '2026-01-20', validade: '2027-01-20' },
-]
-
+// Dados auxiliares para DateEntryModal (mockados — aguarda Fase 4.3)
 const COLAB_NAMES = ['Marina S. Oliveira', 'Carlos M. Soares', 'Pedro H. Almeida', 'Renata Camargo', 'João V. Mendes', 'Juliana Prado', 'Tiago Ferreira']
 const NR_OPTS = ['NR-35 · Trabalho em altura', 'NR-33 · Espaço confinado', 'NR-10 · Segurança elétrica', 'NR-11 · Empilhadeira', 'NR-12 · Máquinas', 'NR-06 · EPI']
 const EPI_OPTS = ['Capacete de segurança', 'Protetor auricular', 'Cinto talabarte duplo', 'Luvas de proteção', 'Botina de segurança', 'Óculos de proteção']
@@ -190,108 +176,6 @@ function DocField({ label, children, full }: { label: string; children: React.Re
     <div className="mp-field" style={full ? { gridColumn: '1 / -1' } : undefined}>
       <label>{label}</label>
       {children}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// ConfirmDelete
-// ---------------------------------------------------------------------------
-function ConfirmDelete({ row, onCancel, onConfirm }: { row: DocRow; onCancel: () => void; onConfirm: () => void }) {
-  const name = row.kind === 'empresa' ? row.nome : `${row.item} · ${row.colab}`
-  return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal" style={{ maxWidth: 430 }} onClick={e => e.stopPropagation()}>
-        <div className="modal-body" style={{ paddingTop: 26 }}>
-          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-            <div className="del-ic"><Trash2 size={20} /></div>
-            <div>
-              <h2 style={{ margin: '0 0 6px', fontSize: 18, fontFamily: 'var(--font-display)' }}>Excluir registro?</h2>
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-500)', lineHeight: 1.5 }}>
-                <strong style={{ color: 'var(--ink-900)' }}>{name}</strong> será removido permanentemente. Esta ação não pode ser desfeita.
-              </p>
-            </div>
-          </div>
-          <div className="modal-foot">
-            <button className="tbtn" onClick={onCancel}>Cancelar</button>
-            <button className="tbtn danger" onClick={onConfirm}><Trash2 size={13} /> Excluir</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// UploadDocModal
-// ---------------------------------------------------------------------------
-function UploadDocModal({ onClose }: { onClose: () => void }) {
-  const [validade, setValidade] = useState('')
-  const [emissao, setEmissao] = useState('')
-  const [fileName, setFileName] = useState('')
-
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
-        <div className="modal-head">
-          <div>
-            <h2>Enviar documento da empresa</h2>
-            <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginTop: 2 }}>Logix Industrial · documento mestre (PGR, laudos, LTCAT…)</div>
-          </div>
-          <button className="icon-btn" onClick={onClose}><X size={16} /></button>
-        </div>
-        <div className="modal-body">
-          <div className="mp-form">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <DocField label="Tipo de documento">
-                <select className="mp-input">
-                  <option value="">Selecione…</option>
-                  <option>PGR — Programa de Gerenciamento de Riscos</option>
-                  <option>PCMSO — Controle Médico</option>
-                  <option>LTCAT</option>
-                  <option>Laudo de Insalubridade</option>
-                  <option>Laudo Ergonômico (AET)</option>
-                  <option>Laudo de Periculosidade</option>
-                  <option>Inventário de Riscos</option>
-                </select>
-              </DocField>
-              <DocField label="Versão"><input className="mp-input" placeholder="v3" /></DocField>
-              <DocField label="Identificação" full><input className="mp-input" placeholder="Ex.: PGR 2026 — unidade matriz" /></DocField>
-              <DocField label="Data de emissão">
-                <input className="mp-input" type="date" value={emissao} onChange={e => setEmissao(e.target.value)} />
-              </DocField>
-              <DocField label="Data de validade">
-                <input className="mp-input" type="date" value={validade} onChange={e => setValidade(e.target.value)} />
-              </DocField>
-              <DocField label="Responsável técnico" full>
-                <input className="mp-input" placeholder="Ex.: Eng. Marcelo Tannous" />
-              </DocField>
-            </div>
-            <StatusPreview validade={validade} />
-            <div className="dropzone">
-              <div className="dropzone-ic"><FileText size={20} /></div>
-              {fileName ? (
-                <>
-                  <div className="dropzone-title">{fileName}</div>
-                  <div className="dropzone-sub">Arquivo pronto para envio</div>
-                </>
-              ) : (
-                <>
-                  <div className="dropzone-title">Arraste o arquivo aqui</div>
-                  <div className="dropzone-sub">PDF · até 25 MB</div>
-                </>
-              )}
-              <button className="tbtn" style={{ margin: '12px auto 0' }} onClick={() => setFileName('documento.pdf')}>
-                <Plus size={13} /> Selecionar arquivo
-              </button>
-            </div>
-          </div>
-          <div className="modal-foot">
-            <button className="tbtn" onClick={onClose}>Cancelar</button>
-            <button className="tbtn primary" onClick={onClose}><CheckCircle2 size={13} /> Enviar documento</button>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -426,11 +310,13 @@ function DateEntryModal({ onClose }: { onClose: () => void }) {
 // ---------------------------------------------------------------------------
 // DocumentosAdmin
 // ---------------------------------------------------------------------------
+type AdminStatusCell = { key: DocStatus | 'na'; label: string; rel: string }
+
 function DocumentosAdmin() {
   const [sel, setSel] = useState<AdminCellSel | null>(null)
 
   const flat = useMemo(() => {
-    const out: { empresa: string; col: AdminDocCol; validade: string | null; st: StatusResult & { key: string } }[] = []
+    const out: { empresa: string; col: AdminDocCol; validade: string | null; st: AdminStatusCell }[] = []
     ADMIN_DOC_DATA.forEach(e => ADMIN_DOC_COLS.forEach(c => {
       const v = e.docs[c.id] ?? null
       out.push({ empresa: e.empresa, col: c, validade: v, st: v ? statusFrom(v) : { key: 'na', label: 'N/A', rel: '' } })
@@ -683,28 +569,170 @@ function DocumentosAdmin() {
 }
 
 // ---------------------------------------------------------------------------
-// DocumentosEmpresa
+// DocumentosEmpresa — plugada no Supabase
 // ---------------------------------------------------------------------------
-function DocumentosEmpresa() {
-  const [cat, setCat] = useState('all')
-  const [q, setQ] = useState('')
-  const [uploadOpen, setUploadOpen] = useState(false)
-  const [dateOpen, setDateOpen] = useState(false)
-  const [confirmDel, setConfirmDel] = useState<DocRow | null>(null)
-  const [empresaDocs, setEmpresaDocs] = useState<EmpresaDoc[]>(DOCS_EMPRESA)
-  const [colabRegs, setColabRegs] = useState<ColabReg[]>(REG_COLAB)
+const novoDocSchema = z.object({
+  tipo_id:    z.string().min(1, 'Selecione o tipo de documento'),
+  titulo:     z.string().min(2, 'Informe o título'),
+  numero:     z.string(),
+  emissao:    z.string(),
+  vencimento: z.string(),
+  observacoes: z.string(),
+})
+type NovoDocForm = z.infer<typeof novoDocSchema>
 
-  const doDelete = (row: DocRow) => {
-    if (row.kind === 'empresa') setEmpresaDocs(s => s.filter(x => x.id !== row.id))
-    else setColabRegs(s => s.filter(x => x.id !== row.id))
-    setConfirmDel(null)
+function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
+  const tiposQuery = useDocumentoTipos()
+  const criar = useCriarDocumento()
+  const [validade, setValidade] = useState('')
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<NovoDocForm>({
+    resolver: zodResolver(novoDocSchema),
+    defaultValues: { tipo_id: '', titulo: '', numero: '', emissao: '', vencimento: '', observacoes: '' },
+  })
+
+  const watchedVencimento = watch('vencimento')
+
+  async function onSubmit(v: NovoDocForm) {
+    try {
+      await criar.mutateAsync({
+        empresa_id:  empresaId,
+        tipo_id:     v.tipo_id,
+        titulo:      v.titulo,
+        numero:      v.numero || null,
+        emissao:     v.emissao || null,
+        vencimento:  v.vencimento || null,
+        observacoes: v.observacoes || null,
+      })
+      onClose()
+    } catch { /* toast já disparado */ }
   }
 
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div>
+            <h2>Novo documento</h2>
+            <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginTop: 2 }}>Campo “arquivo” disponível em breve · status calculado automaticamente pela validade</div>
+          </div>
+          <button className="icon-btn" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <div className="mp-form">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <DocField label="Tipo de documento" full>
+                  <select className="mp-input" {...register('tipo_id')} disabled={tiposQuery.isLoading}>
+                    <option value="">Selecione…</option>
+                    {(tiposQuery.data ?? []).map(t => (
+                      <option key={t.id} value={t.id}>{t.nome}</option>
+                    ))}
+                  </select>
+                  {errors.tipo_id && <span style={{ color:'var(--red-600, #dc2626)', fontSize:11.5, display:'block', marginTop:3 }}>{errors.tipo_id.message}</span>}
+                </DocField>
+                <DocField label="Título" full>
+                  <input className="mp-input" placeholder="Ex.: PGR 2026 — unidade matriz" {...register('titulo')} />
+                  {errors.titulo && <span style={{ color:'var(--red-600, #dc2626)', fontSize:11.5, display:'block', marginTop:3 }}>{errors.titulo.message}</span>}
+                </DocField>
+                <DocField label="Número / versão">
+                  <input className="mp-input" placeholder="v3" {...register('numero')} />
+                </DocField>
+                <DocField label="Responsável técnico">
+                  <input className="mp-input" placeholder="Nome do responsável" disabled style={{ opacity:0.6 }} />
+                </DocField>
+                <DocField label="Data de emissão">
+                  <input className="mp-input" type="date" {...register('emissao')} />
+                </DocField>
+                <DocField label="Data de validade">
+                  <input
+                    className="mp-input" type="date"
+                    {...register('vencimento', { onChange: e => setValidade(e.target.value) })}
+                  />
+                </DocField>
+                <DocField label="Observações" full>
+                  <input className="mp-input" placeholder="Opcional" {...register('observacoes')} />
+                </DocField>
+              </div>
+              <StatusPreview validade={watchedVencimento || validade} />
+              <div className="dropzone" style={{ opacity:0.5, cursor:'not-allowed', pointerEvents:'none' }}>
+                <div className="dropzone-ic"><FileText size={20} /></div>
+                <div className="dropzone-title">Upload de arquivo</div>
+                <div className="dropzone-sub">Disponível em breve</div>
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button type="button" className="tbtn" onClick={onClose}>Cancelar</button>
+              <button type="submit" className="tbtn primary" disabled={criar.isPending}>
+                {criar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13} />}
+                {criar.isPending ? 'Salvando...' : 'Cadastrar documento'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DocumentosEmpresa() {
+  const { empresaId } = useCurrentProfile()
+  const docQuery = useDocumentos(empresaId)
+  const deletar  = useDeletarDocumento()
+
+  const [cat, setCat] = useState('all')
+  const [q, setQ] = useState('')
+  const [novoOpen, setNovoOpen] = useState(false)
+  const [dateOpen, setDateOpen] = useState(false)
+  const [confirmDelId, setConfirmDelId] = useState<string | null>(null)
+
+  const docsBanco = docQuery.data ?? []
+
+  const doDelete = async (id: string) => {
+    if (!empresaId) return
+    try {
+      await deletar.mutateAsync({ id, empresaId })
+    } catch { /* toast */ }
+    setConfirmDelId(null)
+  }
+
+  // Adaptar documentos do banco para o shape que a UI usa
   const allRows = useMemo<DocRow[]>(() => {
-    const emp: DocRow[] = empresaDocs.map(d => ({ ...d, kind: 'empresa', st: statusFrom(d.validade) }))
-    const reg: DocRow[] = colabRegs.map(d => ({ ...d, kind: 'colab', st: statusFrom(d.validade) }))
-    return [...emp, ...reg]
-  }, [empresaDocs, colabRegs])
+    return docsBanco.map(d => {
+      const dbStatus = d.status as DbDocStatus
+      // Converte status do banco (vigente/vencendo/vencido) para o shape local
+      const stKey: DocStatus = dbStatus === 'vencido' ? 'crit' : dbStatus === 'vencendo' ? 'warn' : 'ok'
+      const stLabel = dbStatus === 'vencido' ? 'Vencido' : dbStatus === 'vencendo' ? 'Vencendo' : 'Em dia'
+      const st: StatusResult = { key: stKey, label: stLabel, rel: '' }
+      const tipoNome = d.tipo?.nome?.toLowerCase() ?? ''
+      const cat =
+        tipoNome.includes('pgr') ? 'pgr' :
+        tipoNome.includes('pcmso') ? 'pcmso' :
+        tipoNome.includes('ltcat') ? 'ltcat' :
+        tipoNome.includes('laudo') ? 'laudos' :
+        tipoNome.includes('inventário') || tipoNome.includes('invent') ? 'inventario' :
+        tipoNome.includes('aso') ? 'cert' :
+        'laudos'
+
+      const empresaDoc: EmpresaDoc & { kind: 'empresa'; st: StatusResult } = {
+        id: d.id, cat,
+        nome: d.titulo,
+        versao: d.numero ?? '—',
+        emissao: d.emissao ?? '',
+        validade: d.vencimento ?? '',
+        resp: d.observacoes ?? '—',
+        size: '—',
+        kind: 'empresa',
+        st,
+      }
+      return empresaDoc
+    })
+  }, [docsBanco])
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {}
@@ -748,7 +776,7 @@ function DocumentosEmpresa() {
         <div className="toolbar">
           <button className="tbtn"><Download size={14} /> Exportar lista</button>
           <button className="tbtn" onClick={() => setDateOpen(true)}><Calendar size={14} /> Registrar datas</button>
-          <button className="tbtn primary" onClick={() => setUploadOpen(true)}><Plus size={14} /> Enviar documento</button>
+          <button className="tbtn primary" onClick={() => setNovoOpen(true)}><Plus size={14} /> Novo documento</button>
         </div>
       </div>
 
@@ -756,7 +784,7 @@ function DocumentosEmpresa() {
         <div className="glass kpi">
           <div className="kpi-label"><span>Documentos monitorados</span><span className="kpi-ic violet"><FileText size={16} /></span></div>
           <div className="kpi-value">{kpis.total}</div>
-          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-500)' }}>{empresaDocs.length} mestres · {colabRegs.length} registros</div>
+          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-500)' }}>{docsBanco.length} documentos cadastrados</div>
         </div>
         <div className="glass kpi">
           <div className="kpi-label"><span>Em dia</span><span className="kpi-ic green"><CheckCircle2 size={16} /></span></div>
@@ -895,7 +923,7 @@ function DocumentosEmpresa() {
                           <>
                             <button className="icon-btn sm" title="Visualizar"><Eye size={15} /></button>
                             <button className="icon-btn sm" title="Baixar"><Download size={15} /></button>
-                            <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => setUploadOpen(true)}>
+                            <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => setNovoOpen(true)}>
                               {r.st.key !== 'ok' ? 'Renovar' : 'Nova versão'}
                             </button>
                           </>
@@ -904,7 +932,7 @@ function DocumentosEmpresa() {
                             <Calendar size={13} /> {r.st.key !== 'ok' ? 'Atualizar data' : 'Editar datas'}
                           </button>
                         )}
-                        <button className="icon-btn sm danger" title="Excluir" onClick={() => setConfirmDel(r)}><Trash2 size={15} /></button>
+                        <button className="icon-btn sm danger" title="Excluir" onClick={() => setConfirmDelId(r.id)}><Trash2 size={15} /></button>
                       </div>
                     </td>
                   </tr>
@@ -915,9 +943,30 @@ function DocumentosEmpresa() {
         </div>
       </div>
 
-      {uploadOpen && <UploadDocModal onClose={() => setUploadOpen(false)} />}
+      {novoOpen && empresaId && <NovoDocumentoModal onClose={() => setNovoOpen(false)} empresaId={empresaId} />}
       {dateOpen && <DateEntryModal onClose={() => setDateOpen(false)} />}
-      {confirmDel && <ConfirmDelete row={confirmDel} onCancel={() => setConfirmDel(null)} onConfirm={() => doDelete(confirmDel)} />}
+      {confirmDelId && (
+        <div className="modal-backdrop" onClick={() => setConfirmDelId(null)}>
+          <div className="modal" style={{ maxWidth: 430 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-body" style={{ paddingTop: 26 }}>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div className="del-ic"><Trash2 size={20} /></div>
+                <div>
+                  <h2 style={{ margin: '0 0 6px', fontSize: 18, fontFamily: 'var(--font-display)' }}>Excluir documento?</h2>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-500)', lineHeight: 1.5 }}>Esta ação não pode ser desfeita.</p>
+                </div>
+              </div>
+              <div className="modal-foot">
+                <button className="tbtn" onClick={() => setConfirmDelId(null)}>Cancelar</button>
+                <button className="tbtn danger" disabled={deletar.isPending} onClick={() => void doDelete(confirmDelId)}>
+                  {deletar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <Trash2 size={13} />}
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

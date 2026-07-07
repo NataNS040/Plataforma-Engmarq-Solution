@@ -1,106 +1,87 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { qk } from '@/lib/queryKeys'
+import { handleSupabaseError } from '@/lib/errors'
 import type { UserProfile } from '@/types/database'
 
 interface AuthContextType {
   session: Session | null
   user: User | null
   profile: UserProfile | null
+  /** true enquanto a sessão inicial está sendo carregada */
   loading: boolean
+  /** true enquanto o profile do usuário logado está sendo carregado */
+  profileLoading: boolean
+  /** true se a sessão existe mas o profile não pôde ser carregado ou está inativo */
+  profileError: boolean
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-// ---------------------------------------------------------------------------
-// Dev bypass — apenas em `npm run dev` (import.meta.env.DEV = false em build)
-// Troque o `role` para 'gestor' ou 'operacional' para testar outras views.
-// ---------------------------------------------------------------------------
-const DEV_MODE = import.meta.env.DEV
+async function fetchProfile(userId: string): Promise<UserProfile> {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
 
-const DEV_PROFILE: UserProfile = {
-  id: 'dev-0000-0000-0000-0000',
-  email: 'admin@engmarq.com.br',
-  full_name: 'Dev Admin',
-  role: 'admin',
-  empresa_id: 'dev-empresa-0000',
-  active: true,
-  created_at: new Date().toISOString(),
+  if (error) throw handleSupabaseError(error, 'Não foi possível carregar seu perfil.')
+  return data as UserProfile
 }
 
-const DEV_SESSION = {
-  access_token: 'dev-token',
-  token_type: 'bearer',
-  user: {
-    id: DEV_PROFILE.id,
-    email: DEV_PROFILE.email,
-    app_metadata: {},
-    user_metadata: {},
-    aud: 'authenticated',
-    created_at: DEV_PROFILE.created_at,
-  },
-} as unknown as Session
-
-// ---------------------------------------------------------------------------
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(DEV_MODE ? DEV_SESSION : null)
-  const [profile, setProfile] = useState<UserProfile | null>(DEV_MODE ? DEV_PROFILE : null)
-  const [loading, setLoading] = useState(!DEV_MODE)
-
-  async function loadProfile(userId: string) {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
-    if (error) {
-      console.error('Error loading profile:', error.message)
-      return null
-    }
-    return data as UserProfile
-  }
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
 
   useEffect(() => {
-    if (DEV_MODE) return
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setSession(data.session))
+      .catch(() => setSession(null))
+      .finally(() => setLoading(false))
 
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        setSession(session)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  useEffect(() => {
-    if (DEV_MODE) return
+  const userId = session?.user?.id
+  const profileQuery = useQuery({
+    queryKey: qk.auth.profile(userId),
+    queryFn: () => fetchProfile(userId!),
+    enabled: !!userId,
+    staleTime: 5 * 60_000,
+  })
 
-    if (!session?.user) {
-      setProfile(null)
-      return
-    }
-    let cancelled = false
-    loadProfile(session.user.id).then(p => {
-      if (!cancelled) setProfile(p)
-    })
-    return () => { cancelled = true }
-  }, [session?.user?.id])
+  const profile = profileQuery.data ?? null
+  const profileLoading = !!userId && profileQuery.isLoading
+  const profileError = !!userId && (profileQuery.isError || (!!profile && !profile.active))
 
   async function signOut() {
-    if (DEV_MODE) return
     await supabase.auth.signOut()
+    queryClient.clear()
   }
 
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, profile, loading, signOut }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        user: session?.user ?? null,
+        profile: profileError ? null : profile,
+        loading,
+        profileLoading,
+        profileError,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
