@@ -14,7 +14,7 @@ import ConfiguracoesPage from '@/modules/configuracoes/ConfiguracoesPage'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/Plataforma-Engmarq-Solution/">
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
