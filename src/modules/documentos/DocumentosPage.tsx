@@ -113,7 +113,6 @@ const CAT_LABEL: Record<string, string> = {
 }
 
 // Dados auxiliares para DateEntryModal (mockados — aguarda Fase 4.3)
-const COLAB_NAMES = ['Marina S. Oliveira', 'Carlos M. Soares', 'Pedro H. Almeida', 'Renata Camargo', 'João V. Mendes', 'Juliana Prado', 'Tiago Ferreira']
 const NR_OPTS = ['NR-35 · Trabalho em altura', 'NR-33 · Espaço confinado', 'NR-10 · Segurança elétrica', 'NR-11 · Empilhadeira', 'NR-12 · Máquinas', 'NR-06 · EPI']
 const EPI_OPTS = ['Capacete de segurança', 'Protetor auricular', 'Cinto talabarte duplo', 'Luvas de proteção', 'Botina de segurança', 'Óculos de proteção']
 
