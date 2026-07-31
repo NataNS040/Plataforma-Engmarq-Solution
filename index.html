@@ -5,6 +5,28 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EngMarq SST — Gestão de Segurança do Trabalho</title>
+    <script>
+      // SPA redirect restore: reads the path encoded by 404.html and
+      // replaces the history state so React Router sees the correct URL.
+      (function () {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+        var search = location.search;
+        if (search) {
+          var p = new URLSearchParams(search);
+          var path = p.get('p');
+          if (path) {
+            var query = p.get('q');
+            var newUrl = location.pathname.split('/').slice(0, 2).join('/') +
+              path + (query ? '?' + query.replace(/~and~/g, '&') : '') + location.hash;
+            history.replaceState(null, null, newUrl);
+          }
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
