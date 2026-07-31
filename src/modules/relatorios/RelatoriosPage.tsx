@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import {
   BarChart3, Download, FileText, Calendar, TrendingUp,
   TrendingDown, AlertTriangle,
@@ -144,6 +145,7 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    toast.info('Geração de relatórios disponível em breve.')
     onClose()
   }
 

@@ -6,6 +6,7 @@ import {
   listarAsosDoColaborador,
   criarAso,
   atualizarAso,
+  deletarAso,
   type AsoInput,
 } from '@/services/examesService'
 
@@ -53,6 +54,20 @@ export function useAtualizarExame() {
       qc.invalidateQueries({ queryKey: qk.exames.list(result.empresaId) })
       qc.invalidateQueries({ queryKey: qk.exames.byColaborador(result.colaboradorId) })
       toast.success('ASO atualizado.')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+}
+
+export function useDeletarExame() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, empresaId, colaboradorId }: { id: string; empresaId: string; colaboradorId?: string | null }) =>
+      deletarAso(id).then(() => ({ empresaId, colaboradorId })),
+    onSuccess: ({ empresaId, colaboradorId }) => {
+      qc.invalidateQueries({ queryKey: qk.exames.list(empresaId) })
+      if (colaboradorId) qc.invalidateQueries({ queryKey: qk.exames.byColaborador(colaboradorId) })
+      toast.success('ASO removido.')
     },
     onError: (err: Error) => toast.error(err.message),
   })

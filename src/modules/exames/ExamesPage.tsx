@@ -1,11 +1,15 @@
 import { useState, useMemo } from 'react'
 import {
   CheckCircle2, Clock, AlertTriangle, Calendar, Download, Plus,
-  Eye, Trash2, X, Search, Stethoscope, Filter, MapPin,
+  Eye, Trash2, X, Search, Stethoscope, Filter, MapPin, Loader2,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
-import { useExames } from '@/hooks/queries/useExames'
+import { useExames, useCriarExame, useDeletarExame } from '@/hooks/queries/useExames'
+import { useColaboradores } from '@/hooks/queries/useColaboradores'
+import { useDocumentoTipos } from '@/hooks/queries/useDocumentos'
+import type { SubtipoExame } from '@/types/database'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -58,6 +62,14 @@ const initials = (n: string) => n.split(' ').filter(Boolean).slice(0, 2).map((w:
 const TIPOS = ['Admissional', 'Periódico', 'Mudança de risco', 'Retorno ao trabalho', 'Demissional']
 const RESULTADOS = ['Apto', 'Apto com restrição', 'Inapto']
 const RES_KEY: Record<string, AsoStatusKey> = { 'Apto': 'ok', 'Apto com restrição': 'warn', 'Inapto': 'crit' }
+
+const SUBTIPO_MAP: Record<string, SubtipoExame> = {
+  'Admissional':         'admissional',
+  'Periódico':           'periodico',
+  'Mudança de risco':    'mudanca_risco',
+  'Retorno ao trabalho': 'retorno_trabalho',
+  'Demissional':         'demissional',
+}
 
 interface AsoSeed { id: string; colab: string; tipo: string; realizado: string; validade: string; resultado: string }
 // ASO_SEED removido — dados vêm do Supabase via useExames()
@@ -182,15 +194,40 @@ function StatusPreviewWidget({ validade }: { validade: string }) {
 // ---------------------------------------------------------------------------
 // NewAsoModal
 // ---------------------------------------------------------------------------
-function NewAsoModal({ onClose, onSave }: { onClose: () => void; onSave: (a: AsoSeed) => void }) {
-  const [colab, setColab] = useState('')
+function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
+  const [colabId, setColabId] = useState('')
   const [tipo, setTipo] = useState('')
   const [resultado, setResultado] = useState('')
   const [realizado, setRealizado] = useState('')
   const [validade, setValidade] = useState('')
 
+  const colabsQuery = useColaboradores(empresaId)
+  const tiposQuery  = useDocumentoTipos()
+  const criar       = useCriarExame()
+
   const suggest = () => { if (realizado) setValidade(addYears(realizado, 1)) }
-  const canSave = colab && tipo && resultado && realizado && validade
+  const canSave = colabId && tipo && resultado && realizado && validade
+
+  async function handleSave() {
+    const colab = (colabsQuery.data ?? []).find(c => c.id === colabId)
+    if (!colab) return
+    const tipos = tiposQuery.data ?? []
+    const tipoAso = tipos.find(t => /aso/i.test(t.nome)) ?? tipos[0]
+    if (!tipoAso) { toast.error('Cadastre tipos de documento em Configurações antes de registrar um ASO.'); return }
+    try {
+      await criar.mutateAsync({
+        empresa_id:     empresaId,
+        tipo_id:        tipoAso.id,
+        colaborador_id: colabId,
+        titulo:         `ASO — ${colab.nome}`,
+        subtipo_exame:  SUBTIPO_MAP[tipo] ?? 'periodico',
+        emissao:        realizado || null,
+        vencimento:     validade || null,
+        observacoes:    resultado,
+      })
+      onClose()
+    } catch { /* toast já disparado */ }
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -205,9 +242,9 @@ function NewAsoModal({ onClose, onSave }: { onClose: () => void; onSave: (a: Aso
         <div className="modal-body">
           <div className="mp-form">
             <Field label="Colaborador" full>
-              <select className="mp-input" value={colab} onChange={e => setColab(e.target.value)}>
+              <select className="mp-input" value={colabId} onChange={e => setColabId(e.target.value)} disabled={colabsQuery.isLoading}>
                 <option value="">Selecione…</option>
-                {Object.keys(COLABS_MAP).map(n => <option key={n}>{n}</option>)}
+                {(colabsQuery.data ?? []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
             </Field>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
@@ -241,11 +278,12 @@ function NewAsoModal({ onClose, onSave }: { onClose: () => void; onSave: (a: Aso
             <button className="tbtn" onClick={onClose}>Cancelar</button>
             <button
               className="tbtn primary"
-              disabled={!canSave}
-              style={!canSave ? { opacity:0.5, pointerEvents:'none' } : undefined}
-              onClick={() => onSave({ id:'a'+Date.now(), colab, tipo, realizado, validade, resultado })}
+              disabled={!canSave || criar.isPending}
+              style={(!canSave || criar.isPending) ? { opacity:0.5, pointerEvents:'none' } : undefined}
+              onClick={() => void handleSave()}
             >
-              <CheckCircle2 size={13}/> Salvar ASO
+              {criar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13}/>}
+              {criar.isPending ? 'Salvando...' : 'Salvar ASO'}
             </button>
           </div>
         </div>
@@ -298,7 +336,7 @@ function ScheduleModal({ prefill, onClose }: { prefill: string | null; onClose: 
               className="tbtn primary"
               disabled={!canSave}
               style={!canSave ? { opacity:0.5, pointerEvents:'none' } : undefined}
-              onClick={onClose}
+              onClick={() => { toast.success('Exame agendado com sucesso.'); onClose() }}
             >
               <CheckCircle2 size={13}/> Agendar
             </button>
@@ -465,7 +503,15 @@ function ExamesEmpresa() {
     [rows, fTipo, fStatus, q]
   )
 
-  const doDelete = (_row: typeof asos[number]) => { setConfirmDel(null) }
+  const deletar = useDeletarExame()
+  const doDelete = async (row: typeof asos[number]) => {
+    if (!empresaId) return
+    const original = asosBanco.find(a => a.id === row.id)
+    try {
+      await deletar.mutateAsync({ id: row.id, empresaId, colaboradorId: original?.colaborador_id ?? null })
+      setConfirmDel(null)
+    } catch { /* toast já disparado */ }
+  }
   const openSchedFor = (nome: string) => { setPrefill(nome); setSchedOpen(true) }
 
   const pcmsoAno = (PCMSO_DOC.emissao ?? '').slice(0, 4) || '2026'
@@ -675,7 +721,7 @@ function ExamesEmpresa() {
         </div>
       </div>
 
-      {newOpen && <NewAsoModal onClose={() => setNewOpen(false)} onSave={() => setNewOpen(false)}/>}
+      {newOpen && empresaId && <NewAsoModal onClose={() => setNewOpen(false)} empresaId={empresaId}/>}
       {schedOpen && <ScheduleModal prefill={prefill} onClose={() => setSchedOpen(false)}/>}
       {confirmDel && <ConfirmDelete row={confirmDel} onCancel={() => setConfirmDel(null)} onConfirm={() => doDelete(confirmDel)}/>}
     </div>

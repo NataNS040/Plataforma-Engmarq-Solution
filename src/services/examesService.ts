@@ -84,3 +84,12 @@ export async function atualizarAso(
   if (error) throw handleSupabaseError(error, 'Não foi possível atualizar o ASO.')
   return data as Documento
 }
+
+export async function deletarAso(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('documentos')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw handleSupabaseError(error, 'Não foi possível deletar o ASO.')
+}

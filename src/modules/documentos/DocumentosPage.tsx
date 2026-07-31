@@ -10,6 +10,7 @@ import {
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento } from '@/hooks/queries/useDocumentos'
+import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import type { DocStatus as DbDocStatus } from '@/types/database'
 
 // ---------------------------------------------------------------------------
@@ -183,17 +184,66 @@ function DocField({ label, children, full }: { label: string; children: React.Re
 // ---------------------------------------------------------------------------
 // DateEntryModal
 // ---------------------------------------------------------------------------
-function DateEntryModal({ onClose }: { onClose: () => void }) {
+function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
   const [tipo, setTipo] = useState<'cert' | 'epi'>('cert')
+  const [colabId, setColabId] = useState('')
+  const [norma, setNorma] = useState('')
   const [realizado, setRealizado] = useState('')
   const [validade, setValidade] = useState('')
   const [epiItems, setEpiItems] = useState<EpiItem[]>([{ equip: '', ca: '', entrega: '', validade: '' }])
+
+  const colabsQuery = useColaboradores(empresaId)
+  const tiposQuery  = useDocumentoTipos()
+  const criar       = useCriarDocumento()
 
   const suggestCert = () => { if (realizado) setValidade(addYears(realizado, 2)) }
   const updItem = (i: number, patch: Partial<EpiItem>) =>
     setEpiItems(items => items.map((it, j) => j === i ? { ...it, ...patch } : it))
   const addItem = () => setEpiItems(items => [...items, { equip: '', ca: '', entrega: '', validade: '' }])
   const removeItem = (i: number) => setEpiItems(items => items.length === 1 ? items : items.filter((_, j) => j !== i))
+
+  const canSave = tipo === 'cert'
+    ? Boolean(colabId && norma && realizado && validade)
+    : Boolean(colabId && epiItems.some(it => it.equip && it.entrega))
+
+  async function handleSave() {
+    const colab = (colabsQuery.data ?? []).find(c => c.id === colabId)
+    if (!colab) return
+    const tipos = tiposQuery.data ?? []
+    if (tipo === 'cert') {
+      const tipoId = (tipos.find(t => /certif|treina/i.test(t.nome)) ?? tipos[0])?.id
+      if (!tipoId) return
+      try {
+        await criar.mutateAsync({
+          empresa_id:  empresaId,
+          tipo_id:     tipoId,
+          titulo:      `${norma.split(' · ')[0]} — ${colab.nome}`,
+          emissao:     realizado || null,
+          vencimento:  validade || null,
+          observacoes: norma,
+        })
+        onClose()
+      } catch { /* toast já disparado */ }
+    } else {
+      const tipoId = (tipos.find(t => /epi/i.test(t.nome)) ?? tipos[0])?.id
+      if (!tipoId) return
+      const validItems = epiItems.filter(it => it.equip && it.entrega)
+      try {
+        for (const item of validItems) {
+          await criar.mutateAsync({
+            empresa_id:  empresaId,
+            tipo_id:     tipoId,
+            titulo:      `Ficha de EPI — ${colab.nome}`,
+            numero:      item.ca || null,
+            emissao:     item.entrega || null,
+            vencimento:  item.validade || null,
+            observacoes: item.equip,
+          })
+        }
+        onClose()
+      } catch { /* toast já disparado */ }
+    }
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -218,15 +268,15 @@ function DateEntryModal({ onClose }: { onClose: () => void }) {
           </div>
           <div className="mp-form">
             <DocField label="Colaborador">
-              <select className="mp-input">
+              <select className="mp-input" value={colabId} onChange={e => setColabId(e.target.value)} disabled={colabsQuery.isLoading}>
                 <option value="">Selecione…</option>
-                {COLAB_NAMES.map(n => <option key={n}>{n}</option>)}
+                {(colabsQuery.data ?? []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
             </DocField>
             {tipo === 'cert' ? (
               <>
                 <DocField label="Norma / treinamento">
-                  <select className="mp-input">
+                  <select className="mp-input" value={norma} onChange={e => setNorma(e.target.value)}>
                     <option value="">Selecione…</option>
                     {NR_OPTS.map(n => <option key={n}>{n}</option>)}
                   </select>
@@ -296,9 +346,14 @@ function DateEntryModal({ onClose }: { onClose: () => void }) {
           </div>
           <div className="modal-foot">
             <button className="tbtn" onClick={onClose}>Cancelar</button>
-            <button className="tbtn primary" onClick={onClose}>
-              <CheckCircle2 size={13} />
-              {tipo === 'epi' ? `Salvar ficha (${epiItems.length} ${epiItems.length === 1 ? 'item' : 'itens'})` : 'Salvar registro'}
+            <button
+              className="tbtn primary"
+              disabled={!canSave || criar.isPending}
+              style={(!canSave || criar.isPending) ? { opacity: 0.5, pointerEvents: 'none' } : undefined}
+              onClick={() => void handleSave()}
+            >
+              {criar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13} />}
+              {criar.isPending ? 'Salvando...' : tipo === 'epi' ? `Salvar ficha (${epiItems.length} ${epiItems.length === 1 ? 'item' : 'itens'})` : 'Salvar registro'}
             </button>
           </div>
         </div>
@@ -944,7 +999,7 @@ function DocumentosEmpresa() {
       </div>
 
       {novoOpen && empresaId && <NovoDocumentoModal onClose={() => setNovoOpen(false)} empresaId={empresaId} />}
-      {dateOpen && <DateEntryModal onClose={() => setDateOpen(false)} />}
+      {dateOpen && empresaId && <DateEntryModal onClose={() => setDateOpen(false)} empresaId={empresaId} />}
       {confirmDelId && (
         <div className="modal-backdrop" onClick={() => setConfirmDelId(null)}>
           <div className="modal" style={{ maxWidth: 430 }} onClick={e => e.stopPropagation()}>
