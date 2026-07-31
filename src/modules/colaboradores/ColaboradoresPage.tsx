@@ -30,17 +30,6 @@ interface NrEntry {
   venc: string
 }
 
-const INITIAL_NRS: NrEntry[] = [
-  { nr: "NR-35", desc: "Trabalho em altura",            carga: "8h",  aplica: true,  status: "warn", venc: "12/03/2026" },
-  { nr: "NR-11", desc: "Operação de empilhadeira",      carga: "16h", aplica: true,  status: "ok",   venc: "22/07/2027" },
-  { nr: "NR-12", desc: "Segurança em máquinas",          carga: "8h",  aplica: true,  status: "ok",   venc: "08/09/2026" },
-  { nr: "NR-06", desc: "Equip. de proteção individual",  carga: "4h",  aplica: true,  status: "ok",   venc: "01/12/2026" },
-  { nr: "NR-33", desc: "Espaço confinado",               carga: "16h", aplica: true,  status: "crit", venc: "Vencido há 18 dias" },
-  { nr: "NR-10", desc: "Segurança em inst. elétricas",   carga: "40h", aplica: false, status: "ok",   venc: "—" },
-  { nr: "NR-05", desc: "CIPA · Comissão interna",        carga: "20h", aplica: false, status: "ok",   venc: "—" },
-  { nr: "NR-20", desc: "Inflamáveis e combustíveis",     carga: "16h", aplica: false, status: "ok",   venc: "—" },
-]
-
 const STATUS_LABEL: Record<NrStatus, string> = { ok: "Em dia", warn: "Vencendo", crit: "Vencido" }
 
 /* ============================================================
@@ -54,8 +43,8 @@ interface ProfileModalProps {
 
 function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
   const [editing, setEditing] = useState(false)
-  const [nrs, setNrs] = useState<NrEntry[]>(INITIAL_NRS)
-  const [draft, setDraft] = useState<NrEntry[]>(INITIAL_NRS)
+  const [nrs, setNrs] = useState<NrEntry[]>([])
+  const [draft, setDraft] = useState<NrEntry[]>([])
 
   const initials = c.nome.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase()
   const cor = (() => {
@@ -198,6 +187,11 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
                   </tr>
                 </thead>
                 <tbody>
+                  {(editing ? draft : visiveis).length === 0 && (
+                    <tr><td colSpan={editing ? 5 : 5} style={{ textAlign:'center', padding:24, color:'var(--ink-400)', fontSize:12 }}>
+                      Nenhuma NR configurada. Em breve esta seção será integrada com a Matriz de Treinamentos.
+                    </td></tr>
+                  )}
                   {(editing ? draft : visiveis).map((t, i) => (
                     <tr key={i} style={editing && !t.aplica ? { opacity: 0.45 } : {}}>
                       {editing && (
@@ -298,13 +292,11 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
     } catch { /* toast já disparado */ }
   }
 
-  const csvPreview = [
-    { nome: "Tiago Ferreira",  cpf: "401.220.118-03", cargo: "Op. Produção",   setor: "Produção",       ok: true  },
-    { nome: "Juliana Prado",   cpf: "318.905.226-71", cargo: "Analista Fiscal", setor: "Administrativo", ok: true  },
-    { nome: "Marcos Vinícius", cpf: "—",              cargo: "Op. Soldador",   setor: "Produção",       ok: false },
-    { nome: "Renata Camargo",  cpf: "229.774.330-58", cargo: "Téc. Segurança", setor: "SST",            ok: true  },
-  ]
-  const validRows = csvPreview.filter(r => r.ok).length
+  const csvPreview: never[] = []
+  const validRows = 0
+
+  // Renderiza pré-visualização somente quando há arquivo carregado
+  const hasCsvPreview = csvPreview.length > 0
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -421,9 +413,10 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
                 <button className="tbtn primary" style={{ margin: "0 auto" }}><Plus size={13} /> Selecionar arquivo</button>
               </div>
 
+              {hasCsvPreview && (
               <div className="card" style={{ padding: 0, overflow: "hidden" }}>
                 <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 600 }}>Pré-visualização · colaboradores.csv</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 600 }}>Pré-visualização</span>
                   <span style={{ fontSize: 11.5, color: "var(--ink-500)" }}>
                     <strong style={{ color: "var(--green-600)" }}>{validRows} válidos</strong> · {csvPreview.length - validRows} com erro
                   </span>
@@ -431,22 +424,11 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
                 <table className="tbl">
                   <thead><tr><th>Nome</th><th>CPF</th><th>Cargo · Setor</th><th>Status</th></tr></thead>
                   <tbody>
-                    {csvPreview.map((r, i) => (
-                      <tr key={i}>
-                        <td style={{ fontWeight: 500 }}>{r.nome}</td>
-                        <td style={{ color: r.ok ? "var(--ink-700)" : "var(--red-500)", fontWeight: r.ok ? 400 : 600 }}>{r.cpf}</td>
-                        <td style={{ fontSize: 12 }}>{r.cargo}<span style={{ color: "var(--ink-500)" }}> · {r.setor}</span></td>
-                        <td>
-                          <span className={`chip ${r.ok ? "ok" : "crit"}`}>
-                            {r.ok ? <CheckCircle size={11} /> : <AlertTriangle size={11} />}
-                            {r.ok ? "Pronto" : "CPF ausente"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    <tr><td colSpan={4} style={{ textAlign:'center', padding:20, color:'var(--ink-400)', fontSize:12 }}>Nenhum arquivo carregado.</td></tr>
                   </tbody>
                 </table>
               </div>
+              )}
             </>
           )}
         </div>

@@ -38,15 +38,7 @@ const CELL_COLORS: Record<CellStatus, { bg: string; border: string }> = {
 
 const CELL_SYMBOL: Record<CellStatus, string> = { ok: "✓", warn: "!", crit: "✕", na: "—" }
 
-// NR_CATALOG estático como fallback enquanto o banco não carregou
-const NR_CATALOG_FALLBACK: NrInfo[] = [
-  { nr: "NR-35", titulo: "Trabalho em Altura",                   carga: "8h",  validade: "2 anos", color: "#F59E0B" },
-  { nr: "NR-33", titulo: "Espaço Confinado",                     carga: "16h", validade: "1 ano",  color: "#EF4444" },
-  { nr: "NR-10", titulo: "Segurança em Instalações Elétricas",   carga: "40h", validade: "2 anos", color: "#3B82F6" },
-  { nr: "NR-11", titulo: "Operação de Empilhadeira",             carga: "16h", validade: "1 ano",  color: "#3B82F6" },
-  { nr: "NR-12", titulo: "Segurança em Máquinas e Equipamentos",  carga: "8h",  validade: "—",      color: "#10B981" },
-  { nr: "NR-06", titulo: "Equip. de Proteção Individual",        carga: "4h",  validade: "—",      color: "#10B981" },
-]
+
 
 /* ============================================================
    CellDetail — painel lateral com detalhe da célula
@@ -58,6 +50,8 @@ interface CellRef {
   colab: ColabRow
   nr: string
   status: CellStatus
+  realizacao?: string | null
+  vencimento?: string | null
 }
 
 function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: NrInfo[]; onClose: () => void }) {
@@ -103,18 +97,12 @@ function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: Nr
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
           <div className="prof-row" style={{ padding: "8px 0" }}>
             <span className="lbl">Última conclusão</span>
-            <span className="val">{st === "crit" ? "12/01/2024" : "08/03/2024"}</span>
+            <span className="val">{cell.realizacao ? new Date(cell.realizacao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</span>
           </div>
           <div className="prof-row" style={{ padding: "8px 0" }}>
             <span className="lbl">Vencimento</span>
             <span className="val" style={{ color: st === "crit" ? "var(--red-500)" : st === "warn" ? "var(--orange-600)" : "var(--ink-900)" }}>
-              {st === "crit" ? "Há 47 dias" : st === "warn" ? "12/03/2026" : "08/03/2027"}
-            </span>
-          </div>
-          <div className="prof-row" style={{ padding: "8px 0" }}>
-            <span className="lbl">Certificado</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--blue-500)", fontWeight: 600, fontSize: 12 }}>
-              <Download size={12} /> CT-{(2024 + cell.rowIdx * 13 + cell.colIdx * 7) % 9999}
+              {cell.vencimento ? new Date(cell.vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}
             </span>
           </div>
         </div>
@@ -426,7 +414,11 @@ export default function TreinamentosPage() {
                             style={{ textAlign: "center", padding: 8, opacity: dimmed ? 0.32 : 1, transition: "opacity .15s" }}
                           >
                             <button
-                              onClick={e => { e.stopPropagation(); setSelectedCell({ rowIdx: ri, colIdx: ci, nr, colab: c, status: st }) }}
+                              onClick={e => {
+                                e.stopPropagation()
+                                const trein = treinMap.get(`${(c as ColabRow & {id?: string}).id}:${(nrInfo as NrInfo & {tipoId?: string}).tipoId}`)
+                                setSelectedCell({ rowIdx: ri, colIdx: ci, nr, colab: c, status: st, realizacao: trein?.data_realizacao ?? null, vencimento: trein?.data_vencimento ?? null })
+                              }}
                               title={`${c.nome} · ${nr} · ${st}`}
                               style={{
                                 width: 28, height: 28, borderRadius: 8,
@@ -480,7 +472,7 @@ export default function TreinamentosPage() {
         {/* Painel lateral */}
         <div className="glass" style={{ position: "sticky", top: 80 }}>
           {selectedCell ? (
-            <CellDetail cell={selectedCell} nrCatalog={NR_CATALOG.length ? NR_CATALOG : NR_CATALOG_FALLBACK} onClose={() => setSelectedCell(null)} />
+            <CellDetail cell={selectedCell} nrCatalog={NR_CATALOG} onClose={() => setSelectedCell(null)} />
           ) : (
             <NRRanking stats={nrStats} activeNr={activeNr} onPick={setActiveNr} />
           )}

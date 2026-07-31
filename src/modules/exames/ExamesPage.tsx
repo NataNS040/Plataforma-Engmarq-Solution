@@ -42,18 +42,11 @@ function asoStatus(validadeISO: string | undefined | null) {
 
 type AsoStatusKey = 'ok' | 'warn' | 'crit' | 'neutral'
 
-interface ColobInfo { cor: string; cargo: string; setor: string }
-const COLABS_MAP: Record<string, ColobInfo> = {
-  'Carlos M. Soares':   { cor: '#2563EB', cargo: 'Op. Empilhadeira', setor: 'Logística' },
-  'Marina S. Oliveira': { cor: '#DB2777', cargo: 'Coord. RH',        setor: 'Administrativo' },
-  'Pedro H. Almeida':   { cor: '#7C3AED', cargo: 'Soldador',         setor: 'Produção' },
-  'Renata Camargo':     { cor: '#0891B2', cargo: 'Téc. Segurança',   setor: 'SST' },
-  'João V. Mendes':     { cor: '#059669', cargo: 'Eletricista',      setor: 'Manutenção' },
-  'Juliana Prado':      { cor: '#D97706', cargo: 'Analista Fiscal',  setor: 'Administrativo' },
-  'Tiago Ferreira':     { cor: '#475569', cargo: 'Op. Produção',     setor: 'Produção' },
-  'Beatriz Nunes':      { cor: '#BE185D', cargo: 'Enfermeira Trab.', setor: 'SST' },
+const AVATAR_COLORS = ['#2563EB','#DB2777','#7C3AED','#0891B2','#059669','#D97706','#475569','#BE185D']
+function avatarColor(nome: string) {
+  let h = 0; for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h)
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
 }
-const byName = (n: string): ColobInfo => COLABS_MAP[n] ?? { cor: '#94A3B8', cargo: '—', setor: '—' }
 const initials = (n: string) => n.split(' ').filter(Boolean).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
 
 // ---------------------------------------------------------------------------
@@ -317,7 +310,6 @@ function ScheduleModal({ prefill, onClose }: { prefill: string | null; onClose: 
             <Field label="Colaborador" full>
               <select className="mp-input" value={colab} onChange={e => setColab(e.target.value)}>
                 <option value="">Selecione…</option>
-                {Object.keys(COLABS_MAP).map(n => <option key={n}>{n}</option>)}
               </select>
             </Field>
             <Field label="Tipo de exame" full>
@@ -434,7 +426,7 @@ function AgendaCalendar({ agenda, onNew: _onNew }: { agenda: AgendaItem[]; onNew
             : 'Selecione um dia com exame'}
         </div>
         {selEvents.map(g => {
-          const c = byName(g.colab)
+          const c = { cor: avatarColor(g.colab) }
           return (
             <div key={g.id} className="cal-event">
               <span className="cal-event-time">{g.hora}</span>
@@ -486,7 +478,7 @@ function ExamesEmpresa() {
   const [confirmDel, setConfirmDel] = useState<typeof asos[number] | null>(null)
   const [prefill, setPrefill] = useState<string | null>(null)
 
-  const rows = useMemo(() => asos.map(a => ({ ...a, ...byName(a.colab), st: asoStatus(a.validade) })), [asos])
+  const rows = useMemo(() => asos.map(a => ({ ...a, cor: avatarColor(a.colab), cargo: '—', setor: '—', st: asoStatus(a.validade) })), [asos])
   const kpis = useMemo(() => {
     const total = rows.length
     const ok   = rows.filter(r => r.st.key === 'ok').length
@@ -937,7 +929,7 @@ function ExamesAdmin() {
                   const st = asoStatus(c.validade)
                   return (
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:9, padding:'7px 9px', borderRadius:9, background:'var(--surface-2)', border:'1px solid var(--border)' }}>
-                      <span className="ava" style={{ background: byName(c.nome).cor ?? '#94A3B8', width:26, height:26, fontSize:9, flexShrink:0 }}>{initials(c.nome)}</span>
+                      <span className="ava" style={{ background: avatarColor(c.nome), width:26, height:26, fontSize:9, flexShrink:0 }}>{initials(c.nome)}</span>
                       <div style={{ minWidth:0, flex:1 }}>
                         <div style={{ fontSize:12, fontWeight:600, color:'var(--ink-900)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.nome}</div>
                         <div style={{ fontSize:10.5, color:'var(--ink-500)' }}>{c.cargo} · {c.tipo}</div>
