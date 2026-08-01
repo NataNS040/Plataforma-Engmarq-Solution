@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react"
-import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight } from "lucide-react"
+import { useState, useMemo, useEffect } from "react"
+import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus } from "lucide-react"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores } from "@/hooks/queries/useColaboradores"
-import { useTreinamentos, useTreinamentoTipos } from "@/hooks/queries/useTreinamentos"
+import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento } from "@/hooks/queries/useTreinamentos"
 
 /* ============================================================
    Types
@@ -184,6 +184,144 @@ function NRRanking({ stats, activeNr, onPick }: { stats: NrStat[]; activeNr: str
 }
 
 /* ============================================================
+   AddTreinamentoModal
+   ============================================================ */
+
+import type { TreinamentoTipo } from "@/types/database"
+
+interface AddTreinamentoModalProps {
+  colab: { id: string; nome: string; cor: string; foto: string }
+  tipos: TreinamentoTipo[]
+  empresaId: string
+  onClose: () => void
+}
+
+function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinamentoModalProps) {
+  const registrar = useRegistrarTreinamento()
+  const [tipoId, setTipoId] = useState(tipos[0]?.id ?? "")
+  const [dataRealizacao, setDataRealizacao] = useState("")
+  const [dataVencimento, setDataVencimento] = useState("")
+  const [cargaHoraria, setCargaHoraria] = useState("")
+  const [instrutor, setInstrutor] = useState("")
+
+  useEffect(() => {
+    const tipo = tipos.find(t => t.id === tipoId)
+    if (tipo?.validade_meses && dataRealizacao) {
+      const d = new Date(dataRealizacao + "T00:00:00")
+      d.setMonth(d.getMonth() + tipo.validade_meses)
+      setDataVencimento(d.toISOString().slice(0, 10))
+    } else {
+      setDataVencimento("")
+    }
+  }, [tipoId, dataRealizacao, tipos])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!tipoId || !dataRealizacao) return
+    await registrar.mutateAsync({
+      empresa_id:          empresaId,
+      colaborador_id:      colab.id,
+      treinamento_tipo_id: tipoId,
+      data_realizacao:     dataRealizacao,
+      data_vencimento:     dataVencimento || null,
+      carga_horaria:       cargaHoraria ? Number(cargaHoraria) : null,
+      instrutor:           instrutor || null,
+    })
+    onClose()
+  }
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: "var(--surface)", borderRadius: 16, padding: 24, width: 460, maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,0.18)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 16 }}>Registrar Treinamento</div>
+          <button className="icon-btn" onClick={onClose} style={{ width: 28, height: 28 }}><X size={13} /></button>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, padding: "10px 12px", background: "var(--bg)", borderRadius: 10 }}>
+          <div className="ava" style={{ background: colab.cor, width: 36, height: 36, fontSize: 12 }}>{colab.foto}</div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{colab.nome}</div>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-600)", display: "block", marginBottom: 6 }}>NR / Treinamento *</label>
+            <select
+              value={tipoId}
+              onChange={e => setTipoId(e.target.value)}
+              required
+              style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", fontSize: 13, color: "var(--ink-900)" }}
+            >
+              {tipos.map(t => (
+                <option key={t.id} value={t.id}>{t.nr_referencia ? `${t.nr_referencia} — ` : ""}{t.nome}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-600)", display: "block", marginBottom: 6 }}>Data de realização *</label>
+              <input
+                type="date"
+                value={dataRealizacao}
+                onChange={e => setDataRealizacao(e.target.value)}
+                required
+                style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", fontSize: 13, color: "var(--ink-900)" }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-600)", display: "block", marginBottom: 6 }}>
+                Vencimento {tipos.find(t => t.id === tipoId)?.validade_meses ? "(auto)" : ""}
+              </label>
+              <input
+                type="date"
+                value={dataVencimento}
+                onChange={e => setDataVencimento(e.target.value)}
+                style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", fontSize: 13, color: "var(--ink-900)" }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-600)", display: "block", marginBottom: 6 }}>Carga horária (h)</label>
+              <input
+                type="number"
+                value={cargaHoraria}
+                onChange={e => setCargaHoraria(e.target.value)}
+                min={1}
+                placeholder="Ex: 8"
+                style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", fontSize: 13, color: "var(--ink-900)" }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-600)", display: "block", marginBottom: 6 }}>Instrutor</label>
+              <input
+                type="text"
+                value={instrutor}
+                onChange={e => setInstrutor(e.target.value)}
+                placeholder="Nome do instrutor"
+                style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", fontSize: 13, color: "var(--ink-900)" }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
+            <button type="button" className="tbtn ghost" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="tbtn primary" disabled={registrar.isPending} style={{ justifyContent: "center" }}>
+              {registrar.isPending ? "Salvando…" : "Registrar treinamento"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
    TreinamentosPage
    ============================================================ */
 
@@ -255,6 +393,7 @@ export default function TreinamentosPage() {
   const [setorFilter, setSetorFilter] = useState("Todos")
   const [selectedCell, setSelectedCell] = useState<CellRef | null>(null)
   const [activeNr, setActiveNr] = useState<string | null>(null)
+  const [addingForColab, setAddingForColab] = useState<{ id: string; nome: string; cor: string; foto: string } | null>(null)
 
   const nrStats = useMemo(() => {
     return NR_CATALOG.map((info) => {
@@ -394,12 +533,22 @@ export default function TreinamentosPage() {
                   return (
                     <tr key={ri}>
                       <td style={{ position: "sticky", left: 0, background: "var(--surface)", zIndex: 1 }}>
-                        <div className="cell-person">
-                          <div className="ava" style={{ background: c.cor, width: 30, height: 30, fontSize: 11 }}>{c.foto}</div>
-                          <div>
-                            <div className="name" style={{ fontSize: 12.5 }}>{c.nome}</div>
-                            <div className="role" style={{ fontSize: 10.5 }}>{c.setor}</div>
+                        <div className="cell-person" style={{ justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div className="ava" style={{ background: c.cor, width: 30, height: 30, fontSize: 11 }}>{c.foto}</div>
+                            <div>
+                              <div className="name" style={{ fontSize: 12.5 }}>{c.nome}</div>
+                              <div className="role" style={{ fontSize: 10.5 }}>{c.setor}</div>
+                            </div>
                           </div>
+                          <button
+                            className="tbtn ghost"
+                            style={{ padding: "2px 8px", fontSize: 11, height: 24, gap: 4, marginLeft: 6, flexShrink: 0 }}
+                            title="Registrar treinamento"
+                            onClick={e => { e.stopPropagation(); setAddingForColab({ id: (c as ColabRow & { id?: string }).id!, nome: c.nome, cor: c.cor, foto: c.foto }) }}
+                          >
+                            <Plus size={11} /> Registrar
+                          </button>
                         </div>
                       </td>
                       {NR_CATALOG.map((nrInfo, ci) => {
@@ -478,6 +627,15 @@ export default function TreinamentosPage() {
           )}
         </div>
       </div>
+
+      {addingForColab && empresaId && (
+        <AddTreinamentoModal
+          colab={addingForColab}
+          tipos={nrTipos}
+          empresaId={empresaId}
+          onClose={() => setAddingForColab(null)}
+        />
+      )}
 
     </div>
   )

@@ -283,8 +283,13 @@ function ConfirmDelete({ row, onCancel, onConfirm }: { row: AsoSeed; onCancel: (
 // ---------------------------------------------------------------------------
 // ExamesEmpresa
 // ---------------------------------------------------------------------------
-function ExamesEmpresa() {
-  const { empresaId } = useCurrentProfile()
+function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
+  empresaIdProp?: string | null
+  empresaNome?: string
+  onBack?: () => void
+}) {
+  const { empresaId: empresaIdPerfil } = useCurrentProfile()
+  const empresaId = empresaIdProp ?? empresaIdPerfil
   const asosQuery = useExames(empresaId)
   const asosBanco = asosQuery.data ?? []
 
@@ -345,9 +350,16 @@ function ExamesEmpresa() {
   return (
     <div className="content">
       <div className="page-header">
-        <div>
-          <h1>ASOs e PCMSO</h1>
-          <p className="sub">Logix Industrial · atestados de saúde ocupacional · status automático por validade</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {onBack && (
+            <button className="icon-btn sm" title="Voltar" onClick={onBack} style={{ marginRight:4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          )}
+          <div>
+            <h1>ASOs e PCMSO{empresaNome ? ` · ${empresaNome}` : ''}</h1>
+            <p className="sub">Atestados de saúde ocupacional · status automático por validade</p>
+          </div>
         </div>
         <div className="toolbar">
           <button className="tbtn"><Download size={14}/> Exportar</button>
@@ -493,6 +505,22 @@ function ExamesEmpresa() {
 // ExamesAdmin
 // ---------------------------------------------------------------------------
 function ExamesAdmin() {
+  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
+
+  if (selectedEmpresa) {
+    return (
+      <ExamesEmpresa
+        empresaIdProp={selectedEmpresa.id}
+        empresaNome={selectedEmpresa.nome}
+        onBack={() => setSelectedEmpresa(null)}
+      />
+    )
+  }
+
+  return <ExamesAdminList onSelect={setSelectedEmpresa} />
+}
+
+function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
   const empresasQuery = useEmpresas()
   const empresas = empresasQuery.data ?? []
   const kpisQuery = useDashboardKpis('all')
@@ -552,7 +580,11 @@ function ExamesAdmin() {
                 <tr><td colSpan={4} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
               )}
               {empresas.map((e, i) => (
-                <tr key={e.id}>
+                <tr
+                  key={e.id}
+                  style={{ cursor:'pointer' }}
+                  onClick={() => onSelect({ id: e.id, nome: e.razao_social })}
+                >
                   <td>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <span className="ava" style={{ background: COLORS[i % COLORS.length], borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>

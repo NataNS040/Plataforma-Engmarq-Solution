@@ -322,6 +322,22 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
 // DocumentosAdmin
 // ---------------------------------------------------------------------------
 function DocumentosAdmin() {
+  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
+
+  if (selectedEmpresa) {
+    return (
+      <DocumentosEmpresa
+        empresaIdProp={selectedEmpresa.id}
+        empresaNome={selectedEmpresa.nome}
+        onBack={() => setSelectedEmpresa(null)}
+      />
+    )
+  }
+
+  return <DocumentosAdminList onSelect={setSelectedEmpresa} />
+}
+
+function DocumentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
   const empresasQuery = useEmpresas()
   const empresas = empresasQuery.data ?? []
   const kpisQuery = useDashboardKpis('all')
@@ -381,7 +397,11 @@ function DocumentosAdmin() {
                 <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
               )}
               {empresas.map((e, i) => (
-                <tr key={e.id}>
+                <tr
+                  key={e.id}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => onSelect({ id: e.id, nome: e.razao_social })}
+                >
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span className="ava" style={{ background: COLORS[i % COLORS.length], borderRadius: 8, width: 32, height: 32, fontSize: 12, flexShrink: 0 }}>
@@ -518,8 +538,13 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
   )
 }
 
-function DocumentosEmpresa() {
-  const { empresaId } = useCurrentProfile()
+function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
+  empresaIdProp?: string | null
+  empresaNome?: string
+  onBack?: () => void
+}) {
+  const { empresaId: empresaIdPerfil } = useCurrentProfile()
+  const empresaId = empresaIdProp ?? empresaIdPerfil
   const docQuery = useDocumentos(empresaId)
   const deletar  = useDeletarDocumento()
 
@@ -607,9 +632,16 @@ function DocumentosEmpresa() {
   return (
     <div className="content">
       <div className="page-header">
-        <div>
-          <h1>Documentos SST</h1>
-          <p className="sub">Logix Industrial · documentos mestres e registros por colaborador · status automático por validade</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {onBack && (
+            <button className="icon-btn sm" title="Voltar" onClick={onBack} style={{ marginRight:4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          )}
+          <div>
+            <h1>Documentos SST{empresaNome ? ` · ${empresaNome}` : ''}</h1>
+            <p className="sub">Documentos mestres e registros por colaborador · status automático por validade</p>
+          </div>
         </div>
         <div className="toolbar">
           <button className="tbtn"><Download size={14} /> Exportar lista</button>
