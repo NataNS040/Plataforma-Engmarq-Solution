@@ -1,16 +1,18 @@
-import { useState, useMemo } from 'react'
+﻿import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Shield, Heart, FileText, LayoutGrid, GraduationCap, HardHat,
   Download, Calendar, Plus, CheckCircle2, Clock, AlertTriangle,
-  Search, Eye, Trash2, X, Loader2, Pencil,
+  Search, Eye, Trash2, X, Loader2,
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento } from '@/hooks/queries/useDocumentos'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
+import { useEmpresas } from '@/hooks/queries/useEmpresas'
+import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { DocStatus as DbDocStatus } from '@/types/database'
 
 // ---------------------------------------------------------------------------
@@ -31,13 +33,6 @@ interface ColabReg {
 type DocRow =
   | (EmpresaDoc & { kind: 'empresa'; st: StatusResult })
   | (ColabReg  & { kind: 'colab';   st: StatusResult })
-
-interface AdminDocCol { id: string; label: string }
-interface AdminDocEntry {
-  empresa: string; setor: string; n: number
-  docs: Record<string, string | null>
-}
-interface AdminCellSel { empresa: string; col: AdminDocCol }
 
 interface EpiItem { equip: string; ca: string; entrega: string; validade: string }
 
@@ -74,12 +69,6 @@ function addYears(iso: string, n: number): string {
   d.setFullYear(d.getFullYear() + n)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
-function emissaoFrom(validadeISO: string | null): string | null {
-  if (!validadeISO) return null
-  const [y, m, dd] = validadeISO.split('-').map(Number)
-  return `${y - 1}-${String(m).padStart(2, '0')}-${String(dd).padStart(2, '0')}`
-}
-
 // ---------------------------------------------------------------------------
 // Static data
 // ---------------------------------------------------------------------------
@@ -115,38 +104,6 @@ const CAT_LABEL: Record<string, string> = {
 // Dados auxiliares para DateEntryModal (mockados — aguarda Fase 4.3)
 const NR_OPTS = ['NR-35 · Trabalho em altura', 'NR-33 · Espaço confinado', 'NR-10 · Segurança elétrica', 'NR-11 · Empilhadeira', 'NR-12 · Máquinas', 'NR-06 · EPI']
 const EPI_OPTS = ['Capacete de segurança', 'Protetor auricular', 'Cinto talabarte duplo', 'Luvas de proteção', 'Botina de segurança', 'Óculos de proteção']
-
-// ---------------------------------------------------------------------------
-// Admin data
-// ---------------------------------------------------------------------------
-const ADMIN_DOC_COLS: AdminDocCol[] = [
-  { id: 'pgr', label: 'PGR' }, { id: 'pcmso', label: 'PCMSO' }, { id: 'ltcat', label: 'LTCAT' },
-  { id: 'insal', label: 'Insalub.' }, { id: 'ergo', label: 'Ergonôm.' }, { id: 'inv', label: 'Invent.' },
-]
-const ADMIN_DOC_DATA: AdminDocEntry[] = [
-  { empresa: 'Logix Industrial',  setor: 'Logística',    n: 247, docs: { pgr: '2027-01-15', pcmso: '2027-02-01', ltcat: '2026-06-20', insal: '2026-05-18', ergo: '2026-12-10', inv: '2027-01-15' } },
-  { empresa: 'MetalSul Ltda',     setor: 'Indústria',    n: 412, docs: { pgr: '2026-06-12', pcmso: '2025-12-30', ltcat: '2026-08-01', insal: '2026-06-25', ergo: '2027-03-10', inv: '2026-06-12' } },
-  { empresa: 'Construtora Vita',  setor: 'Const. Civil', n: 184, docs: { pgr: '2026-07-05', pcmso: '2026-09-12', ltcat: '2026-06-28', insal: null,         ergo: '2026-06-15', inv: '2026-07-05' } },
-  { empresa: 'AgroNorte S.A.',    setor: 'Agro',         n: 321, docs: { pgr: '2027-04-20', pcmso: '2027-01-08', ltcat: '2026-11-30', insal: '2026-10-02', ergo: '2027-02-18', inv: '2027-04-20' } },
-  { empresa: 'TransRápido',       setor: 'Transporte',   n: 156, docs: { pgr: '2025-11-20', pcmso: '2026-06-30', ltcat: null,         insal: null,         ergo: '2026-09-04', inv: '2025-11-20' } },
-  { empresa: 'Química Beta',      setor: 'Químico',      n: 203, docs: { pgr: '2026-12-01', pcmso: '2026-07-15', ltcat: '2027-01-22', insal: '2026-08-19', ergo: '2026-06-08', inv: '2026-12-01' } },
-  { empresa: 'Frigorífico Sul',   setor: 'Alimentos',    n: 389, docs: { pgr: '2026-06-09', pcmso: '2026-05-28', ltcat: '2026-10-11', insal: '2026-07-30', ergo: '2027-05-15', inv: '2026-06-09' } },
-  { empresa: 'Têxtil Aurora',     setor: 'Têxtil',       n: 98,  docs: { pgr: '2027-03-03', pcmso: '2027-02-20', ltcat: '2026-09-09', insal: null,         ergo: '2027-01-25', inv: '2027-03-03' } },
-]
-const ADMIN_DOC_COLORS: Record<string, { bg: string; border: string }> = {
-  ok:   { bg: '#10B981', border: '#0E9F6E' },
-  warn: { bg: '#F59E0B', border: '#D97706' },
-  crit: { bg: '#EF4444', border: '#DC2626' },
-  na:   { bg: '#E2E8F0', border: '#CBD5E1' },
-}
-const ADMIN_DOC_META: Record<string, { nome: string; resp: string; ver: string }> = {
-  pgr:   { nome: 'PGR — Gerenciamento de Riscos',   resp: 'Eng. Marcelo Tannous', ver: 'v3' },
-  pcmso: { nome: 'PCMSO — Controle Médico',          resp: 'Dra. Helena Vasquez',  ver: 'v2' },
-  ltcat: { nome: 'LTCAT — Cond. Ambientais',         resp: 'Eng. Ana Becker',      ver: 'v1' },
-  insal: { nome: 'Laudo de Insalubridade',           resp: 'Eng. Ana Becker',      ver: 'v2' },
-  ergo:  { nome: 'Laudo Ergonômico (AET)',           resp: 'Fisio. Rui Campos',    ver: 'v1' },
-  inv:   { nome: 'Inventário de Riscos',             resp: 'Eng. Marcelo Tannous', ver: 'v3' },
-}
 
 // ---------------------------------------------------------------------------
 // StatusPreview
@@ -364,46 +321,19 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
 // ---------------------------------------------------------------------------
 // DocumentosAdmin
 // ---------------------------------------------------------------------------
-type AdminStatusCell = { key: DocStatus | 'na'; label: string; rel: string }
-
 function DocumentosAdmin() {
-  const [sel, setSel] = useState<AdminCellSel | null>(null)
-
-  const flat = useMemo(() => {
-    const out: { empresa: string; col: AdminDocCol; validade: string | null; st: AdminStatusCell }[] = []
-    ADMIN_DOC_DATA.forEach(e => ADMIN_DOC_COLS.forEach(c => {
-      const v = e.docs[c.id] ?? null
-      out.push({ empresa: e.empresa, col: c, validade: v, st: v ? statusFrom(v) : { key: 'na', label: 'N/A', rel: '' } })
-    }))
-    return out
-  }, [])
-
-  const valid = flat.filter(f => f.st.key !== 'na')
-  const okN = valid.filter(f => f.st.key === 'ok').length
-  const warnN = valid.filter(f => f.st.key === 'warn').length
-  const critN = valid.filter(f => f.st.key === 'crit').length
-  const pct = valid.length ? Math.round((okN / valid.length) * 100) : 0
-
-  const attention = flat.filter(f => f.st.key === 'crit' || f.st.key === 'warn')
-    .sort((a, b) => (a.validade ?? '') < (b.validade ?? '') ? -1 : 1)
-
-  const empScore = (e: AdminDocEntry) => {
-    const cells = ADMIN_DOC_COLS.map(c => e.docs[c.id]).filter(Boolean).map(v => statusFrom(v!).key)
-    const ok = cells.filter(k => k === 'ok').length
-    return cells.length ? Math.round((ok / cells.length) * 100) : 0
-  }
-
-  const selEntry = sel ? ADMIN_DOC_DATA.find(x => x.empresa === sel.empresa) : null
-  const selValidade = selEntry ? (selEntry.docs[sel!.col.id] ?? null) : null
-  const selSt = selValidade ? statusFrom(selValidade) : { key: 'na', label: 'N/A', rel: '' }
-  const selMeta = sel ? (ADMIN_DOC_META[sel.col.id] ?? { nome: sel.col.label, resp: '—', ver: '' }) : null
+  const empresasQuery = useEmpresas()
+  const empresas = empresasQuery.data ?? []
+  const kpisQuery = useDashboardKpis('all')
+  const kpis = kpisQuery.data
+  const COLORS = ['#1F2A44','#10B981','#3B82F6','#8B5CF6','#F59E0B']
 
   return (
     <div className="content">
       <div className="page-header">
         <div>
           <h1>Documentos · EngMarq</h1>
-          <p className="sub">Visão consolidada · documentos mestres das 24 empresas-cliente · status automático por validade</p>
+          <p className="sub">Visão consolidada · documentos mestres das {empresas.length} empresas-cliente</p>
         </div>
         <div className="toolbar">
           <button className="tbtn"><Download size={14} /> Exportar consolidado</button>
@@ -412,210 +342,64 @@ function DocumentosAdmin() {
 
       <div className="kpi-row">
         <div className="glass kpi">
-          <div className="kpi-label"><span>Documentos monitorados</span><span className="kpi-ic violet"><FileText size={16} /></span></div>
-          <div className="kpi-value">{valid.length}</div>
-          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-500)' }}>{ADMIN_DOC_DATA.length} empresas · {ADMIN_DOC_COLS.length} tipos</div>
+          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic violet"><FileText size={16} /></span></div>
+          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
         </div>
         <div className="glass kpi">
-          <div className="kpi-label"><span>Em dia</span><span className="kpi-ic green"><CheckCircle2 size={16} /></span></div>
-          <div className="kpi-value">{pct}%</div>
-          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-500)' }}>{okN} de {valid.length} dentro da validade</div>
+          <div className="kpi-label"><span>Documentos monitorados</span><span className="kpi-ic blue"><FileText size={16} /></span></div>
+          <div className="kpi-value">{kpis?.totalDocumentos ?? '—'}</div>
         </div>
         <div className="glass kpi">
-          <div className="kpi-label"><span>Vencendo em 30 dias</span><span className="kpi-ic orange"><Clock size={16} /></span></div>
-          <div className="kpi-value">{warnN}</div>
-          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-500)' }}>renovação recomendada</div>
+          <div className="kpi-label"><span>Vencendo</span><span className="kpi-ic orange"><Clock size={16} /></span></div>
+          <div className="kpi-value">{kpis?.docsVencendo ?? '—'}</div>
         </div>
         <div className="glass kpi">
           <div className="kpi-label"><span>Vencidos</span><span className="kpi-ic red"><AlertTriangle size={16} /></span></div>
-          <div className="kpi-value" style={{ color: critN ? 'var(--red-500)' : 'var(--ink-900)' }}>{critN}</div>
-          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-500)' }}>em {new Set(flat.filter(f => f.st.key === 'crit').map(f => f.empresa)).size} empresas</div>
+          <div className="kpi-value" style={{ color: (kpis?.docsVencidos ?? 0) > 0 ? 'var(--red-500)' : undefined }}>
+            {kpis?.docsVencidos ?? '—'}
+          </div>
         </div>
       </div>
 
-      {attention.length > 0 && (
-        <div className="doc-alert">
-          <div className="doc-alert-ic"><AlertTriangle size={18} /></div>
-          <div style={{ flex: 1 }}>
-            <div className="doc-alert-title">{attention.length} documentos precisam de atenção em várias empresas</div>
-            <div className="doc-alert-row">
-              {attention.slice(0, 5).map((f, i) => (
-                <button key={i} className={`doc-alert-chip ${f.st.key}`} onClick={() => setSel({ empresa: f.empresa, col: f.col })}>
-                  <strong>{f.empresa.split(' ')[0]} · {f.col.label}</strong>
-                  <span>{f.st.label} {f.st.rel}</span>
-                </button>
-              ))}
-              {attention.length > 5 && <span className="doc-alert-more">+{attention.length - 5}</span>}
-            </div>
-          </div>
+      <div className="glass" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <div className="ctitle">Empresas — status documental</div>
+          <div className="csub">Clique numa empresa para ver os documentos</div>
         </div>
-      )}
-
-      <div className="row-2" style={{ gridTemplateColumns: '1fr 300px' }}>
-        <div className="glass" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <div>
-              <div className="ctitle">Matriz empresa × documento</div>
-              <div className="csub">Clique numa célula para ver o detalhe</div>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {(['ok', 'warn', 'crit', 'na'] as const).map(k => (
-                <span key={k} className="legend-pill">
-                  <span className="sw" style={{ background: ADMIN_DOC_COLORS[k].bg }} />
-                  {k === 'ok' ? 'Em dia' : k === 'warn' ? 'Vencendo' : k === 'crit' ? 'Vencido' : 'N/A'}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div style={{ overflow: 'auto' }}>
-            <table className="tbl" style={{ minWidth: 640 }}>
-              <thead>
-                <tr>
-                  <th style={{ position: 'sticky', left: 0, background: 'var(--bg)', zIndex: 1, minWidth: 210 }}>Empresa</th>
-                  {ADMIN_DOC_COLS.map(c => <th key={c.id} style={{ textAlign: 'center', minWidth: 64 }}>{c.label}</th>)}
-                  <th style={{ textAlign: 'right', minWidth: 70 }}>Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ADMIN_DOC_DATA.map((e, ri) => {
-                  const score = empScore(e)
-                  return (
-                    <tr key={ri}>
-                      <td style={{ position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 1 }}>
-                        <div className="aso-name">{e.empresa}</div>
-                        <div className="aso-role">{e.setor} · {e.n} colab.</div>
-                      </td>
-                      {ADMIN_DOC_COLS.map(c => {
-                        const v = e.docs[c.id] ?? null
-                        const st = v ? statusFrom(v) : { key: 'na', label: 'N/A', rel: '' }
-                        const isSel = sel?.empresa === e.empresa && sel?.col.id === c.id
-                        const colors = ADMIN_DOC_COLORS[st.key] ?? ADMIN_DOC_COLORS.na
-                        return (
-                          <td key={c.id} style={{ textAlign: 'center', padding: 8 }}>
-                            <button
-                              onClick={() => setSel({ empresa: e.empresa, col: c })}
-                              title={`${e.empresa} · ${c.label} · ${st.key === 'na' ? 'N/A' : fmtBR(v)}`}
-                              style={{
-                                width: 28, height: 28, borderRadius: 8,
-                                background: colors.bg,
-                                border: `2px solid ${isSel ? '#0F172A' : colors.border}`,
-                                cursor: 'pointer', display: 'grid', placeItems: 'center',
-                                color: '#FFF', fontSize: 12, fontWeight: 700,
-                                boxShadow: isSel ? '0 0 0 3px rgba(15,23,42,0.15)' : 'none',
-                              }}
-                            >
-                              {st.key === 'ok' ? '✓' : st.key === 'warn' ? '!' : st.key === 'crit' ? '✕' : '—'}
-                            </button>
-                          </td>
-                        )
-                      })}
-                      <td style={{ textAlign: 'right' }}>
-                        <span style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontVariantNumeric: 'tabular-nums',
-                          color: score >= 85 ? 'var(--green-600)' : score >= 70 ? 'var(--orange-600)' : 'var(--red-500)' }}>{score}%</span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="glass" style={{ alignSelf: 'start', position: 'sticky', top: 88 }}>
-          {sel && selEntry && selMeta ? (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div className="aso-name" style={{ fontSize: 15 }}>{sel.empresa}</div>
-                  <div className="aso-role">{selEntry.setor} · {selEntry.n} colaboradores</div>
-                </div>
-                <button className="icon-btn sm" onClick={() => setSel(null)}><X size={14} /></button>
-              </div>
-              <div className="status-preview" style={{ marginBottom: 14 }}>
-                <div className="status-preview-label">
-                  {selMeta.nome} {selMeta.ver && <span className="doc-ver" style={{ marginLeft: 4 }}>{selMeta.ver}</span>}
-                </div>
-                {selSt.key === 'na' ? (
-                  <div style={{ fontSize: 12, color: 'var(--ink-500)' }}>Não aplicável a esta empresa.</div>
-                ) : (
-                  <>
-                    <div className="status-preview-body" style={{ marginBottom: 10 }}>
-                      <span className={`chip ${selSt.key}`} style={{ fontSize: 12 }}>{selSt.label}</span>
-                      <span style={{ fontSize: 12, color: 'var(--ink-500)' }}>{selSt.rel}</span>
-                    </div>
-                    <div className="docmeta-grid">
-                      <div><span className="dm-lbl">Emissão</span><span className="dm-val">{fmtBR(emissaoFrom(selValidade))}</span></div>
-                      <div><span className="dm-lbl">Validade</span>
-                        <span className="dm-val" style={{ color: selSt.key === 'crit' ? 'var(--red-500)' : selSt.key === 'warn' ? 'var(--orange-600)' : 'var(--ink-900)' }}>
-                          {fmtBR(selValidade)}
-                        </span>
-                      </div>
-                      <div style={{ gridColumn: '1 / -1' }}><span className="dm-lbl">Responsável técnico</span><span className="dm-val">{selMeta.resp}</span></div>
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="aso-block-head">Documentos da empresa</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 14 }}>
-                {ADMIN_DOC_COLS.map(c => {
-                  const cv = selEntry.docs[c.id] ?? null
-                  const cst = cv ? statusFrom(cv) : { key: 'na', label: 'N/A', rel: '' }
-                  const isCur = c.id === sel.col.id
-                  return (
-                    <button key={c.id} onClick={() => setSel({ empresa: sel.empresa, col: c })}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-                        padding: '8px 10px', borderRadius: 9, cursor: 'pointer', textAlign: 'left',
-                        background: isCur ? 'var(--orange-50)' : 'var(--bg)',
-                        border: `1px solid ${isCur ? 'var(--orange-500)' : 'var(--border)'}` }}>
-                      <span style={{ fontSize: 12, fontWeight: isCur ? 700 : 500, color: 'var(--ink-900)' }}>{c.label}</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {cv && <span style={{ fontSize: 10.5, color: 'var(--ink-500)', fontVariantNumeric: 'tabular-nums' }}>{fmtBR(cv)}</span>}
-                        <span className={`chip ${cst.key}`} style={{ fontSize: 10 }}>{cst.label}</span>
+        <div style={{ overflow: 'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Setor</th>
+                <th>Cidade / UF</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {empresas.length === 0 && (
+                <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
+              )}
+              {empresas.map((e, i) => (
+                <tr key={e.id}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span className="ava" style={{ background: COLORS[i % COLORS.length], borderRadius: 8, width: 32, height: 32, fontSize: 12, flexShrink: 0 }}>
+                        {e.razao_social.slice(0, 1)}
                       </span>
-                    </button>
-                  )
-                })}
-              </div>
-              <div className="bar-inline" style={{ marginBottom: 14 }}>
-                <span style={{ fontSize: 11.5, color: 'var(--ink-500)', minWidth: 92 }}>Conformidade</span>
-                <div className="track">
-                  <div className={`fill ${empScore(selEntry) < 70 ? 'crit' : empScore(selEntry) < 85 ? 'warn' : ''}`} style={{ width: `${empScore(selEntry)}%` }} />
-                </div>
-                <span className="num">{empScore(selEntry)}%</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button className="tbtn primary" style={{ justifyContent: 'center' }}><Eye size={13} /> Abrir empresa</button>
-                {selSt.key !== 'na' && (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="tbtn" style={{ flex: 1, justifyContent: 'center' }}><Download size={13} /> Baixar</button>
-                    <button className={`tbtn${selSt.key !== 'ok' ? ' primary' : ''}`} style={{ flex: 1, justifyContent: 'center' }}>
-                      {selSt.key !== 'ok' ? <><Clock size={13} /> Renovar</> : <><Pencil size={13} /> Nova versão</>}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className="ctitle" style={{ marginBottom: 4 }}>Conformidade documental</div>
-              <div className="csub" style={{ marginBottom: 14 }}>Empresas com mais pendências</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[...ADMIN_DOC_DATA].sort((a, b) => empScore(a) - empScore(b)).slice(0, 6).map((e, i) => {
-                  const s = empScore(e)
-                  return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 11px', borderRadius: 9, background: 'var(--bg)', border: '1px solid var(--border)' }}>
-                      <div style={{ minWidth: 0 }}>
-                        <div className="aso-name" style={{ fontSize: 12.5 }}>{e.empresa}</div>
-                        <div className="aso-role" style={{ fontSize: 10.5 }}>{e.setor}</div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{e.razao_social}</div>
+                        <div style={{ fontSize: 11, color: 'var(--ink-500)' }}>{e.cnpj}</div>
                       </div>
-                      <span style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 13, fontVariantNumeric: 'tabular-nums',
-                        color: s >= 85 ? 'var(--green-600)' : s >= 70 ? 'var(--orange-600)' : 'var(--red-500)' }}>{s}%</span>
                     </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+                  </td>
+                  <td>{e.setor ?? '—'}</td>
+                  <td style={{ fontSize: 12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
+                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -623,7 +407,7 @@ function DocumentosAdmin() {
 }
 
 // ---------------------------------------------------------------------------
-// DocumentosEmpresa — plugada no Supabase
+// NovoDocumentoModal
 // ---------------------------------------------------------------------------
 const novoDocSchema = z.object({
   tipo_id:    z.string().min(1, 'Selecione o tipo de documento'),
@@ -673,7 +457,7 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
         <div className="modal-head">
           <div>
             <h2>Novo documento</h2>
-            <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginTop: 2 }}>Campo “arquivo” disponível em breve · status calculado automaticamente pela validade</div>
+            <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginTop: 2 }}>Campo "arquivo" disponível em breve · status calculado automaticamente pela validade</div>
           </div>
           <button className="icon-btn" onClick={onClose}><X size={16} /></button>
         </div>
