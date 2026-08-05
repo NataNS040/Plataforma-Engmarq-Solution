@@ -6,7 +6,7 @@ import {
 import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
-import { useExames, useCriarExame, useDeletarExame } from '@/hooks/queries/useExames'
+import { useExames, useCriarExame, useDeletarExame, useExamesCatalogo } from '@/hooks/queries/useExames'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useDocumentoTipos } from '@/hooks/queries/useDocumentos'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
@@ -66,7 +66,7 @@ const SUBTIPO_MAP: Record<string, SubtipoExame> = {
   'Demissional':         'demissional',
 }
 
-interface AsoSeed { id: string; colab: string; tipo: string; realizado: string; validade: string; resultado: string }
+interface AsoSeed { id: string; colab: string; tipo: string; realizado: string; validade: string; resultado: string; exames: string[] }
 
 // ---------------------------------------------------------------------------
 // Field helper
@@ -107,10 +107,17 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
   const [resultado, setResultado] = useState('')
   const [realizado, setRealizado] = useState('')
   const [validade, setValidade] = useState('')
+  const [examsSel, setExamsSel] = useState<string[]>([])
 
-  const colabsQuery = useColaboradores(empresaId)
-  const tiposQuery  = useDocumentoTipos()
-  const criar       = useCriarExame()
+  const colabsQuery   = useColaboradores(empresaId)
+  const tiposQuery    = useDocumentoTipos()
+  const catalogoQuery = useExamesCatalogo()
+  const criar         = useCriarExame()
+
+  const catalogo = catalogoQuery.data ?? []
+
+  const toggleExame = (nome: string) =>
+    setExamsSel(prev => prev.includes(nome) ? prev.filter(e => e !== nome) : [...prev, nome])
 
   const suggest = () => { if (realizado) setValidade(addYears(realizado, 1)) }
   const canSave = colabId && tipo && resultado && realizado && validade
@@ -123,14 +130,15 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
     if (!tipoAso) { toast.error('Cadastre tipos de documento em Configurações antes de registrar um ASO.'); return }
     try {
       await criar.mutateAsync({
-        empresa_id:     empresaId,
-        tipo_id:        tipoAso.id,
-        colaborador_id: colabId,
-        titulo:         `ASO — ${colab.nome}`,
-        subtipo_exame:  SUBTIPO_MAP[tipo] ?? 'periodico',
-        emissao:        realizado || null,
-        vencimento:     validade || null,
-        observacoes:    resultado,
+        empresa_id:        empresaId,
+        tipo_id:           tipoAso.id,
+        colaborador_id:    colabId,
+        titulo:            `ASO — ${colab.nome}`,
+        subtipo_exame:     SUBTIPO_MAP[tipo] ?? 'periodico',
+        emissao:           realizado || null,
+        vencimento:        validade || null,
+        observacoes:       resultado,
+        exames_realizados: examsSel.length > 0 ? examsSel : null,
       })
       onClose()
     } catch { /* toast já disparado */ }
@@ -180,6 +188,30 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
               </button>
             )}
             <StatusPreviewWidget validade={validade}/>
+
+            {/* Exames realizados */}
+            <div style={{ gridColumn:'1 / -1' }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:600, color:'var(--ink-600)', marginBottom:8 }}>
+                Exames realizados
+                {examsSel.length > 0 && <span style={{ marginLeft:8, fontWeight:400, color:'var(--ink-400)' }}>{examsSel.length} selecionado{examsSel.length > 1 ? 's' : ''}</span>}
+              </label>
+              {catalogoQuery.isLoading
+                ? <div style={{ fontSize:12, color:'var(--ink-400)' }}>Carregando catálogo…</div>
+                : <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 16px', maxHeight:220, overflowY:'auto', padding:'10px 12px', border:'1px solid var(--border)', borderRadius:8, background:'var(--surface-2)' }}>
+                    {catalogo.map(e => (
+                      <label key={e.id} style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, cursor:'pointer', padding:'3px 0', userSelect:'none' }}>
+                        <input
+                          type="checkbox"
+                          checked={examsSel.includes(e.nome)}
+                          onChange={() => toggleExame(e.nome)}
+                          style={{ accentColor:'var(--primary)', width:14, height:14, cursor:'pointer', flexShrink:0 }}
+                        />
+                        {e.nome}
+                      </label>
+                    ))}
+                  </div>
+              }
+            </div>
           </div>
           <div className="modal-foot">
             <button className="tbtn" onClick={onClose}>Cancelar</button>
@@ -309,19 +341,7 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
     realizado: a.emissao ?? '',
     validade:  a.vencimento ?? '',
     resultado: a.observacoes ?? 'Apto',
-  })), [asosBanco])
-
-  const [fTipo, setFTipo] = useState('Todos')
-  const [fStatus, setFStatus] = useState('all')
-  const [q, setQ] = useState('')
-  const [newOpen, setNewOpen] = useState(false)
-  const [schedOpen, setSchedOpen] = useState(false)
-  const [confirmDel, setConfirmDel] = useState<typeof asos[number] | null>(null)
-  const [prefill, setPrefill] = useState<string | null>(null)
-
-  const rows = useMemo(() => asos.map(a => ({ ...a, cor: avatarColor(a.colab), cargo: '—', setor: '—', st: asoStatus(a.validade) })), [asos])
-  const kpis = useMemo(() => {
-    const total = rows.length
+      exames:    a.exames_realizados ?? [],
     const ok   = rows.filter(r => r.st.key === 'ok').length
     const warn = rows.filter(r => r.st.key === 'warn').length
     const crit = rows.filter(r => r.st.key === 'crit').length
@@ -428,6 +448,7 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
                 <tr>
                   <th>Colaborador</th>
                   <th>Tipo</th>
+                  <th>Exames realizados</th>
                   <th>Realização</th>
                   <th>Validade</th>
                   <th>Resultado</th>
@@ -437,7 +458,7 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhum ASO encontrado com esses filtros.</td></tr>
+                  <tr><td colSpan={8} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhum ASO encontrado com esses filtros.</td></tr>
                 )}
                 {filtered.map(r => (
                   <tr key={r.id}>
@@ -451,6 +472,12 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
                       </div>
                     </td>
                     <td><span className="aso-tipo">{r.tipo}</span></td>
+                    <td style={{ maxWidth:240 }}>
+                      {r.exames.length > 0
+                        ? <span style={{ fontSize:11.5, color:'var(--ink-700)', lineHeight:1.6 }}>{r.exames.join('; ')}</span>
+                        : <span style={{ fontSize:11.5, color:'var(--ink-400)' }}>—</span>
+                      }
+                    </td>
                     <td style={{ color:'var(--ink-700)', fontVariantNumeric:'tabular-nums' }}>{brDate(r.realizado)}</td>
                     <td style={{ fontVariantNumeric:'tabular-nums' }}>
                       <div style={{ fontWeight:600, color: r.st.key === 'crit' ? 'var(--red-500)' : r.st.key === 'warn' ? 'var(--orange-600)' : 'var(--ink-900)' }}>{brDate(r.validade)}</div>

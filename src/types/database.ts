@@ -79,6 +79,12 @@ export interface DocumentoTipo {
 
 export type SubtipoExame = 'admissional' | 'periodico' | 'mudanca_risco' | 'retorno_trabalho' | 'demissional'
 
+export interface ExameCatalogo {
+  id: number
+  nome: string
+  ordem: number
+}
+
 export interface Documento {
   id: string
   empresa_id: string
@@ -92,6 +98,7 @@ export interface Documento {
   observacoes: string | null
   colaborador_id: string | null
   subtipo_exame: SubtipoExame | null
+  exames_realizados: string[] | null
   created_at: string
   tipo?: DocumentoTipo
 }

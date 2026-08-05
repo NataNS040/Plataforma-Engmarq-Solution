@@ -55,6 +55,10 @@ export const qk = {
     byColaborador: (colaboradorId: string) =>
       [...qk.exames.all, 'colaborador', colaboradorId] as const,
   },
+  examesCatalogo: {
+    all: ['exames_catalogo'] as const,
+    list: () => [...qk.examesCatalogo.all, 'list'] as const,
+  },
   dashboard: {
     all: ['dashboard'] as const,
     kpis: (empresaId: string | 'all') => [...qk.dashboard.all, 'kpis', empresaId] as const,

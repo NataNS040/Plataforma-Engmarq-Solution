@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import type { Documento, DocumentoTipo, SubtipoExame } from '@/types/database'
+import type { Documento, DocumentoTipo, ExameCatalogo, SubtipoExame } from '@/types/database'
 
 export interface AsoComDetalhes extends Omit<Documento, 'tipo' | 'colaborador'> {
   tipo: DocumentoTipo | null
@@ -17,6 +17,7 @@ export interface AsoInput {
   vencimento?: string | null
   numero?: string | null
   observacoes?: string | null
+  exames_realizados?: string[] | null
 }
 
 const ASO_SELECT = `
@@ -52,16 +53,17 @@ export async function criarAso(input: AsoInput): Promise<Documento> {
   const { data, error } = await supabase
     .from('documentos')
     .insert({
-      empresa_id:     input.empresa_id,
-      tipo_id:        input.tipo_id,
-      colaborador_id: input.colaborador_id,
-      titulo:         input.titulo,
-      subtipo_exame:  input.subtipo_exame,
-      emissao:        input.emissao ?? null,
-      vencimento:     input.vencimento ?? null,
-      numero:         input.numero ?? null,
-      observacoes:    input.observacoes ?? null,
-      arquivo_url:    null,
+      empresa_id:        input.empresa_id,
+      tipo_id:           input.tipo_id,
+      colaborador_id:    input.colaborador_id,
+      titulo:            input.titulo,
+      subtipo_exame:     input.subtipo_exame,
+      emissao:           input.emissao ?? null,
+      vencimento:        input.vencimento ?? null,
+      numero:            input.numero ?? null,
+      observacoes:       input.observacoes ?? null,
+      exames_realizados: input.exames_realizados ?? [],
+      arquivo_url:       null,
     })
     .select('*')
     .single()
@@ -92,4 +94,14 @@ export async function deletarAso(id: string): Promise<void> {
     .eq('id', id)
 
   if (error) throw handleSupabaseError(error, 'Não foi possível deletar o ASO.')
+}
+
+export async function listarExamesCatalogo(): Promise<ExameCatalogo[]> {
+  const { data, error } = await supabase
+    .from('exames_catalogo')
+    .select('*')
+    .order('ordem')
+
+  if (error) throw handleSupabaseError(error, 'Não foi possível carregar o catálogo de exames.')
+  return (data ?? []) as ExameCatalogo[]
 }

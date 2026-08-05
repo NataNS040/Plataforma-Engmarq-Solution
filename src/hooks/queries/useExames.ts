@@ -7,6 +7,7 @@ import {
   criarAso,
   atualizarAso,
   deletarAso,
+  listarExamesCatalogo,
   type AsoInput,
 } from '@/services/examesService'
 
@@ -70,5 +71,13 @@ export function useDeletarExame() {
       toast.success('ASO removido.')
     },
     onError: (err: Error) => toast.error(err.message),
+  })
+}
+
+export function useExamesCatalogo() {
+  return useQuery({
+    queryKey: qk.examesCatalogo.list(),
+    queryFn: listarExamesCatalogo,
+    staleTime: Infinity, // catálogo não muda em runtime
   })
 }
