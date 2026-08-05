@@ -11,6 +11,7 @@ import { useColaboradores, useCriarColaborador } from "@/hooks/queries/useColabo
 import { useSetores, useFuncoes, useAmbientes } from "@/hooks/queries/useCatalogos"
 import { criarColaborador } from "@/services/colaboradoresService"
 import type { ColaboradorComCatalogos } from "@/services/colaboradoresService"
+import { criarSetor, criarFuncao, criarAmbiente } from "@/services/catalogosService"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { qk } from "@/lib/queryKeys"
@@ -260,6 +261,9 @@ interface ParsedRow {
   funcao_id: string | null
   setor_id: string | null
   ambiente_id: string | null
+  will_create_funcao: boolean
+  will_create_setor: boolean
+  will_create_ambiente: boolean
   errors: string[]
 }
 
@@ -371,13 +375,16 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
       const funcao_id = funcoesMap.get(funcao_nome.toLowerCase()) ?? null
       const setor_id = setoresMap.get(setor_nome.toLowerCase()) ?? null
       const ambiente_id = ambiente_nome ? (ambientesMap.get(ambiente_nome.toLowerCase()) ?? null) : null
+      const will_create_funcao = !funcao_id && funcao_nome.length > 0
+      const will_create_setor  = !setor_id  && setor_nome.length  > 0
+      const will_create_ambiente = !ambiente_id && ambiente_nome.length > 0
       const errors: string[] = []
       if (!nome || nome.length < 2) errors.push('Nome inválido')
       if (cpf.length !== 11) errors.push('CPF inválido')
-      if (!funcao_id) errors.push(`Função "${funcao_nome || '—'}" não encontrada`)
-      if (!setor_id) errors.push(`Setor "${setor_nome || '—'}" não encontrado`)
+      if (!funcao_nome) errors.push('Cargo/Função obrigatório')
+      if (!setor_nome)  errors.push('Setor obrigatório')
       if (!data_admissao) errors.push('Data de admissão inválida')
-      return { nome, cpf, matricula, funcao_nome, setor_nome, ambiente_nome, data_admissao, funcao_id, setor_id, ambiente_id, errors }
+      return { nome, cpf, matricula, funcao_nome, setor_nome, ambiente_nome, data_admissao, funcao_id, setor_id, ambiente_id, will_create_funcao, will_create_setor, will_create_ambiente, errors }
     })
   }
 
@@ -403,17 +410,48 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
     const valid = parsedRows.filter(r => r.errors.length === 0)
     if (!valid.length) return
     setImporting(true)
+
+    // Mutable caches — seeded with already-known catalog IDs, grown on the fly
+    const setoresCache  = new Map((setores.data  ?? []).map(s => [s.nome.toLowerCase().trim(), s.id]))
+    const funcoesCache  = new Map((funcoes.data  ?? []).map(f => [f.nome.toLowerCase().trim(), f.id]))
+    const ambientesCache = new Map((ambientes.data ?? []).map(a => [a.nome.toLowerCase().trim(), a.id]))
+
+    async function resolveSetor(nome: string): Promise<string> {
+      const key = nome.toLowerCase().trim()
+      if (setoresCache.has(key)) return setoresCache.get(key)!
+      const created = await criarSetor({ empresa_id: empresaId, nome })
+      setoresCache.set(key, created.id)
+      return created.id
+    }
+    async function resolveFuncao(nome: string): Promise<string> {
+      const key = nome.toLowerCase().trim()
+      if (funcoesCache.has(key)) return funcoesCache.get(key)!
+      const created = await criarFuncao({ empresa_id: empresaId, nome })
+      funcoesCache.set(key, created.id)
+      return created.id
+    }
+    async function resolveAmbiente(nome: string): Promise<string> {
+      const key = nome.toLowerCase().trim()
+      if (ambientesCache.has(key)) return ambientesCache.get(key)!
+      const created = await criarAmbiente({ empresa_id: empresaId, nome })
+      ambientesCache.set(key, created.id)
+      return created.id
+    }
+
     let ok = 0, fail = 0
     for (const row of valid) {
       try {
+        const funcao_id   = await resolveFuncao(row.funcao_nome)
+        const setor_id    = await resolveSetor(row.setor_nome)
+        const ambiente_id = row.ambiente_nome ? await resolveAmbiente(row.ambiente_nome) : null
         await criarColaborador({
           empresa_id:    empresaId,
           nome:          row.nome,
           cpf:           row.cpf,
           matricula:     row.matricula || null,
-          funcao_id:     row.funcao_id!,
-          setor_id:      row.setor_id!,
-          ambiente_id:   row.ambiente_id,
+          funcao_id,
+          setor_id,
+          ambiente_id,
           data_admissao: row.data_admissao,
         })
         ok++
@@ -421,6 +459,9 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
     }
     setImporting(false)
     await qc.invalidateQueries({ queryKey: qk.colaboradores.list(empresaId) })
+    await qc.invalidateQueries({ queryKey: qk.setores.list(empresaId) })
+    await qc.invalidateQueries({ queryKey: qk.funcoes.list(empresaId) })
+    await qc.invalidateQueries({ queryKey: qk.ambientes.list(empresaId) })
     if (ok > 0) {
       toast.success(`${ok} colaborador(es) importado(s) com sucesso.`)
       onClose()
@@ -598,8 +639,14 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
                             <td>{row.nome || <span style={{ color: "var(--red-500)", fontStyle: "italic" }}>vazio</span>}</td>
                             <td style={{ fontFamily: "monospace", fontSize: 12 }}>{row.cpf || '—'}</td>
                             <td>
-                              <div style={{ fontWeight: 500 }}>{row.funcao_nome || '—'}</div>
-                              <div style={{ fontSize: 11, color: "var(--ink-500)" }}>{row.setor_nome || '—'}</div>
+                              <div style={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
+                                {row.funcao_nome || '—'}
+                                {row.will_create_funcao && <span style={{ fontSize: 9.5, background: "var(--orange-50,#fff7ed)", color: "var(--orange-600)", border: "1px solid rgba(234,88,12,0.3)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
+                              </div>
+                              <div style={{ fontSize: 11, color: "var(--ink-500)", display: "flex", alignItems: "center", gap: 5 }}>
+                                {row.setor_nome || '—'}
+                                {row.will_create_setor && <span style={{ fontSize: 9.5, background: "var(--orange-50,#fff7ed)", color: "var(--orange-600)", border: "1px solid rgba(234,88,12,0.3)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
+                              </div>
                             </td>
                             <td style={{ fontSize: 12 }}>{row.data_admissao || '—'}</td>
                             <td>
