@@ -203,6 +203,7 @@ function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinament
   const [dataVencimento, setDataVencimento] = useState("")
   const [cargaHoraria, setCargaHoraria] = useState("")
   const [instrutor, setInstrutor] = useState("")
+  const [modalidade, setModalidade] = useState<"presencial" | "online" | "semipresencial" | "">()
 
   useEffect(() => {
     const tipo = tipos.find(t => t.id === tipoId)
@@ -226,6 +227,7 @@ function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinament
       data_vencimento:     dataVencimento || null,
       carga_horaria:       cargaHoraria ? Number(cargaHoraria) : null,
       instrutor:           instrutor || null,
+      modalidade:          modalidade || null,
     })
     onClose()
   }
@@ -307,6 +309,20 @@ function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinament
                 style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", fontSize: 13, color: "var(--ink-900)" }}
               />
             </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-600)", display: "block", marginBottom: 6 }}>Modalidade</label>
+            <select
+              value={modalidade}
+              onChange={e => setModalidade(e.target.value as typeof modalidade)}
+              style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", fontSize: 13, color: "var(--ink-900)" }}
+            >
+              <option value="">Selecione a modalidade</option>
+              <option value="presencial">Presencial</option>
+              <option value="online">Online</option>
+              <option value="semipresencial">Semipresencial</option>
+            </select>
           </div>
 
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>

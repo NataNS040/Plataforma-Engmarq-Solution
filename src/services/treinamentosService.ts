@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import type { TreinamentoTipo, MatrizTreinamento, Treinamento } from '@/types/database'
+import type { TreinamentoTipo, MatrizTreinamento, Treinamento, TreinamentoModalidade } from '@/types/database'
 
 // ---------------------------------------------------------------------------
 // Treinamento Tipos (catálogo global)
@@ -91,6 +91,7 @@ export interface TreinamentoInput {
   data_vencimento?: string | null
   carga_horaria?: number | null
   instrutor?: string | null
+  modalidade?: TreinamentoModalidade | null
 }
 
 export async function registrarTreinamento(input: TreinamentoInput): Promise<Treinamento> {
@@ -104,6 +105,7 @@ export async function registrarTreinamento(input: TreinamentoInput): Promise<Tre
       data_vencimento:     input.data_vencimento ?? null,
       carga_horaria:       input.carga_horaria ?? null,
       instrutor:           input.instrutor ?? null,
+      modalidade:          input.modalidade ?? null,
       certificado_url:     null,
     })
     .select('*')

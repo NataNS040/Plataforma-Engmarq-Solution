@@ -121,6 +121,8 @@ export interface MatrizTreinamento {
   treinamento_tipo?: TreinamentoTipo
 }
 
+export type TreinamentoModalidade = 'presencial' | 'online' | 'semipresencial'
+
 export interface Treinamento {
   id: string
   empresa_id: string
@@ -130,6 +132,7 @@ export interface Treinamento {
   data_vencimento: string | null
   carga_horaria: number | null
   instrutor: string | null
+  modalidade: TreinamentoModalidade | null
   certificado_url: string | null
   status: TreinamentoStatus
   created_at: string
