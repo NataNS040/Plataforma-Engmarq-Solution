@@ -352,15 +352,20 @@ export default function TreinamentosPage() {
   const treinamentos = treinamentosQuery.data ?? []
   const nrTipos  = tiposQuery.data ?? []
 
-  // Montar NR_CATALOG dinâmico
-  const NR_CATALOG: NrInfo[] = useMemo(() => nrTipos.map(t => ({
-    nr:       t.nr_referencia ?? t.nome,
-    titulo:   t.nome,
-    carga:    t.validade_meses ? `${t.validade_meses * 30}h` : '—',
-    validade: t.validade_meses ? `${t.validade_meses} meses` : '—',
-    color:    '#3B82F6',
-    tipoId:   t.id,
-  })), [nrTipos])
+  // Apenas tipos com ao menos um treinamento registrado na empresa
+  const NR_CATALOG: NrInfo[] = useMemo(() => {
+    const registrados = new Set(treinamentos.map(t => t.treinamento_tipo_id))
+    return nrTipos
+      .filter(t => registrados.has(t.id))
+      .map(t => ({
+        nr:       t.nr_referencia ?? t.nome,
+        titulo:   t.nome,
+        carga:    t.validade_meses ? `${t.validade_meses * 30}h` : '—',
+        validade: t.validade_meses ? `${t.validade_meses} meses` : '—',
+        color:    '#3B82F6',
+        tipoId:   t.id,
+      }))
+  }, [nrTipos, treinamentos])
 
   // Montar COLABS_MATRIX dinâmico
   const COLABS_MATRIX: ColabRow[] = useMemo(() => {
@@ -469,41 +474,6 @@ export default function TreinamentosPage() {
         </div>
       </div>
 
-      {/* NR health strip */}
-      <div className="glass" style={{ padding: "14px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
-          <div>
-            <div className="ctitle">Conformidade por NR</div>
-            <div className="csub">Clique numa norma para destacá-la na matriz</div>
-          </div>
-          <div className="seg">
-            {setores.map(s => (
-              <button key={s} className={setorFilter === s ? "on" : ""} onClick={() => setSetorFilter(s)}>{s}</button>
-            ))}
-          </div>
-        </div>
-        <div className="nr-strip">
-          {nrStats.map(n => {
-            const active = activeNr === n.nr
-            const col = n.pct >= 85 ? "var(--green-600)" : n.pct >= 70 ? "var(--orange-600)" : "var(--red-500)"
-            return (
-              <button key={n.nr} className={`nr-chip ${active ? "active" : ""}`} onClick={() => setActiveNr(active ? null : n.nr)}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 13 }}>{n.nr}</span>
-                  <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 13, color: col, fontVariantNumeric: "tabular-nums" }}>{n.pct}%</span>
-                </div>
-                <div className="nr-chip-bar">
-                  <div style={{ width: `${(n.ok   / (n.valid || 1)) * 100}%`, background: CELL_COLORS.ok.bg   }} />
-                  <div style={{ width: `${(n.warn / (n.valid || 1)) * 100}%`, background: CELL_COLORS.warn.bg }} />
-                  <div style={{ width: `${(n.crit / (n.valid || 1)) * 100}%`, background: CELL_COLORS.crit.bg }} />
-                </div>
-                {n.crit > 0 && <div className="nr-chip-alert">{n.crit} vencido{n.crit > 1 ? "s" : ""}</div>}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {/* Matriz + painel lateral */}
       <div className="row-2" style={{ gridTemplateColumns: "1fr 300px", alignItems: "start" }}>
 
@@ -514,7 +484,12 @@ export default function TreinamentosPage() {
               <div className="ctitle">Matriz colaborador × NR</div>
               <div className="csub">Clique numa célula para ver o detalhe do treinamento</div>
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+              <div className="seg">
+                {setores.map(s => (
+                  <button key={s} className={setorFilter === s ? "on" : ""} onClick={() => setSetorFilter(s)}>{s}</button>
+                ))}
+              </div>
               <span className="legend-pill"><span className="sw" style={{ background: CELL_COLORS.ok.bg   }} /> Em dia</span>
               <span className="legend-pill"><span className="sw" style={{ background: CELL_COLORS.warn.bg }} /> Vencendo</span>
               <span className="legend-pill"><span className="sw" style={{ background: CELL_COLORS.crit.bg }} /> Vencido</span>
