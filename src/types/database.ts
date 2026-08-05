@@ -170,6 +170,7 @@ export interface Database {
       treinamento_tipos:   TableDef<TreinamentoTipo>
       matriz_treinamentos: TableDef<MatrizTreinamento>
       treinamentos:        TableDef<Treinamento>
+      exames_catalogo:     TableDef<ExameCatalogo>
     }
     Views: {
       vw_dashboard_documentos: {

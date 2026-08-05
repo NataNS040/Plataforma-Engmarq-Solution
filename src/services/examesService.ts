@@ -103,5 +103,5 @@ export async function listarExamesCatalogo(): Promise<ExameCatalogo[]> {
     .order('ordem')
 
   if (error) throw handleSupabaseError(error, 'Não foi possível carregar o catálogo de exames.')
-  return (data ?? []) as ExameCatalogo[]
+  return (data ?? []) as unknown as ExameCatalogo[]
 }
