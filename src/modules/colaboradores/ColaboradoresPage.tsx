@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -9,7 +9,11 @@ import {
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores, useCriarColaborador } from "@/hooks/queries/useColaboradores"
 import { useSetores, useFuncoes, useAmbientes } from "@/hooks/queries/useCatalogos"
+import { criarColaborador } from "@/services/colaboradoresService"
 import type { ColaboradorComCatalogos } from "@/services/colaboradoresService"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { qk } from "@/lib/queryKeys"
 
 /* ============================================================
    Types
@@ -242,6 +246,57 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
 }
 
 /* ============================================================
+   Em massa — helpers
+   ============================================================ */
+
+interface ParsedRow {
+  nome: string
+  cpf: string
+  matricula: string
+  funcao_nome: string
+  setor_nome: string
+  ambiente_nome: string
+  data_admissao: string
+  funcao_id: string | null
+  setor_id: string | null
+  ambiente_id: string | null
+  errors: string[]
+}
+
+function normalizeCpf(raw: string): string {
+  return String(raw ?? '').replace(/\D/g, '')
+}
+
+function parseAdmissaoDate(raw: string): string | null {
+  const s = String(raw ?? '').trim()
+  if (!s) return null
+  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (br) return `${br[3]}-${br[2].padStart(2, '0')}-${br[1].padStart(2, '0')}`
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  // Excel date serial
+  const n = Number(s)
+  if (!isNaN(n) && n > 1000) {
+    const d = new Date((n - 25569) * 86400 * 1000)
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+  }
+  return null
+}
+
+function downloadCsvTemplate() {
+  const rows = [
+    ['nome', 'cpf', 'matricula', 'funcao', 'setor', 'ambiente', 'data_admissao'],
+    ['João Silva', '123.456.789-00', 'MAT001', 'Operador', 'Produção', 'Linha A', '2024-01-15'],
+    ['Maria Souza', '987.654.321-00', '', 'Técnico de Segurança', 'Segurança', '', '01/06/2023'],
+  ]
+  const csv = rows.map(r => r.join(',')).join('\r\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = 'modelo_colaboradores.csv'; a.click()
+  URL.revokeObjectURL(url)
+}
+
+/* ============================================================
    AddColabModal — schema
    ============================================================ */
 const addColabSchema = z.object({
@@ -292,11 +347,91 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
     } catch { /* toast já disparado */ }
   }
 
-  const csvPreview: never[] = []
-  const validRows = 0
+  // ── Em massa tab state ────────────────────────────────────
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const [parsedRows, setParsedRows] = useState<ParsedRow[]>([])
+  const [importing, setImporting] = useState(false)
+  const qc = useQueryClient()
 
-  // Renderiza pré-visualização somente quando há arquivo carregado
-  const hasCsvPreview = csvPreview.length > 0
+  const catalogsReady = !setores.isLoading && !funcoes.isLoading && !ambientes.isLoading
+
+  function validateRows(raw: Record<string, string>[]): ParsedRow[] {
+    const setoresMap = new Map((setores.data ?? []).map(s => [s.nome.toLowerCase().trim(), s.id]))
+    const funcoesMap = new Map((funcoes.data ?? []).map(f => [f.nome.toLowerCase().trim(), f.id]))
+    const ambientesMap = new Map((ambientes.data ?? []).map(a => [a.nome.toLowerCase().trim(), a.id]))
+    return raw.map(r => {
+      const nome = String(r.nome ?? '').trim()
+      const cpf = normalizeCpf(r.cpf ?? '')
+      const matricula = String(r.matricula ?? '').trim()
+      const funcao_nome = String(r.funcao ?? r['cargo'] ?? r['função'] ?? '').trim()
+      const setor_nome = String(r.setor ?? '').trim()
+      const ambiente_nome = String(r.ambiente ?? '').trim()
+      const data_admissao = parseAdmissaoDate(String(r.data_admissao ?? r['admissão'] ?? r['admissao'] ?? '')) ?? ''
+      const funcao_id = funcoesMap.get(funcao_nome.toLowerCase()) ?? null
+      const setor_id = setoresMap.get(setor_nome.toLowerCase()) ?? null
+      const ambiente_id = ambiente_nome ? (ambientesMap.get(ambiente_nome.toLowerCase()) ?? null) : null
+      const errors: string[] = []
+      if (!nome || nome.length < 2) errors.push('Nome inválido')
+      if (cpf.length !== 11) errors.push('CPF inválido')
+      if (!funcao_id) errors.push(`Função "${funcao_nome || '—'}" não encontrada`)
+      if (!setor_id) errors.push(`Setor "${setor_nome || '—'}" não encontrado`)
+      if (!data_admissao) errors.push('Data de admissão inválida')
+      return { nome, cpf, matricula, funcao_nome, setor_nome, ambiente_nome, data_admissao, funcao_id, setor_id, ambiente_id, errors }
+    })
+  }
+
+  async function processFile(file: File) {
+    const XLSX = await import('xlsx')
+    const buf = await file.arrayBuffer()
+    const wb = XLSX.read(buf, { type: 'array', raw: false, cellDates: false })
+    const ws = wb.Sheets[wb.SheetNames[0]]
+    const json = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '', raw: false })
+    const normalized = json.map(row =>
+      Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase().trim(), String(v)]))
+    ) as Record<string, string>[]
+    setParsedRows(validateRows(normalized))
+  }
+
+  function handleFile(file: File | undefined) {
+    if (!file) return
+    if (!/\.(csv|xlsx|xls)$/i.test(file.name)) { toast.error('Use um arquivo CSV ou XLSX.'); return }
+    processFile(file)
+  }
+
+  async function handleImport() {
+    const valid = parsedRows.filter(r => r.errors.length === 0)
+    if (!valid.length) return
+    setImporting(true)
+    let ok = 0, fail = 0
+    for (const row of valid) {
+      try {
+        await criarColaborador({
+          empresa_id:    empresaId,
+          nome:          row.nome,
+          cpf:           row.cpf,
+          matricula:     row.matricula || null,
+          funcao_id:     row.funcao_id!,
+          setor_id:      row.setor_id!,
+          ambiente_id:   row.ambiente_id,
+          data_admissao: row.data_admissao,
+        })
+        ok++
+      } catch { fail++ }
+    }
+    setImporting(false)
+    await qc.invalidateQueries({ queryKey: qk.colaboradores.list(empresaId) })
+    if (ok > 0) {
+      toast.success(`${ok} colaborador(es) importado(s) com sucesso.`)
+      onClose()
+    } else {
+      toast.error('Nenhum colaborador pôde ser importado. Verifique os erros na planilha.')
+    }
+  }
+
+  const validRows  = parsedRows.filter(r => r.errors.length === 0).length
+  const errorRows  = parsedRows.length - validRows
+  const hasParsed  = parsedRows.length > 0
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -394,40 +529,110 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
             </form>
           ) : (
             <>
+              {/* Toolbar */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
                 <div style={{ fontSize: 12.5, color: "var(--ink-500)", maxWidth: 320 }}>
                   Importe vários colaboradores via planilha. Baixe o modelo, preencha e envie.
                 </div>
-                <button className="tbtn"><Download size={13} /> Baixar modelo CSV</button>
+                <button className="tbtn" type="button" onClick={downloadCsvTemplate}><Download size={13} /> Baixar modelo CSV</button>
               </div>
 
-              <div style={{
-                border: "2px dashed var(--border-strong)", borderRadius: 14,
-                padding: "32px 20px", textAlign: "center", background: "var(--bg)",
-              }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--orange-600)" }}>
-                  <Download size={20} />
+              {/* Drop zone — shown only before a file is loaded */}
+              {!hasParsed && (
+                <div
+                  style={{
+                    border: `2px dashed ${dragOver ? 'var(--navy-700)' : 'var(--border-strong)'}`,
+                    borderRadius: 14, padding: "32px 20px", textAlign: "center",
+                    background: dragOver ? "rgba(30,41,59,0.04)" : "var(--bg)",
+                    transition: "all 0.15s", cursor: "pointer",
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }}
+                >
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--orange-600)" }}>
+                    <Download size={20} />
+                  </div>
+                  <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Arraste a planilha aqui</div>
+                  <div style={{ fontSize: 12, color: "var(--ink-500)", marginBottom: 14 }}>CSV ou XLSX · até 500 colaboradores por importação</div>
+                  <button className="tbtn primary" style={{ margin: "0 auto" }} type="button"><Plus size={13} /> Selecionar arquivo</button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    style={{ display: 'none' }}
+                    onChange={e => handleFile(e.target.files?.[0])}
+                  />
                 </div>
-                <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Arraste a planilha aqui</div>
-                <div style={{ fontSize: 12, color: "var(--ink-500)", marginBottom: 14 }}>CSV ou XLSX · até 500 colaboradores por importação</div>
-                <button className="tbtn primary" style={{ margin: "0 auto" }}><Plus size={13} /> Selecionar arquivo</button>
-              </div>
+              )}
 
-              {hasCsvPreview && (
-              <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-                <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 600 }}>Pré-visualização</span>
-                  <span style={{ fontSize: 11.5, color: "var(--ink-500)" }}>
-                    <strong style={{ color: "var(--green-600)" }}>{validRows} válidos</strong> · {csvPreview.length - validRows} com erro
-                  </span>
+              {/* Preview table */}
+              {hasParsed && (
+                <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+                  <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600 }}>Pré-visualização · {parsedRows.length} linha{parsedRows.length !== 1 ? 's' : ''}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 11.5, color: "var(--ink-500)" }}>
+                        <strong style={{ color: "var(--green-600)" }}>{validRows} válidos</strong>
+                        {errorRows > 0 && <> · <strong style={{ color: "var(--red-500)" }}>{errorRows} com erro</strong></>}
+                      </span>
+                      <button
+                        className="tbtn"
+                        style={{ fontSize: 11 }}
+                        type="button"
+                        onClick={() => { setParsedRows([]); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                      >
+                        <X size={11} /> Trocar arquivo
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ maxHeight: 280, overflowY: "auto" }}>
+                    <table className="tbl">
+                      <thead>
+                        <tr><th>Nome</th><th>CPF</th><th>Cargo · Setor</th><th>Admissão</th><th>Status</th></tr>
+                      </thead>
+                      <tbody>
+                        {parsedRows.map((row, i) => (
+                          <tr key={i} style={row.errors.length > 0 ? { background: "rgba(220,38,38,0.04)" } : {}}>
+                            <td>{row.nome || <span style={{ color: "var(--red-500)", fontStyle: "italic" }}>vazio</span>}</td>
+                            <td style={{ fontFamily: "monospace", fontSize: 12 }}>{row.cpf || '—'}</td>
+                            <td>
+                              <div style={{ fontWeight: 500 }}>{row.funcao_nome || '—'}</div>
+                              <div style={{ fontSize: 11, color: "var(--ink-500)" }}>{row.setor_nome || '—'}</div>
+                            </td>
+                            <td style={{ fontSize: 12 }}>{row.data_admissao || '—'}</td>
+                            <td>
+                              {row.errors.length === 0
+                                ? <span className="chip ok" style={{ fontSize: 10.5 }}><CheckCircle size={10} /> OK</span>
+                                : <span title={row.errors.join('; ')} className="chip crit" style={{ fontSize: 10.5, cursor: "help" }}>
+                                    <AlertTriangle size={10} /> {row.errors[0]}{row.errors.length > 1 ? ` +${row.errors.length - 1}` : ''}
+                                  </span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <table className="tbl">
-                  <thead><tr><th>Nome</th><th>CPF</th><th>Cargo · Setor</th><th>Status</th></tr></thead>
-                  <tbody>
-                    <tr><td colSpan={4} style={{ textAlign:'center', padding:20, color:'var(--ink-400)', fontSize:12 }}>Nenhum arquivo carregado.</td></tr>
-                  </tbody>
-                </table>
-              </div>
+              )}
+
+              {/* Import action bar */}
+              {hasParsed && (
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 8, borderTop: "1px solid var(--border)" }}>
+                  <button className="tbtn" type="button" onClick={onClose}>Cancelar</button>
+                  <button
+                    className="tbtn primary"
+                    type="button"
+                    disabled={validRows === 0 || importing || !catalogsReady}
+                    onClick={handleImport}
+                  >
+                    {importing
+                      ? <><Loader2 size={13} className="btn-spinner" /> Importando…</>
+                      : <><CheckCircle size={13} /> Importar {validRows} colaborador{validRows !== 1 ? 'es' : ''}</>
+                    }
+                  </button>
+                </div>
               )}
             </>
           )}
