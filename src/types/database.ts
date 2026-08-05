@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'gestor' | 'operacional'
+export type UserRole = 'admin' | 'gestor' | 'operacional' | 'empresa'
 export type DocStatus = 'vigente' | 'vencendo' | 'vencido'
 export type TreinamentoStatus = 'em_dia' | 'vencendo' | 'vencido' | 'pendente'
 

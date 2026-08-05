@@ -18,7 +18,8 @@ export function useCurrentProfile() {
     isAdmin: role === 'admin',
     isGestor: role === 'gestor',
     isOperacional: role === 'operacional',
-    canWrite: role === 'admin' || role === 'gestor',
+    isEmpresa: role === 'empresa',
+    canWrite: role === 'admin' || role === 'gestor' || role === 'empresa',
     loading: profileLoading,
     error: profileError,
   }

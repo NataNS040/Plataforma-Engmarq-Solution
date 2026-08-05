@@ -79,7 +79,10 @@ export function Sidebar() {
   const initials = profile?.full_name
     ? profile.full_name.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()
     : "?"
-  const roleLabel = profile?.role === "admin" ? "EngMarq · Admin" : "Empresa"
+  const roleLabel =
+    profile?.role === "admin" ? "EngMarq · Admin" :
+    profile?.role === "empresa" ? "Acesso Empresa" :
+    profile?.role === "gestor" ? "Gestor" : "Operacional"
 
   return (
     <aside className="sidebar">
