@@ -341,7 +341,20 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
     realizado: a.emissao ?? '',
     validade:  a.vencimento ?? '',
     resultado: a.observacoes ?? 'Apto',
-      exames:    a.exames_realizados ?? [],
+    exames:    a.exames_realizados ?? [],
+  })), [asosBanco])
+
+  const [fTipo, setFTipo] = useState('Todos')
+  const [fStatus, setFStatus] = useState('all')
+  const [q, setQ] = useState('')
+  const [newOpen, setNewOpen] = useState(false)
+  const [schedOpen, setSchedOpen] = useState(false)
+  const [confirmDel, setConfirmDel] = useState<typeof asos[number] | null>(null)
+  const [prefill, setPrefill] = useState<string | null>(null)
+
+  const rows = useMemo(() => asos.map(a => ({ ...a, cor: avatarColor(a.colab), cargo: '—', setor: '—', st: asoStatus(a.validade) })), [asos])
+  const kpis = useMemo(() => {
+    const total = rows.length
     const ok   = rows.filter(r => r.st.key === 'ok').length
     const warn = rows.filter(r => r.st.key === 'warn').length
     const crit = rows.filter(r => r.st.key === 'crit').length
