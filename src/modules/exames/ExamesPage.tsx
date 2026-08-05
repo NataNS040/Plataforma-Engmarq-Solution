@@ -8,7 +8,6 @@ import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useExames, useCriarExame, useDeletarExame, useExamesCatalogo } from '@/hooks/queries/useExames'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
-import { useDocumentoTipos } from '@/hooks/queries/useDocumentos'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { SubtipoExame } from '@/types/database'
@@ -110,7 +109,6 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
   const [examsSel, setExamsSel] = useState<string[]>([])
 
   const colabsQuery   = useColaboradores(empresaId)
-  const tiposQuery    = useDocumentoTipos()
   const catalogoQuery = useExamesCatalogo()
   const criar         = useCriarExame()
 
@@ -125,13 +123,9 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
   async function handleSave() {
     const colab = (colabsQuery.data ?? []).find(c => c.id === colabId)
     if (!colab) return
-    const tipos = tiposQuery.data ?? []
-    const tipoAso = tipos.find(t => /aso/i.test(t.nome)) ?? tipos[0]
-    if (!tipoAso) { toast.error('Cadastre tipos de documento em Configurações antes de registrar um ASO.'); return }
     try {
       await criar.mutateAsync({
         empresa_id:        empresaId,
-        tipo_id:           tipoAso.id,
         colaborador_id:    colabId,
         titulo:            `ASO — ${colab.nome}`,
         subtipo_exame:     SUBTIPO_MAP[tipo] ?? 'periodico',

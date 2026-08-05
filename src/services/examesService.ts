@@ -9,15 +9,16 @@ export interface AsoComDetalhes extends Omit<Documento, 'tipo' | 'colaborador'> 
 
 export interface AsoInput {
   empresa_id: string
-  tipo_id: string           // ID do tipo 'ASO'
   colaborador_id: string
-  titulo: string            // Ex.: "ASO — João da Silva"
+  titulo: string
   subtipo_exame: SubtipoExame
-  emissao?: string | null   // ISO date
+  emissao?: string | null
   vencimento?: string | null
   numero?: string | null
   observacoes?: string | null
   exames_realizados?: string[] | null
+  // tipo_id é resolvido automaticamente pelo serviço via upsert
+  tipo_id?: string
 }
 
 const ASO_SELECT = `
@@ -49,12 +50,27 @@ export async function listarAsosDoColaborador(colaboradorId: string): Promise<As
   return (data ?? []) as unknown as AsoComDetalhes[]
 }
 
+// Garante que o tipo 'ASO' existe e retorna seu ID
+async function getOrCreateAsoTipoId(): Promise<string> {
+  const { data, error } = await supabase
+    .from('documento_tipos')
+    .upsert(
+      { nome: 'ASO', descricao: 'Atestado de Saúde Ocupacional', validade_meses: 12 },
+      { onConflict: 'nome' }
+    )
+    .select('id')
+    .single()
+  if (error) throw handleSupabaseError(error, 'Não foi possível obter o tipo de documento ASO.')
+  return data.id as string
+}
+
 export async function criarAso(input: AsoInput): Promise<Documento> {
+  const tipoId = input.tipo_id ?? await getOrCreateAsoTipoId()
   const { data, error } = await supabase
     .from('documentos')
     .insert({
       empresa_id:        input.empresa_id,
-      tipo_id:           input.tipo_id,
+      tipo_id:           tipoId,
       colaborador_id:    input.colaborador_id,
       titulo:            input.titulo,
       subtipo_exame:     input.subtipo_exame,
