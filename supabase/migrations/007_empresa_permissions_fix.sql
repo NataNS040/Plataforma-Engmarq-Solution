@@ -4,6 +4,40 @@
 -- Resolve casos em que a migration 005 ETAPA 2 não foi aplicada.
 
 -- -------------------------------------------------------
+-- Garante que os tipos de documento padrão existem
+-- -------------------------------------------------------
+INSERT INTO documento_tipos (nome, descricao, validade_meses) VALUES
+  ('ASO',        'Atestado de Saúde Ocupacional',                    12),
+  ('PGR',        'Programa de Gerenciamento de Riscos',              24),
+  ('PCMSO',      'Programa de Controle Médico de Saúde Ocupacional', 12),
+  ('LTCAT',      'Laudo Técnico das Condições Ambientais',           24),
+  ('PPRA',       'Programa de Prevenção de Riscos Ambientais',       12),
+  ('LAUDO NR17', 'Laudo Ergonômico (NR-17)',                         24),
+  ('LAUDO NR10', 'Laudo de Segurança em Instalações Elétricas',      24),
+  ('LAUDO NR12', 'Laudo de Segurança em Máquinas e Equipamentos',    36),
+  ('APR',        'Análise Preliminar de Risco',                      NULL),
+  ('PT',         'Permissão de Trabalho',                            NULL)
+ON CONFLICT (nome) DO NOTHING;
+
+-- -------------------------------------------------------
+-- documento_tipos: leitura para todos autenticados
+-- -------------------------------------------------------
+ALTER TABLE documento_tipos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "documento_tipos_read" ON documento_tipos;
+CREATE POLICY "documento_tipos_read" ON documento_tipos FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- -------------------------------------------------------
+-- exames_catalogo: garante política de leitura
+-- -------------------------------------------------------
+DROP POLICY IF EXISTS "exames_catalogo_read" ON exames_catalogo;
+CREATE POLICY "exames_catalogo_read" ON exames_catalogo FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- -------------------------------------------------------
 -- documentos: empresa pode ler e escrever os próprios
 -- -------------------------------------------------------
 DROP POLICY IF EXISTS "documentos_select" ON documentos;
