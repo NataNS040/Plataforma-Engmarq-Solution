@@ -50,17 +50,15 @@ export async function listarAsosDoColaborador(colaboradorId: string): Promise<As
   return (data ?? []) as unknown as AsoComDetalhes[]
 }
 
-// Garante que o tipo 'ASO' existe e retorna seu ID
+// Busca o tipo 'ASO' — sempre presente via seed da migration 001
 async function getOrCreateAsoTipoId(): Promise<string> {
   const { data, error } = await supabase
     .from('documento_tipos')
-    .upsert(
-      { nome: 'ASO', descricao: 'Atestado de Saúde Ocupacional', validade_meses: 12 },
-      { onConflict: 'nome' }
-    )
     .select('id')
+    .ilike('nome', 'ASO')
+    .limit(1)
     .single()
-  if (error) throw handleSupabaseError(error, 'Não foi possível obter o tipo de documento ASO.')
+  if (error || !data) throw new Error('Tipo de documento ASO não encontrado no banco. Execute a migration 001 para corrigir.')
   return data.id as string
 }
 
