@@ -10,6 +10,16 @@ ALTER TABLE treinamentos
     CHECK (modalidade IN ('presencial', 'online', 'semipresencial'));
 
 -- -------------------------------------------------------
+-- treinamento_tipos: garante RLS + política de leitura
+-- -------------------------------------------------------
+ALTER TABLE treinamento_tipos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "treinamento_tipos_read" ON treinamento_tipos;
+CREATE POLICY "treinamento_tipos_read" ON treinamento_tipos FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- -------------------------------------------------------
 -- Catálogo completo de treinamentos NR
 -- -------------------------------------------------------
 INSERT INTO treinamento_tipos (nome, nr_referencia, validade_meses) VALUES
