@@ -98,7 +98,7 @@ const CAT_GROUPS: CatGroup[] = [
 const EMPRESA_CATS = ['pgr', 'pcmso', 'ltcat', 'laudos', 'inventario']
 const CAT_LABEL: Record<string, string> = {
   pgr: 'PGR', pcmso: 'PCMSO', ltcat: 'LTCAT', laudos: 'Laudo técnico',
-  inventario: 'Inventário de risco', cert: 'Certificado de treinamento', epi: 'Ficha de EPI',
+  inventario: 'Inventário de risco', aso: 'ASO', cert: 'Certificado de treinamento', epi: 'Ficha de EPI',
 }
 
 // Dados auxiliares para DateEntryModal (mockados — aguarda Fase 4.3)
@@ -579,7 +579,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
         tipoNome.includes('ltcat') ? 'ltcat' :
         tipoNome.includes('laudo') ? 'laudos' :
         tipoNome.includes('inventário') || tipoNome.includes('invent') ? 'inventario' :
-        tipoNome.includes('aso') ? 'cert' :
+        tipoNome.includes('aso') ? 'aso' :
         'laudos'
 
       const empresaDoc: EmpresaDoc & { kind: 'empresa'; st: StatusResult } = {
