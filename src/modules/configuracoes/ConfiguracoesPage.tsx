@@ -7,6 +7,7 @@ import {
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { CatalogosTab } from './CatalogosTab'
+import { CriarUsuarioModal } from './CriarUsuarioModal'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -203,7 +204,7 @@ const ADMIN_TABS = [
   { id:'plano',       label:'Plano e faturamento', icon:Star },
 ]
 
-function ConfiguracoesAdmin({ tab, editing }: { tab: string; editing: boolean }) {
+function ConfiguracoesAdmin({ tab, editing, onCriarUsuario }: { tab: string; editing: boolean; onCriarUsuario: () => void }) {
   if (tab === 'conta') {
     return (
       <div className="row-2" style={{ alignItems:'start' }}>
@@ -261,7 +262,7 @@ function ConfiguracoesAdmin({ tab, editing }: { tab: string; editing: boolean })
           </div>
           <div className="toolbar">
             <button className="tbtn"><Download size={13}/> Exportar</button>
-            <button className="tbtn primary"><Plus size={13}/> Convidar membro</button>
+            <button className="tbtn primary" onClick={onCriarUsuario}><Plus size={13}/> Criar acesso</button>
           </div>
         </div>
         <TeamTable members={ENG_TEAM} showEmp empHead="Empresas"/>
@@ -685,6 +686,7 @@ export default function ConfiguracoesPage() {
   const tabs = isAdmin ? ADMIN_TABS : EMP_TABS
   const [tab, setTab] = useState(tabs[0].id)
   const [editing, setEditing] = useState(false)
+  const [showCriarModal, setShowCriarModal] = useState(false)
 
   useEffect(() => {
     setTab(tabs[0].id)
@@ -722,8 +724,15 @@ export default function ConfiguracoesPage() {
       {onCatalogosTab
         ? <CatalogosTab empresaId={empresaId} />
         : isAdmin
-          ? <ConfiguracoesAdmin tab={tab} editing={editing}/>
+          ? <ConfiguracoesAdmin tab={tab} editing={editing} onCriarUsuario={() => setShowCriarModal(true)}/>
           : <MinhaEmpresa tab={tab} editing={editing}/>}
+
+      {showCriarModal && empresaId && (
+        <CriarUsuarioModal
+          adminEmpresaId={empresaId}
+          onClose={() => setShowCriarModal(false)}
+        />
+      )}
     </div>
   )
 }
