@@ -52,6 +52,7 @@ interface CellRef {
   status: CellStatus
   realizacao?: string | null
   vencimento?: string | null
+  cargaHoraria?: number | null
 }
 
 function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: NrInfo[]; onClose: () => void }) {
@@ -84,7 +85,7 @@ function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: Nr
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 11.5 }}>
           <div>
             <div style={{ color: "var(--ink-500)" }}>Carga horária</div>
-            <div style={{ fontWeight: 600, color: "var(--ink-900)" }}>{info.carga}</div>
+            <div style={{ fontWeight: 600, color: "var(--ink-900)" }}>{cell.cargaHoraria != null ? `${cell.cargaHoraria}h` : '—'}</div>
           </div>
           <div>
             <div style={{ color: "var(--ink-500)" }}>Validade</div>
@@ -360,7 +361,7 @@ export default function TreinamentosPage() {
       .map(t => ({
         nr:       t.nr_referencia ?? t.nome,
         titulo:   t.nome,
-        carga:    t.validade_meses ? `${t.validade_meses * 30}h` : '—',
+        carga:    '—',
         validade: t.validade_meses ? `${t.validade_meses} meses` : '—',
         color:    '#3B82F6',
         tipoId:   t.id,
@@ -557,7 +558,7 @@ export default function TreinamentosPage() {
                               onClick={e => {
                                 e.stopPropagation()
                                 const trein = treinMap.get(`${(c as ColabRow & {id?: string}).id}:${(nrInfo as NrInfo & {tipoId?: string}).tipoId}`)
-                                setSelectedCell({ rowIdx: ri, colIdx: ci, nr, colab: c, status: st, realizacao: trein?.data_realizacao ?? null, vencimento: trein?.data_vencimento ?? null })
+                                setSelectedCell({ rowIdx: ri, colIdx: ci, nr, colab: c, status: st, realizacao: trein?.data_realizacao ?? null, vencimento: trein?.data_vencimento ?? null, cargaHoraria: trein?.carga_horaria ?? null })
                               }}
                               title={`${c.nome} · ${nr} · ${st}`}
                               style={{
