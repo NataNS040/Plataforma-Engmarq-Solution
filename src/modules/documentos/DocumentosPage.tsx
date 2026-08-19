@@ -9,9 +9,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
-import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento } from '@/hooks/queries/useDocumentos'
-import { uploadDocumentoArquivo, gerarUrlAssinada } from '@/services/documentosService'
-import { toast } from 'sonner'
+import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento, useAtualizarDocumento } from '@/hooks/queries/useDocumentos'
+import { uploadDocumentoArquivo, type DocumentoComTipo } from '@/services/documentosService'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
@@ -569,6 +568,161 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
   )
 }
 
+// ---------------------------------------------------------------------------
+// EditarDocumentoModal
+// ---------------------------------------------------------------------------
+function EditarDocumentoModal({ doc, empresaId, onClose }: {
+  doc: DocumentoComTipo
+  empresaId: string
+  onClose: () => void
+}) {
+  const tiposQuery = useDocumentoTipos()
+  const atualizar = useAtualizarDocumento()
+  const [file, setFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<NovoDocForm>({
+    resolver: zodResolver(novoDocSchema),
+    defaultValues: {
+      tipo_id:     doc.tipo_id,
+      titulo:      doc.titulo,
+      numero:      doc.numero ?? '',
+      emissao:     doc.emissao ?? '',
+      vencimento:  doc.vencimento ?? '',
+      observacoes: doc.observacoes ?? '',
+    },
+  })
+
+  const watchedVencimento = watch('vencimento')
+  const st = statusFrom(doc.vencimento)
+
+  async function onSubmit(v: NovoDocForm) {
+    setIsUploading(true)
+    try {
+      let arquivoUrl = doc.arquivo_url
+      if (file) arquivoUrl = await uploadDocumentoArquivo(empresaId, file)
+      await atualizar.mutateAsync({
+        id: doc.id,
+        empresaId,
+        input: {
+          tipo_id:     v.tipo_id,
+          titulo:      v.titulo,
+          numero:      v.numero || null,
+          emissao:     v.emissao || null,
+          vencimento:  v.vencimento || null,
+          observacoes: v.observacoes || null,
+          arquivo_url: arquivoUrl,
+        },
+      })
+      onClose()
+    } catch { /* toast já disparado */ }
+    finally { setIsUploading(false) }
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div>
+            <h2>Detalhes do documento</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <span style={{ fontSize: 12.5, color: 'var(--ink-500)' }}>{doc.tipo?.nome ?? '—'}</span>
+              <span className={`chip ${st.key}`} style={{ fontSize: 11 }}>{st.label}</span>
+            </div>
+          </div>
+          <button className="icon-btn" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <div className="mp-form">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <DocField label="Tipo de documento" full>
+                  <select className="mp-input" {...register('tipo_id')} disabled={tiposQuery.isLoading}>
+                    <option value="">Selecione…</option>
+                    {(tiposQuery.data ?? []).map(t => (
+                      <option key={t.id} value={t.id}>{t.nome}</option>
+                    ))}
+                  </select>
+                  {errors.tipo_id && <span style={{ color: 'var(--red-600, #dc2626)', fontSize: 11.5, display: 'block', marginTop: 3 }}>{errors.tipo_id.message}</span>}
+                </DocField>
+                <DocField label="Título" full>
+                  <input className="mp-input" placeholder="Ex.: PGR 2026 — unidade matriz" {...register('titulo')} />
+                  {errors.titulo && <span style={{ color: 'var(--red-600, #dc2626)', fontSize: 11.5, display: 'block', marginTop: 3 }}>{errors.titulo.message}</span>}
+                </DocField>
+                <DocField label="Número / versão">
+                  <input className="mp-input" placeholder="v3" {...register('numero')} />
+                </DocField>
+                <DocField label="Responsável técnico">
+                  <input className="mp-input" placeholder="Nome do responsável" disabled style={{ opacity: 0.6 }} />
+                </DocField>
+                <DocField label="Data de emissão">
+                  <input className="mp-input" type="date" {...register('emissao')} />
+                </DocField>
+                <DocField label="Data de validade">
+                  <input className="mp-input" type="date" {...register('vencimento')} />
+                </DocField>
+                <DocField label="Observações" full>
+                  <input className="mp-input" placeholder="Opcional" {...register('observacoes')} />
+                </DocField>
+              </div>
+              <StatusPreview validade={watchedVencimento} />
+              {doc.arquivo_url && !file && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
+                  <FileText size={16} style={{ color: 'var(--ink-400)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Arquivo anexado</span>
+                  <button type="button" className="tbtn ghost sm" onClick={() => window.open(doc.arquivo_url!, '_blank')}><Eye size={12} /> Visualizar</button>
+                  <button type="button" className="tbtn ghost sm" onClick={() => { const a = document.createElement('a'); a.href = doc.arquivo_url!; a.download = doc.titulo; a.target = '_blank'; a.click() }}><Download size={12} /> Baixar</button>
+                </div>
+              )}
+              <div
+                className="dropzone"
+                style={{ cursor: 'pointer', borderColor: isDragging ? 'var(--navy-600)' : file ? 'var(--green-500)' : undefined, background: isDragging ? 'var(--bg-tint-1)' : file ? 'var(--green-50, #f0fdf4)' : undefined }}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) setFile(f) }}
+              >
+                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) setFile(f) }} />
+                {file ? (
+                  <>
+                    <div className="dropzone-ic"><CheckCircle2 size={20} style={{ color: 'var(--green-500)' }} /></div>
+                    <div className="dropzone-title">{file.name}</div>
+                    <div className="dropzone-sub">{(file.size / 1024).toFixed(0)} KB</div>
+                    <button type="button" className="tbtn ghost sm" style={{ marginTop: 4, fontSize: 11 }} onClick={e => { e.stopPropagation(); setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}><X size={12} /> Remover</button>
+                  </>
+                ) : (
+                  <>
+                    <div className="dropzone-ic"><UploadCloud size={20} /></div>
+                    <div className="dropzone-title">{doc.arquivo_url ? 'Substituir arquivo' : 'Arraste ou clique para adicionar arquivo'}</div>
+                    <div className="dropzone-sub">PDF, Word ou Excel · máx. 10 MB</div>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button type="button" className="tbtn" onClick={onClose}>Cancelar</button>
+              <button type="submit" className="tbtn primary" disabled={atualizar.isPending || isUploading}>
+                {(atualizar.isPending || isUploading) ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13} />}
+                {isUploading ? 'Enviando arquivo...' : atualizar.isPending ? 'Salvando...' : 'Salvar alterações'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// DocumentosEmpresa
+// ---------------------------------------------------------------------------
 function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   empresaIdProp?: string | null
   empresaNome?: string
@@ -584,24 +738,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   const [novoOpen, setNovoOpen] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
   const [confirmDelId, setConfirmDelId] = useState<string | null>(null)
-  const [viewingId, setViewingId] = useState<string | null>(null)
-
-  const handleFileAction = async (r: DocRow, action: 'view' | 'download') => {
-    if (r.kind !== 'empresa' || !r.arquivo_url) return
-    setViewingId(r.id)
-    try {
-      const url = await gerarUrlAssinada(r.arquivo_url)
-      if (action === 'view') {
-        window.open(url, '_blank')
-      } else {
-        const a = document.createElement('a'); a.href = url; a.download = r.nome; a.click()
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao abrir arquivo.')
-    } finally {
-      setViewingId(null)
-    }
-  }
+  const [viewDoc, setViewDoc] = useState<DocumentoComTipo | null>(null)
 
   const docsBanco = docQuery.data ?? []
 
@@ -841,10 +978,8 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                       <div className="doc-actions">
                         {r.kind === 'empresa' ? (
                           <>
-                            <button className="icon-btn sm" title="Visualizar" disabled={!r.arquivo_url || viewingId === r.id} onClick={() => void handleFileAction(r, 'view')}>
-                              {viewingId === r.id ? <Loader2 size={15} className="btn-spinner" /> : <Eye size={15} />}
-                            </button>
-                            <button className="icon-btn sm" title="Baixar" disabled={!r.arquivo_url || viewingId === r.id} onClick={() => void handleFileAction(r, 'download')}><Download size={15} /></button>
+                            <button className="icon-btn sm" title="Visualizar" onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}><Eye size={15} /></button>
+                            <button className="icon-btn sm" title="Baixar" disabled={!r.arquivo_url} onClick={() => { if (r.arquivo_url) { const a = document.createElement('a'); a.href = r.arquivo_url; a.download = r.nome; a.target = '_blank'; a.click() } }}><Download size={15} /></button>
                             <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => setNovoOpen(true)}>
                               {r.st.key !== 'ok' ? 'Renovar' : 'Nova versão'}
                             </button>
@@ -866,6 +1001,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
       </div>
 
       {novoOpen && empresaId && <NovoDocumentoModal onClose={() => setNovoOpen(false)} empresaId={empresaId} />}
+      {viewDoc && empresaId && <EditarDocumentoModal doc={viewDoc} empresaId={empresaId} onClose={() => setViewDoc(null)} />}
       {dateOpen && empresaId && <DateEntryModal onClose={() => setDateOpen(false)} empresaId={empresaId} />}
       {confirmDelId && (
         <div className="modal-backdrop" onClick={() => setConfirmDelId(null)}>
