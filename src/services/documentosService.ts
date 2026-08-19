@@ -29,6 +29,7 @@ export interface DocumentoInput {
   emissao?: string | null   // ISO date
   vencimento?: string | null
   observacoes?: string | null
+  arquivo_url?: string | null
 }
 
 export async function listarDocumentos(empresaId: string): Promise<DocumentoComTipo[]> {
@@ -53,7 +54,7 @@ export async function criarDocumento(input: DocumentoInput): Promise<Documento> 
       emissao:     input.emissao ?? null,
       vencimento:  input.vencimento ?? null,
       observacoes: input.observacoes ?? null,
-      arquivo_url: null,
+      arquivo_url: input.arquivo_url ?? null,
     })
     .select('*')
     .single()
@@ -75,6 +76,21 @@ export async function atualizarDocumento(
 
   if (error) throw handleSupabaseError(error, 'Não foi possível atualizar o documento.')
   return data as Documento
+}
+
+// Bucket 'documentos' deve estar criado no Supabase Storage (Dashboard → Storage → New bucket)
+export async function uploadDocumentoArquivo(empresaId: string, file: File): Promise<string> {
+  const ext = file.name.split('.').pop() ?? 'bin'
+  const path = `${empresaId}/${crypto.randomUUID()}.${ext}`
+
+  const { error } = await supabase.storage
+    .from('documentos')
+    .upload(path, file, { cacheControl: '3600', upsert: false })
+
+  if (error) throw handleSupabaseError(error, 'Não foi possível fazer o upload do arquivo.')
+
+  const { data } = supabase.storage.from('documentos').getPublicUrl(path)
+  return data.publicUrl
 }
 
 export async function deletarDocumento(id: string): Promise<void> {

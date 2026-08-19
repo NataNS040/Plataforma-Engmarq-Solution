@@ -1,15 +1,16 @@
-﻿import { useState, useMemo } from 'react'
+﻿import { useState, useMemo, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Shield, Heart, FileText, LayoutGrid, GraduationCap, HardHat,
   Download, Calendar, Plus, CheckCircle2, Clock, AlertTriangle,
-  Search, Eye, Trash2, X, Loader2,
+  Search, Eye, Trash2, X, Loader2, UploadCloud,
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento } from '@/hooks/queries/useDocumentos'
+import { uploadDocumentoArquivo } from '@/services/documentosService'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
@@ -25,6 +26,7 @@ interface StatusResult { key: DocStatus; label: string; rel: string }
 interface EmpresaDoc {
   id: string; cat: string; nome: string; versao: string
   emissao: string; validade: string; resp: string; size: string
+  arquivo_url: string | null
 }
 interface ColabReg {
   id: string; cat: string; colab: string; cor: string
@@ -443,6 +445,10 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
   const tiposQuery = useDocumentoTipos()
   const criar = useCriarDocumento()
   const [validade, setValidade] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
     register,
@@ -457,7 +463,10 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
   const watchedVencimento = watch('vencimento')
 
   async function onSubmit(v: NovoDocForm) {
+    setIsUploading(true)
     try {
+      let arquivoUrl: string | null = null
+      if (file) arquivoUrl = await uploadDocumentoArquivo(empresaId, file)
       await criar.mutateAsync({
         empresa_id:  empresaId,
         tipo_id:     v.tipo_id,
@@ -466,9 +475,11 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
         emissao:     v.emissao || null,
         vencimento:  v.vencimento || null,
         observacoes: v.observacoes || null,
+        arquivo_url: arquivoUrl,
       })
       onClose()
     } catch { /* toast já disparado */ }
+    finally { setIsUploading(false) }
   }
 
   return (
@@ -477,7 +488,7 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
         <div className="modal-head">
           <div>
             <h2>Novo documento</h2>
-            <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginTop: 2 }}>Campo "arquivo" disponível em breve · status calculado automaticamente pela validade</div>
+            <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginTop: 2 }}>Anexe o arquivo PDF ou Word · status calculado automaticamente pela validade</div>
           </div>
           <button className="icon-btn" onClick={onClose}><X size={16} /></button>
         </div>
@@ -518,17 +529,36 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
                 </DocField>
               </div>
               <StatusPreview validade={watchedVencimento || validade} />
-              <div className="dropzone" style={{ opacity:0.5, cursor:'not-allowed', pointerEvents:'none' }}>
-                <div className="dropzone-ic"><FileText size={20} /></div>
-                <div className="dropzone-title">Upload de arquivo</div>
-                <div className="dropzone-sub">Disponível em breve</div>
+              <div
+                className="dropzone"
+                style={{ cursor: 'pointer', borderColor: isDragging ? 'var(--navy-600)' : file ? 'var(--green-500)' : undefined, background: isDragging ? 'var(--bg-tint-1)' : file ? 'var(--green-50, #f0fdf4)' : undefined }}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) setFile(f) }}
+              >
+                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) setFile(f) }} />
+                {file ? (
+                  <>
+                    <div className="dropzone-ic"><CheckCircle2 size={20} style={{ color: 'var(--green-500)' }} /></div>
+                    <div className="dropzone-title">{file.name}</div>
+                    <div className="dropzone-sub">{(file.size / 1024).toFixed(0)} KB</div>
+                    <button type="button" className="tbtn ghost sm" style={{ marginTop: 4, fontSize: 11 }} onClick={e => { e.stopPropagation(); setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}><X size={12} /> Remover</button>
+                  </>
+                ) : (
+                  <>
+                    <div className="dropzone-ic"><UploadCloud size={20} /></div>
+                    <div className="dropzone-title">Arraste ou clique para adicionar arquivo</div>
+                    <div className="dropzone-sub">PDF, Word ou Excel · máx. 10 MB</div>
+                  </>
+                )}
               </div>
             </div>
             <div className="modal-foot">
               <button type="button" className="tbtn" onClick={onClose}>Cancelar</button>
-              <button type="submit" className="tbtn primary" disabled={criar.isPending}>
-                {criar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13} />}
-                {criar.isPending ? 'Salvando...' : 'Cadastrar documento'}
+              <button type="submit" className="tbtn primary" disabled={criar.isPending || isUploading}>
+                {(criar.isPending || isUploading) ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13} />}
+                {isUploading ? 'Enviando arquivo...' : criar.isPending ? 'Salvando...' : 'Cadastrar documento'}
               </button>
             </div>
           </form>
@@ -590,6 +620,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
         validade: d.vencimento ?? '',
         resp: d.observacoes ?? '—',
         size: '—',
+        arquivo_url: d.arquivo_url,
         kind: 'empresa',
         st,
       }
@@ -791,8 +822,8 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                       <div className="doc-actions">
                         {r.kind === 'empresa' ? (
                           <>
-                            <button className="icon-btn sm" title="Visualizar"><Eye size={15} /></button>
-                            <button className="icon-btn sm" title="Baixar"><Download size={15} /></button>
+                            <button className="icon-btn sm" title="Visualizar" disabled={!r.arquivo_url} onClick={() => r.arquivo_url && window.open(r.arquivo_url, '_blank')}><Eye size={15} /></button>
+                            <button className="icon-btn sm" title="Baixar" disabled={!r.arquivo_url} onClick={() => { if (r.arquivo_url) { const a = document.createElement('a'); a.href = r.arquivo_url; a.download = r.nome; a.target = '_blank'; a.click() } }}><Download size={15} /></button>
                             <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => setNovoOpen(true)}>
                               {r.st.key !== 'ok' ? 'Renovar' : 'Nova versão'}
                             </button>
