@@ -89,8 +89,22 @@ export async function uploadDocumentoArquivo(empresaId: string, file: File): Pro
 
   if (error) throw handleSupabaseError(error, 'Não foi possível fazer o upload do arquivo.')
 
-  const { data } = supabase.storage.from('documentos').getPublicUrl(path)
-  return data.publicUrl
+  // Salva o path (não a URL pública) para gerar URLs assinadas depois
+  return path
+}
+
+export async function gerarUrlAssinada(path: string, expiresIn = 300): Promise<string> {
+  // Extrai o path caso o valor salvo seja uma URL pública legada
+  const marker = '/object/public/documentos/'
+  const idx = path.indexOf(marker)
+  const storagePath = idx >= 0 ? decodeURIComponent(path.slice(idx + marker.length)) : path
+
+  const { data, error } = await supabase.storage
+    .from('documentos')
+    .createSignedUrl(storagePath, expiresIn)
+
+  if (error) throw handleSupabaseError(error, 'Não foi possível gerar o link de acesso.')
+  return data.signedUrl
 }
 
 export async function deletarDocumento(id: string): Promise<void> {

@@ -10,7 +10,8 @@ import {
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento } from '@/hooks/queries/useDocumentos'
-import { uploadDocumentoArquivo } from '@/services/documentosService'
+import { uploadDocumentoArquivo, gerarUrlAssinada } from '@/services/documentosService'
+import { toast } from 'sonner'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
@@ -583,6 +584,24 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   const [novoOpen, setNovoOpen] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
   const [confirmDelId, setConfirmDelId] = useState<string | null>(null)
+  const [viewingId, setViewingId] = useState<string | null>(null)
+
+  const handleFileAction = async (r: DocRow, action: 'view' | 'download') => {
+    if (r.kind !== 'empresa' || !r.arquivo_url) return
+    setViewingId(r.id)
+    try {
+      const url = await gerarUrlAssinada(r.arquivo_url)
+      if (action === 'view') {
+        window.open(url, '_blank')
+      } else {
+        const a = document.createElement('a'); a.href = url; a.download = r.nome; a.click()
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao abrir arquivo.')
+    } finally {
+      setViewingId(null)
+    }
+  }
 
   const docsBanco = docQuery.data ?? []
 
@@ -822,8 +841,10 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                       <div className="doc-actions">
                         {r.kind === 'empresa' ? (
                           <>
-                            <button className="icon-btn sm" title="Visualizar" disabled={!r.arquivo_url} onClick={() => r.arquivo_url && window.open(r.arquivo_url, '_blank')}><Eye size={15} /></button>
-                            <button className="icon-btn sm" title="Baixar" disabled={!r.arquivo_url} onClick={() => { if (r.arquivo_url) { const a = document.createElement('a'); a.href = r.arquivo_url; a.download = r.nome; a.target = '_blank'; a.click() } }}><Download size={15} /></button>
+                            <button className="icon-btn sm" title="Visualizar" disabled={!r.arquivo_url || viewingId === r.id} onClick={() => void handleFileAction(r, 'view')}>
+                              {viewingId === r.id ? <Loader2 size={15} className="btn-spinner" /> : <Eye size={15} />}
+                            </button>
+                            <button className="icon-btn sm" title="Baixar" disabled={!r.arquivo_url || viewingId === r.id} onClick={() => void handleFileAction(r, 'download')}><Download size={15} /></button>
                             <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => setNovoOpen(true)}>
                               {r.st.key !== 'ok' ? 'Renovar' : 'Nova versão'}
                             </button>
