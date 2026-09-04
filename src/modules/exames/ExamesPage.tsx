@@ -11,6 +11,7 @@ import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { SubtipoExame } from '@/types/database'
+import { getAvatarColor, getInitials, getChartColor } from '@/lib/theme'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -43,12 +44,8 @@ function asoStatus(validadeISO: string | undefined | null) {
 
 type AsoStatusKey = 'ok' | 'warn' | 'crit' | 'neutral'
 
-const AVATAR_COLORS = ['#2563EB','#DB2777','#7C3AED','#0891B2','#059669','#D97706','#475569','#BE185D']
-function avatarColor(nome: string) {
-  let h = 0; for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h)
-  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
-}
-const initials = (n: string) => n.split(' ').filter(Boolean).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
+const avatarColor = getAvatarColor
+const initials = getInitials
 
 // ---------------------------------------------------------------------------
 // Static data
@@ -559,13 +556,12 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
   const empresas = empresasQuery.data ?? []
   const kpisQuery = useDashboardKpis('all')
   const kpis = kpisQuery.data
-  const COLORS = ['#1F2A44','#10B981','#3B82F6','#8B5CF6','#F59E0B']
 
   return (
     <div className="content">
       <div className="page-header">
         <div>
-          <h1>Exames médicos · PCMSO · EngMarq</h1>
+          <h1>Exames médicos · PCMSO</h1>
           <p className="sub">Saúde ocupacional consolidada · {empresas.length} empresas-cliente</p>
         </div>
         <div className="toolbar">
@@ -621,7 +617,7 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
                 >
                   <td>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <span className="ava" style={{ background: COLORS[i % COLORS.length], borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
+                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
                         {e.razao_social.slice(0,1)}
                       </span>
                       <div>

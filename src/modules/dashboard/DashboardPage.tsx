@@ -12,6 +12,7 @@ import {
   Calendar, Download, Plus, ArrowRight,
   Filter, AlertTriangle,
 } from "lucide-react"
+import { getChartColor } from "@/lib/theme"
 
 /* ============================================================
    Shared helpers
@@ -25,8 +26,6 @@ function currentDateLabel() {
 }
 
 type TimelineKind = "crit" | "warn" | "ok"
-
-const EMPRESA_COLORS = ["#1F2A44","#10B981","#3B82F6","#8B5CF6","#F59E0B"]
 
 /* ============================================================
    ADMIN — dashboard cross-company
@@ -54,7 +53,7 @@ function DashboardAdmin() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1>Dashboard EngMarq</h1>
+          <h1>Dashboard</h1>
           <p className="sub">Visão consolidada de conformidade SST · {kpis?.totalEmpresas ?? '—'} empresas · {kpis?.totalColaboradores?.toLocaleString('pt-BR') ?? '—'} colaboradores</p>
         </div>
         <div className="toolbar">
@@ -142,7 +141,7 @@ function DashboardAdmin() {
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                   {kpis ? `${compliancePct}%` : '—'}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--ink-400)", marginTop: 4 }}>compliance</span>
@@ -182,7 +181,7 @@ function DashboardAdmin() {
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>
                   {kpis ? kpis.docsVencidos + kpis.docsVencendo + kpis.treinamentosVencidos + kpis.treinamentosVencendo : '—'}
                 </span>
                 <span style={{ fontSize: 10, color: "var(--ink-400)", marginTop: 3 }}>pendências</span>
@@ -260,7 +259,7 @@ function DashboardAdmin() {
               <tr key={e.id}>
                 <td>
                   <div className="cell-person">
-                    <div className="ava" style={{ background: EMPRESA_COLORS[i % 5], borderRadius: 8 }}>
+                    <div className="ava" style={{ background: getChartColor(i), borderRadius: 8 }}>
                       {e.razao_social.slice(0, 1)}
                     </div>
                     <div>
@@ -417,7 +416,7 @@ function DashboardEmpresa() {
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                   {kpis ? `${compliancePct}%` : '—'}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--ink-400)", marginTop: 4 }}>compliance</span>
@@ -451,7 +450,7 @@ function DashboardEmpresa() {
               return (
                 <div key={nr.code} style={{ display: "grid", gridTemplateColumns: "140px 1fr 44px", gap: 14, alignItems: "center" }}>
                   <div>
-                    <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em" }}>{nr.code}</div>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em" }}>{nr.code}</div>
                     <div style={{ fontSize: 11, color: "var(--ink-500)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nr.titulo}</div>
                   </div>
                   <div>
@@ -467,7 +466,7 @@ function DashboardEmpresa() {
                       <span style={{ marginLeft: "auto" }}>{nr.req} obrigatórios</span>
                     </div>
                   </div>
-                  <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 13, textAlign: "right", fontVariantNumeric: "tabular-nums", color: pct >= 85 ? "#059669" : pct >= 70 ? "#D97706" : "#EF4444" }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, textAlign: "right", fontVariantNumeric: "tabular-nums", color: pct >= 85 ? "#059669" : pct >= 70 ? "#D97706" : "#EF4444" }}>
                     {pct}%
                   </div>
                 </div>
@@ -499,7 +498,7 @@ function DashboardEmpresa() {
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>{kpis ? `${compliancePct}%` : '—'}</span>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>{kpis ? `${compliancePct}%` : '—'}</span>
                 <span style={{ fontSize: 10, color: "var(--ink-400)", marginTop: 3 }}>em dia</span>
               </div>
             </div>

@@ -1,45 +1,72 @@
 @import "tailwindcss";
 
 /* ============================================================
-   EngMarq Vision — Design System Tokens
+   Norveo — Design System Tokens
    ============================================================ */
 :root {
-  /* Brand navy */
-  --navy-900: #0B1426;
-  --navy-800: #111E37;
-  --navy-700: #1A2942;
-  --navy-600: #233354;
-  --navy-500: #2E4068;
-  --navy-300: #6B7B98;
+  /* ==========================================================
+     Paleta física — cores "cruas" da marca atual (Norveo).
+     Isto é o único bloco que muda quando a identidade visual
+     for trocada de novo (ver src/config/brand.ts para nome/
+     tagline). Componentes de página NÃO devem referenciar estes
+     tokens diretamente — usar sempre a camada semântica abaixo.
 
-  /* Brand orange (accent) */
-  --orange-500: #F59E0B;
-  --orange-400: #FBBF24;
-  --orange-600: #D97706;
-  --orange-50:  #FEF3E2;
+     Origem: manual de marca Norveo — Norte #071A2B, Graphite
+     #202938, Vision Blue #176FFF, Horizon #4385FF, Signal
+     #FFB020, Cloud #F5F7FA. Os tons intermediários da rampa
+     (ex.: --navy-600/500/300) foram interpolados a partir
+     desses pontos oficiais para manter a progressão de escala
+     já usada em todo o CSS legado.
+     ========================================================== */
+
+  /* Brand navy (Norte / Graphite) */
+  --navy-900: #071A2B; /* Norte */
+  --navy-800: #142235;
+  --navy-700: #202938; /* Graphite */
+  --navy-600: #34415A;
+  --navy-500: #4A5A78;
+  --navy-300: #8794AC;
+  --navy-100: #E2E7F0;
+  --navy-50:  #F1F4F8;
+
+  /* Brand orange — mapeado ao "Signal" (tom de atenção da Norveo) */
+  --orange-700: #B5790F;
+  --orange-600: #E09A17;
+  --orange-500: #FFB020; /* Signal */
+  --orange-400: #FFC658;
+  --orange-50:  #FFF6E6;
 
   /* Status */
+  --green-700: #047857;
+  --green-600: #059669;
   --green-500: #10B981;
   --green-400: #34D399;
-  --green-600: #059669;
   --green-50:  #ECFDF5;
+  --red-700:   #B91C1C;
+  --red-600:   #DC2626;
   --red-500:   #EF4444;
   --red-50:    #FEF2F2;
-  --blue-500:  #3B82F6;
-  --blue-50:   #EFF6FF;
+  --blue-700:  #0F5DD1; /* Vision Blue, hover */
+  --blue-600:  #176FFF; /* Vision Blue — cor de ação/CTA da marca */
+  --blue-500:  #4385FF; /* Horizon — azul secundário/info */
+  --blue-50:   #EAF2FF;
   --violet-500: #8B5CF6;
   --violet-50:  #F5F3FF;
 
   /* Neutrals */
-  --bg:            #F4F6FB;
+  --bg:            #F5F7FA; /* Cloud */
+  --bg-tint-1:     #EEF1F8;
   --surface:       #FFFFFF;
+  --surface-2:     var(--bg-tint-1);
   --border:        #E5E8F0;
   --border-strong: #D5DAE5;
   --ink-900:       #0F172A;
+  --ink-800:       #1E293B;
   --ink-700:       #334155;
   --ink-500:       #64748B;
   --ink-400:       #94A3B8;
   --ink-300:       #CBD5E1;
+  --ink-200:       #E2E8F0;
 
   /* Glassmorphism */
   --glass-bg:       rgba(255, 255, 255, 0.55);
@@ -48,8 +75,8 @@
   --glass-blur:     22px;
   --glass-shadow:   0 8px 24px -8px rgba(15, 23, 42, 0.12), 0 2px 4px -1px rgba(15, 23, 42, 0.05);
 
-  /* Typography */
-  --font-display: "Plus Jakarta Sans", -apple-system, system-ui, sans-serif;
+  /* Typography — manual de marca Norveo: Sora (títulos/logo/destaques), Inter (interface/textos) */
+  --font-display: "Sora", -apple-system, system-ui, sans-serif;
   --font-body:    "Inter", -apple-system, system-ui, sans-serif;
 
   /* Radii */
@@ -60,6 +87,85 @@
   --r-xl:   20px;
   --r-2xl:  24px;
   --r-full: 999px;
+
+  /* ==========================================================
+     Camada semântica — é ISTO que componentes/páginas devem
+     usar. Ao trocar a identidade visual (Etapa C), só o bloco
+     físico acima muda; estes nomes continuam os mesmos.
+     ========================================================== */
+  --color-primary:         var(--navy-900);
+  --color-primary-hover:   var(--navy-800);
+  --color-primary-soft:    var(--navy-50);
+  /* Accent = Vision Blue, a cor de ação/CTA da Norveo (ver botão
+     "Acessar" no manual de marca) — não confundir com --orange-*
+     (Signal), que fica reservado ao estado "warning". */
+  --color-accent:          var(--blue-600);
+  --color-accent-hover:    var(--blue-700);
+  --color-accent-soft:     var(--blue-50);
+
+  --color-surface:         var(--surface);
+  --color-surface-alt:     var(--surface-2);
+  --color-bg:              var(--bg);
+  --color-border:          var(--border);
+  --color-border-strong:   var(--border-strong);
+
+  --color-text-primary:    var(--ink-900);
+  --color-text-secondary:  var(--ink-700);
+  --color-text-muted:      var(--ink-500);
+
+  --color-success:         var(--green-600);
+  --color-success-soft:    var(--green-50);
+  --color-warning:         var(--orange-600);
+  --color-warning-soft:    var(--orange-50);
+  --color-danger:          var(--red-500);
+  --color-danger-soft:     var(--red-50);
+  --color-info:            var(--blue-500);
+  --color-info-soft:       var(--blue-50);
+}
+
+/* ============================================================
+   Tailwind v4 theme — mapeia a camada semântica acima para
+   classes utilitárias (bg-primary, text-accent, ...), usadas
+   pelos componentes novos em src/components/ui/. Não migra o
+   CSS legado abaixo, que continua em classes customizadas.
+   ============================================================ */
+@theme {
+  --color-primary:        var(--color-primary);
+  --color-primary-hover:  var(--color-primary-hover);
+  --color-primary-soft:   var(--color-primary-soft);
+  --color-accent:         var(--color-accent);
+  --color-accent-hover:   var(--color-accent-hover);
+  --color-accent-soft:    var(--color-accent-soft);
+
+  --color-surface:        var(--color-surface);
+  --color-surface-alt:    var(--color-surface-alt);
+  --color-bg:             var(--color-bg);
+  --color-border:         var(--color-border);
+  --color-border-strong:  var(--color-border-strong);
+
+  --color-text-primary:   var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted:     var(--color-text-muted);
+
+  --color-success:        var(--color-success);
+  --color-success-soft:   var(--color-success-soft);
+  --color-warning:        var(--color-warning);
+  --color-warning-soft:   var(--color-warning-soft);
+  --color-danger:         var(--color-danger);
+  --color-danger-soft:    var(--color-danger-soft);
+  --color-info:           var(--color-info);
+  --color-info-soft:      var(--color-info-soft);
+
+  --font-display: var(--font-display);
+  --font-body:    var(--font-body);
+
+  --radius-xs:   var(--r-xs);
+  --radius-sm:   var(--r-sm);
+  --radius-md:   var(--r-md);
+  --radius-lg:   var(--r-lg);
+  --radius-xl:   var(--r-xl);
+  --radius-2xl:  var(--r-2xl);
+  --radius-full: var(--r-full);
 }
 
 /* ============================================================
@@ -167,13 +273,13 @@ html, body {
 .brand-mark {
   width: 42px;
   height: 42px;
-  background: var(--orange-500);
+  background: var(--color-accent);
   border-radius: var(--r-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 12px rgba(23, 111, 255, 0.35);
 }
 .brand-name {
   font-family: var(--font-display);
@@ -186,7 +292,7 @@ html, body {
 .brand-tag {
   font-size: 10px;
   font-weight: 700;
-  color: var(--orange-400);
+  color: var(--blue-500);
   letter-spacing: 1.8px;
   text-transform: uppercase;
   margin-top: 1px;
@@ -310,7 +416,7 @@ html, body {
   gap: 10px;
   margin-bottom: 32px;
 }
-.login-mobile-brand .brand-mark-sm {
+.brand-mark-sm {
   width: 38px;
   height: 38px;
   background: var(--navy-700);
@@ -318,8 +424,9 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
-.login-mobile-brand .brand-text {
+.brand-text {
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 800;
@@ -424,16 +531,16 @@ html, body {
   gap: 8px;
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 }
-.btn-primary.orange {
-  background: var(--orange-500);
+.btn-primary.accent {
+  background: var(--color-accent);
   color: white;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 14px rgba(23, 111, 255, 0.35);
 }
-.btn-primary.orange:hover {
-  background: var(--orange-600);
-  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.45);
+.btn-primary.accent:hover {
+  background: var(--color-accent-hover);
+  box-shadow: 0 4px 18px rgba(23, 111, 255, 0.45);
 }
-.btn-primary.orange:active { transform: scale(0.98); }
+.btn-primary.accent:active { transform: scale(0.98); }
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -2234,8 +2341,8 @@ html, body {
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 20px;
-  background: var(--navy-100, #E0E7FF);
-  color: var(--navy-600, #4338CA);
+  background: var(--navy-100);
+  color: var(--navy-600);
 }
 .pcmso-vig {
   font-size: 12px;
@@ -2435,8 +2542,8 @@ html, body {
 .aso-tipo {
   font-size: 12px;
   font-weight: 600;
-  color: var(--navy-700, #3730A3);
-  background: var(--navy-50, #EEF2FF);
+  color: var(--navy-700);
+  background: var(--navy-50);
   padding: 3px 8px;
   border-radius: 6px;
   white-space: nowrap;
@@ -2549,10 +2656,10 @@ html, body {
 .cal-cell.has {
   cursor: pointer;
   font-weight: 700;
-  color: var(--navy-700, #3730A3);
+  color: var(--navy-700);
 }
 .cal-cell.has:hover {
-  background: var(--navy-50, #EEF2FF);
+  background: var(--navy-50);
 }
 .cal-cell.today {
   color: var(--orange-600);
@@ -2568,7 +2675,7 @@ html, body {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--navy-500, #4338CA);
+  background: var(--navy-500);
   font-size: 0;
 }
 .cal-cell.sel .cal-dot {
@@ -2595,13 +2702,13 @@ html, body {
   gap: 9px;
   padding: 8px 10px;
   border-radius: 9px;
-  background: var(--surface-2, var(--bg-tint-1));
+  background: var(--surface-2);
   border: 1px solid var(--border);
 }
 .cal-event-time {
   font-size: 11px;
   font-weight: 700;
-  color: var(--navy-600, #4338CA);
+  color: var(--navy-600);
   font-variant-numeric: tabular-nums;
   min-width: 34px;
 }
@@ -2656,9 +2763,9 @@ html, body {
 }
 .mp-tab:hover { color: var(--ink-900); background: var(--bg-tint-1); }
 .mp-tab.on {
-  color: var(--navy-700, #3730A3);
+  color: var(--navy-700);
   font-weight: 600;
-  border-bottom-color: var(--navy-700, #3730A3);
+  border-bottom-color: var(--navy-700);
   background: transparent;
 }
 
@@ -2761,8 +2868,8 @@ html, body {
   border-radius: 20px;
   font-size: 11.5px;
   font-weight: 600;
-  background: var(--navy-50, #EEF2FF);
-  color: var(--navy-700, #3730A3);
+  background: var(--navy-50);
+  color: var(--navy-700);
   white-space: nowrap;
 }
 
@@ -2779,7 +2886,7 @@ html, body {
    CONFIGURAÇÕES — plan card
    ============================================================ */
 .cfg-plan {
-  background: linear-gradient(135deg, var(--navy-900, #0B1426) 0%, var(--navy-800, #1E3A5F) 100%);
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 100%);
   color: #fff;
   border: none;
 }

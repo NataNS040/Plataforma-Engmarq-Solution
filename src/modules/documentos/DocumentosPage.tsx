@@ -15,6 +15,7 @@ import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { DocStatus as DbDocStatus } from '@/types/database'
+import { getChartColor } from '@/lib/theme'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -344,13 +345,12 @@ function DocumentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: s
   const empresas = empresasQuery.data ?? []
   const kpisQuery = useDashboardKpis('all')
   const kpis = kpisQuery.data
-  const COLORS = ['#1F2A44','#10B981','#3B82F6','#8B5CF6','#F59E0B']
 
   return (
     <div className="content">
       <div className="page-header">
         <div>
-          <h1>Documentos · EngMarq</h1>
+          <h1>Documentos</h1>
           <p className="sub">Visão consolidada · documentos mestres das {empresas.length} empresas-cliente</p>
         </div>
         <div className="toolbar">
@@ -406,7 +406,7 @@ function DocumentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: s
                 >
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span className="ava" style={{ background: COLORS[i % COLORS.length], borderRadius: 8, width: 32, height: 32, fontSize: 12, flexShrink: 0 }}>
+                      <span className="ava" style={{ background: getChartColor(i), borderRadius: 8, width: 32, height: 32, fontSize: 12, flexShrink: 0 }}>
                         {e.razao_social.slice(0, 1)}
                       </span>
                       <div>

@@ -4,9 +4,10 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import type { UserRole } from '@/types/database'
+import { APP_SHORT_NAME } from '@/config/brand'
 
 const ROLES: { value: UserRole; label: string; desc: string }[] = [
-  { value: 'admin',       label: 'Administrador',  desc: 'Acesso total à plataforma EngMarq' },
+  { value: 'admin',       label: 'Administrador',  desc: `Acesso total à plataforma ${APP_SHORT_NAME}` },
   { value: 'gestor',      label: 'Gestor',         desc: 'Operação e compliance' },
   { value: 'operacional', label: 'Operacional',    desc: 'Documentos, treinamentos e exames' },
   { value: 'empresa',     label: 'Empresa-cliente',desc: 'Acesso à empresa vinculada' },

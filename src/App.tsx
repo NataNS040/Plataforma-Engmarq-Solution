@@ -11,6 +11,7 @@ import ExamesPage from '@/modules/exames/ExamesPage'
 import RelatoriosPage from '@/modules/relatorios/RelatoriosPage'
 import EmpresasPage from '@/modules/empresas/EmpresasPage'
 import ConfiguracoesPage from '@/modules/configuracoes/ConfiguracoesPage'
+import PerfilPage from '@/modules/perfil/PerfilPage'
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
               }
             />
             <Route path="configuracoes" element={<ConfiguracoesPage />} />
+            <Route path="perfil" element={<PerfilPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

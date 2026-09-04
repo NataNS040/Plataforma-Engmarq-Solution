@@ -3,6 +3,7 @@ import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronR
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores } from "@/hooks/queries/useColaboradores"
 import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento } from "@/hooks/queries/useTreinamentos"
+import { STATUS_COLORS, getAvatarColor } from "@/lib/theme"
 
 /* ============================================================
    Types
@@ -29,12 +30,7 @@ interface ColabRow {
    Constants
    ============================================================ */
 
-const CELL_COLORS: Record<CellStatus, { bg: string; border: string }> = {
-  ok:   { bg: "#10B981", border: "rgba(16,185,129,0.18)" },
-  warn: { bg: "#F59E0B", border: "rgba(245,158,11,0.18)"  },
-  crit: { bg: "#EF4444", border: "rgba(239,68,68,0.18)"   },
-  na:   { bg: "#CBD5E1", border: "rgba(203,213,225,0.30)" },
-}
+const CELL_COLORS: Record<CellStatus, { bg: string; border: string }> = STATUS_COLORS
 
 const CELL_SYMBOL: Record<CellStatus, string> = { ok: "✓", warn: "!", crit: "✕", na: "—" }
 
@@ -78,7 +74,7 @@ function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: Nr
 
       <div style={{ padding: 14, borderRadius: 12, background: `${col}15`, border: `1px solid ${col}40`, marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 18, letterSpacing: "-0.01em" }}>{info.nr}</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, letterSpacing: "-0.01em" }}>{info.nr}</div>
           <span className={`chip ${st === "na" ? "neutral" : st}`} style={{ fontSize: 11 }}>{labels[st]}</span>
         </div>
         <div style={{ fontSize: 12.5, color: "var(--ink-700)", marginBottom: 10, fontWeight: 500 }}>{info.titulo}</div>
@@ -149,7 +145,7 @@ function NRRanking({ stats, activeNr, onPick }: { stats: NrStat[]; activeNr: str
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <AlertTriangle size={16} style={{ color: "var(--red-500)", marginTop: 2 }} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4, fontFamily: "Plus Jakarta Sans" }}>Atenção prioritária</div>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4, fontFamily: "var(--font-display)" }}>Atenção prioritária</div>
               <div style={{ fontSize: 11.5, color: "var(--ink-700)", lineHeight: 1.4 }}>
                 <strong>{worst.nr} · {worst.titulo}</strong> está em {worst.pct}% — {worst.crit} colaborador{worst.crit > 1 ? "es" : ""} com treinamento vencido.
               </div>
@@ -166,10 +162,10 @@ function NRRanking({ stats, activeNr, onPick }: { stats: NrStat[]; activeNr: str
             <button key={n.nr} className={`nr-rank-row ${active ? "active" : ""}`} onClick={() => onPick(active ? null : n.nr)}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
                 <span style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-                  <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 12.5 }}>{n.nr}</span>
+                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 12.5 }}>{n.nr}</span>
                   <span style={{ fontSize: 10.5, color: "var(--ink-500)", maxWidth: 170, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.titulo}</span>
                 </span>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 13, color: col, fontVariantNumeric: "tabular-nums" }}>{n.pct}%</span>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, color: col, fontVariantNumeric: "tabular-nums" }}>{n.pct}%</span>
               </div>
               <div className="nr-chip-bar">
                 <div style={{ width: `${(n.ok   / (n.valid || 1)) * 100}%`, background: CELL_COLORS.ok.bg   }} />
@@ -240,7 +236,7 @@ function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinament
     >
       <div style={{ background: "var(--surface)", borderRadius: 16, padding: 24, width: 460, maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,0.18)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-          <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 16 }}>Registrar Treinamento</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>Registrar Treinamento</div>
           <button className="icon-btn" onClick={onClose} style={{ width: 28, height: 28 }}><X size={13} /></button>
         </div>
 
@@ -370,16 +366,11 @@ export default function TreinamentosPage() {
 
   // Montar COLABS_MATRIX dinâmico
   const COLABS_MATRIX: ColabRow[] = useMemo(() => {
-    const AVATAR_COLORS = ['#3B82F6','#F59E0B','#10B981','#8B5CF6','#EF4444','#06B6D4','#1F2A44','#F472B6','#22C55E','#A855F7']
-    function avatarColor(nome: string) {
-      let h = 0; for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h)
-      return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
-    }
     return colabs.map(c => ({
       nome:  c.nome,
       setor: c.setor?.nome ?? '—',
       foto:  c.nome.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase(),
-      cor:   avatarColor(c.nome),
+      cor:   getAvatarColor(c.nome),
       id:    c.id,
     }))
   }, [colabs])
@@ -581,7 +572,7 @@ export default function TreinamentosPage() {
                         )
                       })}
                       <td style={{ textAlign: "right" }}>
-                        <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: score >= 85 ? "var(--green-600)" : score >= 70 ? "var(--orange-600)" : "var(--red-500)" }}>
+                        <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: score >= 85 ? "var(--green-600)" : score >= 70 ? "var(--orange-600)" : "var(--red-500)" }}>
                           {score}%
                         </span>
                       </td>
@@ -598,7 +589,7 @@ export default function TreinamentosPage() {
                     <td
                       key={n.nr}
                       className={activeNr === n.nr ? "col-active" : ""}
-                      style={{ textAlign: "center", fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 12, fontVariantNumeric: "tabular-nums", color: n.pct >= 85 ? "var(--green-600)" : n.pct >= 70 ? "var(--orange-600)" : "var(--red-500)" }}
+                      style={{ textAlign: "center", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 12, fontVariantNumeric: "tabular-nums", color: n.pct >= 85 ? "var(--green-600)" : n.pct >= 70 ? "var(--orange-600)" : "var(--red-500)" }}
                     >
                       {n.pct}%
                     </td>

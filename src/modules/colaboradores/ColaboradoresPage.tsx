@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -15,6 +16,7 @@ import { criarSetor, criarFuncao, criarAmbiente } from "@/services/catalogosServ
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { qk } from "@/lib/queryKeys"
+import { getAvatarColor, getInitials } from "@/lib/theme"
 
 /* ============================================================
    Types
@@ -51,12 +53,8 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
   const [nrs, setNrs] = useState<NrEntry[]>([])
   const [draft, setDraft] = useState<NrEntry[]>([])
 
-  const initials = c.nome.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase()
-  const cor = (() => {
-    const COLORS = ['#3B82F6','#F59E0B','#10B981','#8B5CF6','#EF4444','#06B6D4','#1F2A44','#F472B6','#22C55E','#A855F7']
-    let h = 0; for (let i = 0; i < c.nome.length; i++) h = c.nome.charCodeAt(i) + ((h << 5) - h)
-    return COLORS[Math.abs(h) % COLORS.length]
-  })()
+  const initials = getInitials(c.nome)
+  const cor = getAvatarColor(c.nome)
 
   const startEdit  = () => { setDraft(nrs.map(x => ({ ...x }))); setEditing(true) }
   const cancelEdit = () => setEditing(false)
@@ -115,23 +113,23 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
             <div className="card" style={{ padding: 14 }}>
               <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Treinamentos</div>
-              <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 20 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
                 — <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>/ obrig.</span>
               </div>
             </div>
             <div className="card" style={{ padding: 14 }}>
               <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Documentos</div>
-              <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 20 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
                 — <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>arquivos</span>
               </div>
             </div>
             <div className="card" style={{ padding: 14 }}>
               <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>CPF</div>
-              <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 14 }}>{c.cpf}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{c.cpf}</div>
             </div>
             <div className="card" style={{ padding: 14 }}>
               <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Matrícula</div>
-              <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 14 }}>{c.matricula ?? '—'}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{c.matricula ?? '—'}</div>
             </div>
           </div>
 
@@ -211,7 +209,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
                           </button>
                         </td>
                       )}
-                      <td><strong style={{ fontFamily: "Plus Jakarta Sans" }}>{t.nr}</strong></td>
+                      <td><strong style={{ fontFamily: "var(--font-display)" }}>{t.nr}</strong></td>
                       <td>{t.desc}</td>
                       <td style={{ color: "var(--ink-500)" }}>{t.carga}</td>
                       <td>
@@ -595,7 +593,7 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
                   <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--orange-600)" }}>
                     <Download size={20} />
                   </div>
-                  <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Arraste a planilha aqui</div>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Arraste a planilha aqui</div>
                   <div style={{ fontSize: 12, color: "var(--ink-500)", marginBottom: 14 }}>CSV ou XLSX · até 500 colaboradores por importação</div>
                   <button className="tbtn primary" style={{ margin: "0 auto" }} type="button"><Plus size={13} /> Selecionar arquivo</button>
                   <input
@@ -713,31 +711,29 @@ export default function ColaboradoresPage() {
     return ['Todos', ...Array.from(nomes).sort()]
   }, [colabs])
 
+  const [searchParams] = useSearchParams()
+
   const [setor, setSetor]           = useState("Todos")
   const [statusFilter, setStatus]   = useState<string>("all")
   const [view, setView]             = useState<"table" | "grid">("table")
-  const [query, setQuery]           = useState("")
+  const [query, setQuery]           = useState(() => searchParams.get("q") ?? "")
   const [adding, setAdding]         = useState(false)
   const [openProfile, setOpenProfile] = useState<ColaboradorComCatalogos | null>(null)
+
+  // Busca vinda do Header (?q=) — sincroniza se o usuário buscar de novo por lá
+  // sem sair da página. Ajusta o state durante o render (não em efeito),
+  // guardado pela comparação com o último valor visto.
+  const [lastSyncedQ, setLastSyncedQ] = useState(searchParams.get("q"))
+  const currentQ = searchParams.get("q")
+  if (currentQ !== lastSyncedQ) {
+    setLastSyncedQ(currentQ)
+    if (currentQ) setQuery(currentQ)
+  }
 
   // Derivação de status baseada em treinamentos/documentos (Fase 4.3)
   // Por ora: todos ficam 'ok' até a Fase 4.3 cruzar com treinamentos
   function getStatus(_c: ColaboradorComCatalogos): "ok" | "warn" | "crit" {
     return 'ok'
-  }
-
-  function getInitials(nome: string) {
-    return nome.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
-  }
-
-  const AVATAR_COLORS = [
-    '#3B82F6','#F59E0B','#10B981','#8B5CF6','#EF4444',
-    '#06B6D4','#1F2A44','#F472B6','#22C55E','#A855F7',
-  ]
-  function avatarColor(nome: string) {
-    let h = 0
-    for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h)
-    return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
   }
 
   function fmtDate(iso: string | null | undefined) {
@@ -800,7 +796,7 @@ export default function ColaboradoresPage() {
               <span style={{ fontSize: 12.5, color: "var(--ink-500)", fontWeight: 500 }}>{s.label}</span>
               {s.color && <span style={{ width: 10, height: 10, borderRadius: 3, background: s.color }} />}
             </div>
-            <div style={{ fontFamily: "Plus Jakarta Sans", fontSize: 26, fontWeight: 700, color: "var(--ink-900)", letterSpacing: "-0.02em" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, color: "var(--ink-900)", letterSpacing: "-0.02em" }}>
               {s.count}
             </div>
           </button>
@@ -870,7 +866,7 @@ export default function ColaboradoresPage() {
                 <tr key={c.id} onClick={() => setOpenProfile(c)} style={{ cursor: "pointer" }}>
                   <td>
                     <div className="cell-person">
-                      <div className="ava" style={{ background: avatarColor(c.nome) }}>{getInitials(c.nome)}</div>
+                      <div className="ava" style={{ background: getAvatarColor(c.nome) }}>{getInitials(c.nome)}</div>
                       <div>
                         <div className="name">{c.nome}</div>
                         <div className="role">{c.cpf}</div>
@@ -902,7 +898,7 @@ export default function ColaboradoresPage() {
             return (
             <button key={c.id} className="glass" onClick={() => setOpenProfile(c)} style={{ textAlign: "left", padding: 16, cursor: "pointer" }}>
               <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                <div className="ava" style={{ background: avatarColor(c.nome), width: 44, height: 44, fontSize: 14 }}>{getInitials(c.nome)}</div>
+                <div className="ava" style={{ background: getAvatarColor(c.nome), width: 44, height: 44, fontSize: 14 }}>{getInitials(c.nome)}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.nome}</div>
                   <div style={{ fontSize: 11.5, color: "var(--ink-500)" }}>{c.funcao?.nome ?? '—'}</div>

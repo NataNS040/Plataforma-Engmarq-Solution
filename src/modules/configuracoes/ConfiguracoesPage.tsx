@@ -8,6 +8,7 @@ import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { CatalogosTab } from './CatalogosTab'
 import { CriarUsuarioModal } from './CriarUsuarioModal'
+import { APP_NAME } from '@/config/brand'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -99,7 +100,7 @@ function TeamTable({ members, showEmp, empHead = 'Empresas' }: {
               <td style={{ fontSize:12.5 }}>{m.funcao}</td>
               <td><span className="cfg-role-pill">{m.papel}</span></td>
               {showEmp && (
-                <td style={{ textAlign:'center', fontFamily:'Plus Jakarta Sans', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>
+                <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>
                   {m.emp || '—'}
                 </td>
               )}
@@ -228,7 +229,7 @@ function ConfiguracoesAdmin({ tab, editing, onCriarUsuario }: { tab: string; edi
             <div style={{ display:'flex', alignItems:'center', gap:14 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:10, background:'var(--navy-900)', color:'#fff', fontFamily:'var(--font-display)', fontWeight:800, fontSize:15 }}>
                 <Shield size={18} strokeWidth={2.5}/>
-                EngMarq Vision
+                {APP_NAME}
               </div>
             </div>
             <div style={{ display:'flex', gap:8, marginTop:16 }}>
@@ -374,7 +375,7 @@ function ConfiguracoesAdmin({ tab, editing, onCriarUsuario }: { tab: string; edi
               <div key={i}>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:12.5, marginBottom:6 }}>
                   <span style={{ color:'var(--ink-700)' }}>{u.l}</span>
-                  <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:600 }}>{u.v} <span style={{ color:'var(--ink-400)', fontWeight:400 }}>/ {u.max}</span></span>
+                  <span style={{ fontFamily:'var(--font-display)', fontWeight:600 }}>{u.v} <span style={{ color:'var(--ink-400)', fontWeight:400 }}>/ {u.max}</span></span>
                 </div>
                 <div style={{ height:8, borderRadius:999, background:'var(--bg-tint-1)', overflow:'hidden' }}>
                   <div style={{ width:`${u.pct}%`, height:'100%', background:'var(--orange-500)', borderRadius:999 }}/>
@@ -407,7 +408,7 @@ function ConfiguracoesAdmin({ tab, editing, onCriarUsuario }: { tab: string; edi
               {ENG_INVOICES.map((f, i) => (
                 <tr key={i}>
                   <td style={{ fontWeight:500 }}>{f.mes}<div style={{ fontSize:11, color:'var(--ink-500)' }}>venc. {f.venc}</div></td>
-                  <td style={{ fontFamily:'Plus Jakarta Sans', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{f.valor}</td>
+                  <td style={{ fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{f.valor}</td>
                   <td><span className="chip ok"><CheckCircle2 size={11}/> {f.stl}</span></td>
                   <td style={{ textAlign:'right' }}><button className="icon-btn sm" title="Baixar NF"><Download size={15}/></button></td>
                 </tr>
@@ -554,7 +555,7 @@ function MinhaEmpresa({ tab, editing }: { tab: string; editing: boolean }) {
                   <td style={{ textAlign:'center' }}>
                     <span className="chip" style={{ background: u.risco >= 3 ? 'var(--orange-50)' : 'var(--bg-tint-1)', color: u.risco >= 3 ? 'var(--orange-600)' : 'var(--ink-700)' }}>Grau {u.risco}</span>
                   </td>
-                  <td style={{ textAlign:'center', fontFamily:'Plus Jakarta Sans', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{u.n}</td>
+                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{u.n}</td>
                   <td><span className="chip ok"><CheckCircle2 size={11}/> Ativa</span></td>
                   <td style={{ textAlign:'right' }}><button className="icon-btn sm"><MoreHorizontal size={15}/></button></td>
                 </tr>
