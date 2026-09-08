@@ -29,7 +29,9 @@ export function BrandMark({ size = 'md', hideTagline }: BrandMarkProps) {
 
   return (
     <>
-      <NorveoMark size={40} tone="dark" />
+      <div className="brand-icon-panel">
+        <NorveoMark size={30} tone="dark" />
+      </div>
       <div>
         <div className="brand-name">{APP_NAME}</div>
         {!hideTagline && <div className="brand-tag">{APP_TAGLINE}</div>}

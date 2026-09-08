@@ -7,9 +7,18 @@ import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, HardHat } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, HardHat, Target, ShieldCheck, TrendingUp, Eye as EyeIcon, Compass } from 'lucide-react'
 import { BrandMark } from '@/components/ui/BrandMark'
 import { APP_COPYRIGHT } from '@/config/brand'
+
+// Os 5 pilares da marca Norveo (manual de marca)
+const PILLARS = [
+  { icon: Target,      label: 'Clareza' },
+  { icon: ShieldCheck, label: 'Controle' },
+  { icon: TrendingUp,  label: 'Antecipação' },
+  { icon: EyeIcon,     label: 'Inteligência' },
+  { icon: Compass,     label: 'Direção' },
+]
 
 const schema = z.object({
   email: z.string().min(1, 'Informe o e-mail').email('E-mail inválido'),
@@ -83,11 +92,14 @@ export default function LoginPage() {
               <em>Segurança Jurídica</em>
             </h2>
 
-            <p>
-              Gestão completa de conformidade, NRs, ASOs e PCMSO em uma única
-              plataforma — colaboradores seguros, documentação em dia e
-              tranquilidade para operar.
-            </p>
+            <div className="lpillars">
+              {PILLARS.map(({ icon: Icon, label }) => (
+                <div className="lpillar" key={label}>
+                  <div className="lpillar-ic"><Icon size={17} /></div>
+                  <div className="lpillar-label">{label}</div>
+                </div>
+              ))}
+            </div>
 
             {/* Card glassmorphism com métricas */}
             <div className="lglass">

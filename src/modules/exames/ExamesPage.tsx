@@ -3,7 +3,6 @@ import {
   CheckCircle2, Clock, AlertTriangle, Calendar, Download, Plus,
   Eye, Trash2, X, Search, Loader2,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useExames, useCriarExame, useDeletarExame, useExamesCatalogo } from '@/hooks/queries/useExames'
@@ -12,6 +11,7 @@ import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { SubtipoExame } from '@/types/database'
 import { getAvatarColor, getInitials, getChartColor } from '@/lib/theme'
+import { comingSoon } from '@/lib/comingSoon'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -225,8 +225,22 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
 // ---------------------------------------------------------------------------
 // ScheduleModal
 // ---------------------------------------------------------------------------
-function ScheduleModal({ prefill, onClose }: { prefill: string | null; onClose: () => void }) {
-  const [colab, setColab] = useState(prefill ?? '')
+function ScheduleModal({ prefill, onClose, empresaId }: { prefill: string | null; onClose: () => void; empresaId: string | null }) {
+  const colabsQuery = useColaboradores(empresaId)
+  const colabs = colabsQuery.data ?? []
+
+  // Pré-seleciona o colaborador quando o modal é aberto a partir da linha de
+  // uma ASO específica (prefill = nome) — ajustado durante o render (não em
+  // efeito) assim que a lista de colaboradores carrega, guardado pela
+  // comparação com o último prefill já aplicado.
+  const prefillId = useMemo(() => colabs.find(c => c.nome === prefill)?.id ?? '', [colabs, prefill])
+  const [colab, setColab] = useState('')
+  const [lastPrefillId, setLastPrefillId] = useState('')
+  if (prefillId && prefillId !== lastPrefillId) {
+    setLastPrefillId(prefillId)
+    setColab(prefillId)
+  }
+
   const [tipo, setTipo] = useState('Periódico')
   const [data, setData] = useState('')
   const [hora, setHora] = useState('')
@@ -238,15 +252,16 @@ function ScheduleModal({ prefill, onClose }: { prefill: string | null; onClose: 
         <div className="modal-head">
           <div>
             <h2>Agendar exame</h2>
-            <div style={{ fontSize:12.5, color:'var(--ink-500)', marginTop:2 }}>Agenda da clínica ocupacional · junho/2026</div>
+            <div style={{ fontSize:12.5, color:'var(--ink-500)', marginTop:2 }}>Agenda da clínica ocupacional</div>
           </div>
           <button className="icon-btn sm" onClick={onClose}><X size={16}/></button>
         </div>
         <div className="modal-body">
           <div className="mp-form">
             <Field label="Colaborador" full>
-              <select className="mp-input" value={colab} onChange={e => setColab(e.target.value)}>
+              <select className="mp-input" value={colab} onChange={e => setColab(e.target.value)} disabled={colabsQuery.isLoading}>
                 <option value="">Selecione…</option>
+                {colabs.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
             </Field>
             <Field label="Tipo de exame" full>
@@ -262,10 +277,11 @@ function ScheduleModal({ prefill, onClose }: { prefill: string | null; onClose: 
           <div className="modal-foot">
             <button className="tbtn" onClick={onClose}>Cancelar</button>
             <button
-              className="tbtn primary"
+              className="tbtn primary is-soon"
               disabled={!canSave}
+              title="Em breve"
               style={!canSave ? { opacity:0.5, pointerEvents:'none' } : undefined}
-              onClick={() => { toast.success('Exame agendado com sucesso.'); onClose() }}
+              onClick={() => { comingSoon('Agenda de exames'); onClose() }}
             >
               <CheckCircle2 size={13}/> Agendar
             </button>
@@ -386,7 +402,7 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
           </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Download size={14}/> Exportar</button>
+          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar')}><Download size={14}/> Exportar</button>
           <button className="tbtn" onClick={() => { setPrefill(null); setSchedOpen(true) }}><Calendar size={14}/> Agendar exame</button>
           <button className="tbtn primary" onClick={() => setNewOpen(true)}><Plus size={14}/> Registrar ASO</button>
         </div>
@@ -495,8 +511,8 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
                     <td><span className={`chip ${r.st.key}`}>{r.st.label}</span></td>
                     <td>
                       <div className="aso-actions">
-                        <button className="icon-btn sm" title="Visualizar PDF"><Eye size={15}/></button>
-                        <button className="icon-btn sm" title="Baixar PDF"><Download size={15}/></button>
+                        <button className="icon-btn sm is-soon" title="Em breve — upload de PDF ainda não existe" onClick={() => comingSoon('Visualizar PDF')}><Eye size={15}/></button>
+                        <button className="icon-btn sm is-soon" title="Em breve — upload de PDF ainda não existe" onClick={() => comingSoon('Baixar PDF')}><Download size={15}/></button>
                         {r.st.key !== 'ok'
                           ? <button className="tbtn ghost sm accent" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>
                           : <button className="tbtn ghost sm" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>}
@@ -526,7 +542,7 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
       </div>
 
       {newOpen && empresaId && <NewAsoModal onClose={() => setNewOpen(false)} empresaId={empresaId}/>}
-      {schedOpen && <ScheduleModal prefill={prefill} onClose={() => setSchedOpen(false)}/>}
+      {schedOpen && <ScheduleModal prefill={prefill} onClose={() => setSchedOpen(false)} empresaId={empresaId}/>}
       {confirmDel && <ConfirmDelete row={confirmDel} onCancel={() => setConfirmDel(null)} onConfirm={() => doDelete(confirmDel)}/>}
     </div>
   )
@@ -565,7 +581,7 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
           <p className="sub">Saúde ocupacional consolidada · {empresas.length} empresas-cliente</p>
         </div>
         <div className="toolbar">
-          <button className="tbtn primary"><Download size={14}/> Exportar consolidado</button>
+          <button className="tbtn primary is-soon" title="Em breve" onClick={() => comingSoon('Exportar consolidado')}><Download size={14}/> Exportar consolidado</button>
         </div>
       </div>
 

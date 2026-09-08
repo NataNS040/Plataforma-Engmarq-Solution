@@ -1,9 +1,13 @@
 import { useState, useMemo, useEffect } from "react"
 import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus } from "lucide-react"
+import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores } from "@/hooks/queries/useColaboradores"
 import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento } from "@/hooks/queries/useTreinamentos"
-import { STATUS_COLORS, getAvatarColor } from "@/lib/theme"
+import { useEmpresas } from "@/hooks/queries/useEmpresas"
+import { useDashboardKpis } from "@/hooks/queries/useDashboard"
+import { STATUS_COLORS, getAvatarColor, getChartColor } from "@/lib/theme"
+import { comingSoon } from "@/lib/comingSoon"
 
 /* ============================================================
    Types
@@ -106,11 +110,11 @@ function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: Nr
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <button className="tbtn primary" style={{ justifyContent: "center" }}>
+        <button className="tbtn primary is-soon" style={{ justifyContent: "center" }} title="Em breve" onClick={() => comingSoon('Ver perfil do colaborador')}>
           Ver perfil do colaborador <ChevronRight size={13} />
         </button>
         {st !== "na" && (
-          <button className="tbtn ghost" style={{ justifyContent: "center" }}>
+          <button className="tbtn ghost is-soon" style={{ justifyContent: "center" }} title="Em breve" onClick={() => comingSoon('Baixar certificado')}>
             <Download size={13} /> Baixar certificado
           </button>
         )}
@@ -338,8 +342,13 @@ function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinament
    TreinamentosPage
    ============================================================ */
 
-export default function TreinamentosPage() {
-  const { empresaId } = useCurrentProfile()
+function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
+  empresaIdProp?: string | null
+  empresaNome?: string
+  onBack?: () => void
+}) {
+  const { empresaId: empresaIdPerfil } = useCurrentProfile()
+  const empresaId = empresaIdProp ?? empresaIdPerfil
 
   const colabsQuery = useColaboradores(empresaId)
   const treinamentosQuery = useTreinamentos(empresaId)
@@ -359,7 +368,7 @@ export default function TreinamentosPage() {
         titulo:   t.nome,
         carga:    '—',
         validade: t.validade_meses ? `${t.validade_meses} meses` : '—',
-        color:    '#3B82F6',
+        color:    'var(--blue-500)',
         tipoId:   t.id,
       }))
   }, [nrTipos, treinamentos])
@@ -437,12 +446,19 @@ export default function TreinamentosPage() {
 
       {/* Header */}
       <div className="page-header">
-        <div>
-          <h1>Matriz de Treinamentos NR</h1>
-          <p className="sub">{colabs.length} colaboradores · {NR_CATALOG.length} NRs monitoradas</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {onBack && (
+            <button className="icon-btn sm" title="Voltar" onClick={onBack} style={{ marginRight:4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          )}
+          <div>
+            <h1>Matriz de Treinamentos NR{empresaNome ? ` · ${empresaNome}` : ''}</h1>
+            <p className="sub">{colabs.length} colaboradores · {NR_CATALOG.length} NRs monitoradas</p>
+          </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Download size={14} /> Exportar matriz (CSV)</button>
+          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar matriz')}><Download size={14} /> Exportar matriz (CSV)</button>
         </div>
       </div>
 
@@ -622,4 +638,107 @@ export default function TreinamentosPage() {
 
     </div>
   )
+}
+
+/* ============================================================
+   TreinamentosAdmin — escolha de empresa-cliente antes de ver a
+   matriz (mesmo motivo do ColaboradoresAdmin: admin acompanha
+   várias empresas, não só a do próprio perfil).
+   ============================================================ */
+
+function TreinamentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
+  const empresasQuery = useEmpresas()
+  const empresas = empresasQuery.data ?? []
+  const kpisQuery = useDashboardKpis('all')
+  const kpis = kpisQuery.data
+
+  return (
+    <div className="content">
+      <div className="page-header">
+        <div>
+          <h1>Matriz de Treinamentos NR</h1>
+          <p className="sub">Selecione uma empresa-cliente para ver a matriz · {empresas.length} empresas</p>
+        </div>
+      </div>
+
+      <div className="kpi-row">
+        <div className="glass kpi">
+          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic blue"><GraduationCap size={15}/></span></div>
+          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
+        </div>
+        <div className="glass kpi">
+          <div className="kpi-label"><span>Treinamentos vencidos</span><span className="kpi-ic red"><AlertTriangle size={15}/></span></div>
+          <div className="kpi-value" style={{ color: (kpis?.treinamentosVencidos ?? 0) > 0 ? "var(--red-500)" : undefined }}>{kpis?.treinamentosVencidos ?? '—'}</div>
+        </div>
+      </div>
+
+      <div className="glass" style={{ padding:0, overflow:'hidden' }}>
+        <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
+          <div className="ctitle">Empresas-cliente</div>
+          <div className="csub">Clique numa empresa para ver a matriz de treinamentos</div>
+        </div>
+        <div style={{ overflow:'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Setor</th>
+                <th>Cidade / UF</th>
+                <th style={{ textAlign:'center' }}>Colaboradores</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {empresas.length === 0 && (
+                <tr><td colSpan={5} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
+              )}
+              {empresas.map((e, i) => (
+                <tr key={e.id} style={{ cursor:'pointer' }} onClick={() => onSelect({ id: e.id, nome: e.razao_social })}>
+                  <td>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
+                        {e.razao_social.slice(0,1)}
+                      </span>
+                      <div>
+                        <div style={{ fontWeight:600, fontSize:13 }}>{e.razao_social}</div>
+                        <div style={{ fontSize:11, color:'var(--ink-500)' }}>{e.cnpj}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{e.setor ?? '—'}</td>
+                  <td style={{ fontSize:12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
+                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{e.colaboradores_count}</td>
+                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TreinamentosAdmin() {
+  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
+
+  if (selectedEmpresa) {
+    return (
+      <TreinamentosEmpresa
+        empresaIdProp={selectedEmpresa.id}
+        empresaNome={selectedEmpresa.nome}
+        onBack={() => setSelectedEmpresa(null)}
+      />
+    )
+  }
+
+  return <TreinamentosAdminList onSelect={setSelectedEmpresa} />
+}
+
+// ---------------------------------------------------------------------------
+// Export
+// ---------------------------------------------------------------------------
+export default function TreinamentosPage() {
+  const { profile } = useAuth()
+  return profile?.role === 'admin' ? <TreinamentosAdmin /> : <TreinamentosEmpresa />
 }

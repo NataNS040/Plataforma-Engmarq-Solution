@@ -9,30 +9,38 @@ export interface NorveoMarkProps {
  * Ícone da marca Norveo (seta/"N"), recriado em SVG a partir do manual de
  * marca — não é um traço vetorial exato do arquivo original (o Claude Code
  * não tem acesso ao binário de imagens coladas no chat, só à visualização),
- * mas usa as cores oficiais (Norte/Vision Blue/Horizon) e a composição
- * correta (seta sobre "N"). Trocar por <img src=.../> aqui, num único
- * lugar, se/quando o arquivo vetorial oficial (src/assets/brand/) chegar.
+ * mas replica cores, gradientes e composição fielmente. Trocar por
+ * <img src=.../> aqui, num único lugar, se/quando o arquivo vetorial
+ * oficial (src/assets/brand/) chegar.
  */
 export function NorveoMark({ size = 42, tone = 'dark', className }: NorveoMarkProps) {
-  const gradId = `norveo-mark-grad-${tone}`
+  const uid = tone // sufixo único pros gradientes, evita colisão de ids se houver 2 marks na tela
   const leftLeg = tone === 'dark' ? '#0F2A44' : '#071A2B'
-  const diagonal = tone === 'dark' ? '#176FFF' : '#0F2A44'
+  const diagonal = tone === 'dark' ? '#176FFF' : '#0B233A'
 
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" className={className} aria-hidden="true">
+    <svg width={size} height={size * 1.1} viewBox="0 0 100 110" className={className} aria-hidden="true">
       <defs>
-        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`norveo-al-${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#7EC0FF" />
+          <stop offset="1" stopColor="#3B82F6" />
+        </linearGradient>
+        <linearGradient id={`norveo-ar-${uid}`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#4385FF" />
-          <stop offset="1" stopColor="#176FFF" />
+          <stop offset="1" stopColor="#0F5DD1" />
+        </linearGradient>
+        <linearGradient id={`norveo-nr-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4385FF" />
+          <stop offset="1" stopColor="#0F5DD1" />
         </linearGradient>
       </defs>
       {/* Seta / pico */}
-      <path d="M49 4 L25 39 L49 24 Z" fill="#4385FF" />
-      <path d="M49 4 L49 24 L73 39 Z" fill="#176FFF" />
+      <path d="M50 3 L21 43 L50 25 Z" fill={`url(#norveo-al-${uid})`} />
+      <path d="M50 3 L50 25 L79 43 Z" fill={`url(#norveo-ar-${uid})`} />
       {/* "N" */}
-      <path d="M14 38 L30 38 L30 96 L14 96 Z" fill={leftLeg} />
-      <path d="M14 38 L30 38 L84 96 L68 96 Z" fill={diagonal} />
-      <path d="M68 38 L84 38 L84 96 L68 96 Z" fill={`url(#${gradId})`} />
+      <path d="M11 41 L30 41 L30 107 L11 92 Z" fill={leftLeg} />
+      <path d="M70 41 L89 41 L89 92 L70 107 Z" fill={`url(#norveo-nr-${uid})`} />
+      <path d="M11 41 L30 41 L89 92 L70 107 Z" fill={diagonal} />
     </svg>
   )
 }

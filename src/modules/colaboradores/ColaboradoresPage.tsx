@@ -7,16 +7,20 @@ import {
   Search, Download, Plus, X, CheckCircle, AlertTriangle, Clock,
   Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2,
 } from "lucide-react"
+import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores, useCriarColaborador } from "@/hooks/queries/useColaboradores"
 import { useSetores, useFuncoes, useAmbientes } from "@/hooks/queries/useCatalogos"
+import { useEmpresas } from "@/hooks/queries/useEmpresas"
+import { useDashboardKpis } from "@/hooks/queries/useDashboard"
 import { criarColaborador } from "@/services/colaboradoresService"
 import type { ColaboradorComCatalogos } from "@/services/colaboradoresService"
 import { criarSetor, criarFuncao, criarAmbiente } from "@/services/catalogosService"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { qk } from "@/lib/queryKeys"
-import { getAvatarColor, getInitials } from "@/lib/theme"
+import { getAvatarColor, getChartColor, getInitials } from "@/lib/theme"
+import { comingSoon } from "@/lib/comingSoon"
 
 /* ============================================================
    Types
@@ -80,7 +84,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
         <div className="modal-head">
           <h2>{editing ? "Editar colaborador · Treinamentos NR" : "Perfil do colaborador"}</h2>
           <div style={{ display: "flex", gap: 8 }}>
-            {!editing && <button className="tbtn"><Download size={13} /> Exportar PDF</button>}
+            {!editing && <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar perfil em PDF')}><Download size={13} /> Exportar PDF</button>}
             {!editing
               ? <button className="tbtn primary" onClick={startEdit}><Edit size={13} /> Editar colaborador</button>
               : <>
@@ -590,7 +594,7 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
                   onDragLeave={() => setDragOver(false)}
                   onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }}
                 >
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--orange-600)" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--color-accent)" }}>
                     <Download size={20} />
                   </div>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Arraste a planilha aqui</div>
@@ -639,11 +643,11 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
                             <td>
                               <div style={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
                                 {row.funcao_nome || '—'}
-                                {row.will_create_funcao && <span style={{ fontSize: 9.5, background: "var(--orange-50,#fff7ed)", color: "var(--orange-600)", border: "1px solid rgba(234,88,12,0.3)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
+                                {row.will_create_funcao && <span style={{ fontSize: 9.5, background: "var(--color-accent-soft)", color: "var(--color-accent)", border: "1px solid rgba(23,111,255,0.25)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
                               </div>
                               <div style={{ fontSize: 11, color: "var(--ink-500)", display: "flex", alignItems: "center", gap: 5 }}>
                                 {row.setor_nome || '—'}
-                                {row.will_create_setor && <span style={{ fontSize: 9.5, background: "var(--orange-50,#fff7ed)", color: "var(--orange-600)", border: "1px solid rgba(234,88,12,0.3)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
+                                {row.will_create_setor && <span style={{ fontSize: 9.5, background: "var(--color-accent-soft)", color: "var(--color-accent)", border: "1px solid rgba(23,111,255,0.25)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
                               </div>
                             </td>
                             <td style={{ fontSize: 12 }}>{row.data_admissao || '—'}</td>
@@ -699,8 +703,13 @@ function FieldErrorSmall({ msg }: { msg: string }) {
    ColaboradoresPage
    ============================================================ */
 
-export default function ColaboradoresPage() {
-  const { empresaId } = useCurrentProfile()
+function ColaboradoresEmpresa({ empresaIdProp, empresaNome, onBack }: {
+  empresaIdProp?: string | null
+  empresaNome?: string
+  onBack?: () => void
+}) {
+  const { empresaId: empresaIdPerfil } = useCurrentProfile()
+  const empresaId = empresaIdProp ?? empresaIdPerfil
 
   const colabsQuery = useColaboradores(empresaId)
   const colabs = colabsQuery.data ?? []
@@ -717,7 +726,9 @@ export default function ColaboradoresPage() {
   const [statusFilter, setStatus]   = useState<string>("all")
   const [view, setView]             = useState<"table" | "grid">("table")
   const [query, setQuery]           = useState(() => searchParams.get("q") ?? "")
-  const [adding, setAdding]         = useState(false)
+  // Abre já com o formulário de novo colaborador se veio de um atalho (ex.:
+  // "Novo colaborador" no Dashboard, via navigate('/colaboradores?add=1')).
+  const [adding, setAdding]         = useState(() => searchParams.get("add") === "1")
   const [openProfile, setOpenProfile] = useState<ColaboradorComCatalogos | null>(null)
 
   // Busca vinda do Header (?q=) — sincroniza se o usuário buscar de novo por lá
@@ -766,12 +777,19 @@ export default function ColaboradoresPage() {
 
       {/* Header */}
       <div className="page-header">
-        <div>
-          <h1>Colaboradores</h1>
-          <p className="sub">{colabs.length} ativos</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {onBack && (
+            <button className="icon-btn sm" title="Voltar" onClick={onBack} style={{ marginRight:4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          )}
+          <div>
+            <h1>Colaboradores{empresaNome ? ` · ${empresaNome}` : ''}</h1>
+            <p className="sub">{colabs.length} ativos</p>
+          </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Download size={14} /> Exportar CSV</button>
+          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar CSV')}><Download size={14} /> Exportar CSV</button>
           <button className="tbtn primary" onClick={() => setAdding(true)} disabled={!empresaId}>
             <Plus size={14} /> Adicionar colaborador
           </button>
@@ -788,7 +806,7 @@ export default function ColaboradoresPage() {
             style={{
               textAlign: "left", padding: 16, cursor: "pointer",
               borderColor: statusFilter === s.id ? "var(--navy-700)" : "var(--border)",
-              boxShadow: statusFilter === s.id ? "0 0 0 2px var(--navy-700), var(--glass-shadow)" : "var(--glass-shadow)",
+              boxShadow: statusFilter === s.id ? "0 0 0 2px var(--navy-700), var(--shadow-md)" : "var(--shadow-md)",
               transition: "all 0.15s",
             }}
           >
@@ -928,4 +946,108 @@ export default function ColaboradoresPage() {
 
     </div>
   )
+}
+
+/* ============================================================
+   ColaboradoresAdmin — escolha de empresa-cliente antes de ver
+   os colaboradores (admin acompanha várias empresas; sem isso,
+   a página ficava presa à empresa do perfil do próprio admin,
+   ou vazia).
+   ============================================================ */
+
+function ColaboradoresAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
+  const empresasQuery = useEmpresas()
+  const empresas = empresasQuery.data ?? []
+  const kpisQuery = useDashboardKpis('all')
+  const kpis = kpisQuery.data
+
+  return (
+    <div className="content">
+      <div className="page-header">
+        <div>
+          <h1>Colaboradores</h1>
+          <p className="sub">Selecione uma empresa-cliente para ver os colaboradores · {empresas.length} empresas</p>
+        </div>
+      </div>
+
+      <div className="kpi-row">
+        <div className="glass kpi">
+          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic blue"><Briefcase size={15}/></span></div>
+          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
+        </div>
+        <div className="glass kpi">
+          <div className="kpi-label"><span>Colaboradores ativos</span><span className="kpi-ic green"><CheckCircle size={15}/></span></div>
+          <div className="kpi-value">{kpis ? kpis.totalColaboradores.toLocaleString('pt-BR') : '—'}</div>
+        </div>
+      </div>
+
+      <div className="glass" style={{ padding:0, overflow:'hidden' }}>
+        <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
+          <div className="ctitle">Empresas-cliente</div>
+          <div className="csub">Clique numa empresa para ver seus colaboradores</div>
+        </div>
+        <div style={{ overflow:'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Setor</th>
+                <th>Cidade / UF</th>
+                <th style={{ textAlign:'center' }}>Colaboradores</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {empresas.length === 0 && (
+                <tr><td colSpan={5} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
+              )}
+              {empresas.map((e, i) => (
+                <tr key={e.id} style={{ cursor:'pointer' }} onClick={() => onSelect({ id: e.id, nome: e.razao_social })}>
+                  <td>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
+                        {e.razao_social.slice(0,1)}
+                      </span>
+                      <div>
+                        <div style={{ fontWeight:600, fontSize:13 }}>{e.razao_social}</div>
+                        <div style={{ fontSize:11, color:'var(--ink-500)' }}>{e.cnpj}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{e.setor ?? '—'}</td>
+                  <td style={{ fontSize:12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
+                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{e.colaboradores_count}</td>
+                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ColaboradoresAdmin() {
+  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
+
+  if (selectedEmpresa) {
+    return (
+      <ColaboradoresEmpresa
+        empresaIdProp={selectedEmpresa.id}
+        empresaNome={selectedEmpresa.nome}
+        onBack={() => setSelectedEmpresa(null)}
+      />
+    )
+  }
+
+  return <ColaboradoresAdminList onSelect={setSelectedEmpresa} />
+}
+
+// ---------------------------------------------------------------------------
+// Export
+// ---------------------------------------------------------------------------
+export default function ColaboradoresPage() {
+  const { profile } = useAuth()
+  return profile?.role === 'admin' ? <ColaboradoresAdmin /> : <ColaboradoresEmpresa />
 }

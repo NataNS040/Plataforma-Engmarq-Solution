@@ -1,13 +1,17 @@
-import { NavLink } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useDashboardKpis } from "@/hooks/queries/useDashboard"
 import {
   LayoutDashboard, Building2, Users, GraduationCap,
-  FileText, Heart, BarChart3, Settings, LogOut,
+  FileText, Heart, BarChart3, Settings, LogOut, ChevronLeft,
 } from "lucide-react"
 import { BrandMark } from "@/components/ui/BrandMark"
 import { APP_SHORT_NAME } from "@/config/brand"
+import { comingSoon } from "@/lib/comingSoon"
+
+const COLLAPSE_KEY = "sidebar:collapsed"
 
 type NavItem = {
   to: string
@@ -76,6 +80,25 @@ const EMPRESA_NAV: NavGroup[] = [
 export function Sidebar() {
   const { profile, signOut } = useAuth()
   const { empresaId, isAdmin } = useCurrentProfile()
+  const navigate = useNavigate()
+
+  // Sidebar auto-hide: expandida por padrão, usuário recolhe pra ganhar
+  // espaço de tela; preferência persistida por navegador.
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSE_KEY) === "1"
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0")
+    } catch {
+      // localStorage indisponível (modo privado etc.) — só não persiste
+    }
+  }, [collapsed])
 
   const kpisQuery = useDashboardKpis(isAdmin ? 'all' : empresaId)
   const kpis = kpisQuery.data
@@ -104,7 +127,17 @@ export function Sidebar() {
     profile?.role === "gestor" ? "Gestor" : "Operacional"
 
   return (
-    <aside className="sidebar">
+    <aside className={"sidebar" + (collapsed ? " collapsed" : "")}>
+      {/* Botão de recolher/expandir */}
+      <button
+        className="sb-toggle"
+        onClick={() => setCollapsed(c => !c)}
+        title={collapsed ? "Expandir menu" : "Recolher menu"}
+        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+      >
+        <ChevronLeft size={13} />
+      </button>
+
       {/* Brand */}
       <div className="sb-brand">
         <BrandMark />
@@ -123,6 +156,7 @@ export function Sidebar() {
                   to={soon ? "#" : to}
                   end={exact}
                   onClick={soon ? (e) => e.preventDefault() : undefined}
+                  title={collapsed ? label : undefined}
                   className={({ isActive }) =>
                     "nav-item" + (isActive && !soon ? " active" : "")
                   }
@@ -151,14 +185,16 @@ export function Sidebar() {
                 : "Nenhuma pendência crítica no momento.")
             : "Tire dúvidas com os profissionais de SST."}
         </p>
-        <button className="cta">
-          {profile?.role === "admin" ? "Ver alertas" : "Falar com SST"}
-        </button>
+        {profile?.role === "admin" ? (
+          <button className="cta" onClick={() => navigate('/relatorios')}>Ver alertas</button>
+        ) : (
+          <button className="cta is-soon" title="Em breve" onClick={() => comingSoon('Falar com SST')}>Falar com SST</button>
+        )}
       </div>
 
       {/* User strip */}
       <div className="sb-user">
-        <div className="sb-ava">{initials}</div>
+        <div className="sb-ava" title={collapsed ? (profile?.full_name ?? "Usuário") : undefined}>{initials}</div>
         <div className="sb-user-info">
           <div className="sb-user-name">{profile?.full_name ?? "Usuário"}</div>
           <div className="sb-user-role">{roleLabel}</div>

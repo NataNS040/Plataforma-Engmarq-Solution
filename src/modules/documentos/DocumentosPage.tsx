@@ -16,6 +16,7 @@ import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { DocStatus as DbDocStatus } from '@/types/database'
 import { getChartColor } from '@/lib/theme'
+import { comingSoon } from '@/lib/comingSoon'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -354,7 +355,7 @@ function DocumentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: s
           <p className="sub">Visão consolidada · documentos mestres das {empresas.length} empresas-cliente</p>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Download size={14} /> Exportar consolidado</button>
+          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar consolidado')}><Download size={14} /> Exportar consolidado</button>
         </div>
       </div>
 
@@ -831,7 +832,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
           </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Download size={14} /> Exportar lista</button>
+          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar lista')}><Download size={14} /> Exportar lista</button>
           <button className="tbtn" onClick={() => setDateOpen(true)}><Calendar size={14} /> Registrar datas</button>
           <button className="tbtn primary" onClick={() => setNovoOpen(true)}><Plus size={14} /> Novo documento</button>
         </div>

@@ -23,4 +23,4 @@ export const APP_TAGLINE = 'O Norte da sua Gestão.'
 /** Linha secundária, usada em telas maiores (hero do login, banners). */
 export const APP_SLOGAN = 'Gestão à vista. Decisões à frente.'
 
-export const APP_COPYRIGHT = `© ${new Date().getFullYear()} Norveo · uma tecnologia Engmarq Solution`
+export const APP_COPYRIGHT = `© ${new Date().getFullYear()} Norveo. Todos os direitos reservados.`
