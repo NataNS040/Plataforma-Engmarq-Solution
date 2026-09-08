@@ -7,16 +7,19 @@ import {
   Download, Calendar, Plus, CheckCircle2, Clock, AlertTriangle,
   Search, Eye, Trash2, X, Loader2, UploadCloud,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento, useAtualizarDocumento } from '@/hooks/queries/useDocumentos'
-import { uploadDocumentoArquivo, type DocumentoComTipo } from '@/services/documentosService'
+import { useTreinamentoTipos } from '@/hooks/queries/useTreinamentos'
+import { uploadDocumentoArquivo, getTipoIdPorNome, type DocumentoComTipo } from '@/services/documentosService'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { DocStatus as DbDocStatus } from '@/types/database'
-import { getChartColor } from '@/lib/theme'
-import { comingSoon } from '@/lib/comingSoon'
+import { getChartColor, getAvatarColor } from '@/lib/theme'
+import { exportToCsv } from '@/lib/csvExport'
+import type { EmpresaComContagem } from '@/services/empresasService'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -105,10 +108,6 @@ const CAT_LABEL: Record<string, string> = {
   inventario: 'Inventário de risco', aso: 'ASO', cert: 'Certificado de treinamento', epi: 'Ficha de EPI',
 }
 
-// Dados auxiliares para DateEntryModal (mockados — aguarda Fase 4.3)
-const NR_OPTS = ['NR-35 · Trabalho em altura', 'NR-33 · Espaço confinado', 'NR-10 · Segurança elétrica', 'NR-11 · Empilhadeira', 'NR-12 · Máquinas', 'NR-06 · EPI']
-const EPI_OPTS = ['Capacete de segurança', 'Protetor auricular', 'Cinto talabarte duplo', 'Luvas de proteção', 'Botina de segurança', 'Óculos de proteção']
-
 // ---------------------------------------------------------------------------
 // StatusPreview
 // ---------------------------------------------------------------------------
@@ -147,13 +146,13 @@ function DocField({ label, children, full }: { label: string; children: React.Re
 function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
   const [tipo, setTipo] = useState<'cert' | 'epi'>('cert')
   const [colabId, setColabId] = useState('')
-  const [norma, setNorma] = useState('')
+  const [tipoTreinoId, setTipoTreinoId] = useState('')
   const [realizado, setRealizado] = useState('')
   const [validade, setValidade] = useState('')
   const [epiItems, setEpiItems] = useState<EpiItem[]>([{ equip: '', ca: '', entrega: '', validade: '' }])
 
   const colabsQuery = useColaboradores(empresaId)
-  const tiposQuery  = useDocumentoTipos()
+  const nrTiposQuery = useTreinamentoTipos()
   const criar       = useCriarDocumento()
 
   const suggestCert = () => { if (realizado) setValidade(addYears(realizado, 2)) }
@@ -163,45 +162,46 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
   const removeItem = (i: number) => setEpiItems(items => items.length === 1 ? items : items.filter((_, j) => j !== i))
 
   const canSave = tipo === 'cert'
-    ? Boolean(colabId && norma && realizado && validade)
+    ? Boolean(colabId && tipoTreinoId && realizado && validade)
     : Boolean(colabId && epiItems.some(it => it.equip && it.entrega))
 
   async function handleSave() {
     const colab = (colabsQuery.data ?? []).find(c => c.id === colabId)
     if (!colab) return
-    const tipos = tiposQuery.data ?? []
     if (tipo === 'cert') {
-      const tipoId = (tipos.find(t => /certif|treina/i.test(t.nome)) ?? tipos[0])?.id
-      if (!tipoId) return
+      const nrTipo = (nrTiposQuery.data ?? []).find(t => t.id === tipoTreinoId)
+      if (!nrTipo) return
       try {
+        const tipoId = await getTipoIdPorNome('Certificado de Treinamento')
         await criar.mutateAsync({
-          empresa_id:  empresaId,
-          tipo_id:     tipoId,
-          titulo:      `${norma.split(' · ')[0]} — ${colab.nome}`,
-          emissao:     realizado || null,
-          vencimento:  validade || null,
-          observacoes: norma,
+          empresa_id:     empresaId,
+          tipo_id:        tipoId,
+          colaborador_id: colab.id,
+          titulo:         `${nrTipo.nr_referencia ?? nrTipo.nome} — ${colab.nome}`,
+          emissao:        realizado || null,
+          vencimento:     validade || null,
+          observacoes:    nrTipo.nome,
         })
         onClose()
-      } catch { /* toast já disparado */ }
+      } catch (err) { toast.error((err as Error).message) }
     } else {
-      const tipoId = (tipos.find(t => /epi/i.test(t.nome)) ?? tipos[0])?.id
-      if (!tipoId) return
       const validItems = epiItems.filter(it => it.equip && it.entrega)
+      if (!validItems.length) return
       try {
+        const tipoId = await getTipoIdPorNome('Ficha de EPI')
         for (const item of validItems) {
           await criar.mutateAsync({
-            empresa_id:  empresaId,
-            tipo_id:     tipoId,
-            titulo:      `Ficha de EPI — ${colab.nome}`,
-            numero:      item.ca || null,
-            emissao:     item.entrega || null,
-            vencimento:  item.validade || null,
-            observacoes: item.equip,
+            empresa_id:     empresaId,
+            tipo_id:        tipoId,
+            colaborador_id: colab.id,
+            titulo:         item.equip,
+            numero:         item.ca || null,
+            emissao:        item.entrega || null,
+            vencimento:     item.validade || null,
           })
         }
         onClose()
-      } catch { /* toast já disparado */ }
+      } catch (err) { toast.error((err as Error).message) }
     }
   }
 
@@ -236,9 +236,11 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
             {tipo === 'cert' ? (
               <>
                 <DocField label="Norma / treinamento">
-                  <select className="mp-input" value={norma} onChange={e => setNorma(e.target.value)}>
+                  <select className="mp-input" value={tipoTreinoId} onChange={e => setTipoTreinoId(e.target.value)} disabled={nrTiposQuery.isLoading}>
                     <option value="">Selecione…</option>
-                    {NR_OPTS.map(n => <option key={n}>{n}</option>)}
+                    {(nrTiposQuery.data ?? []).map(t => (
+                      <option key={t.id} value={t.id}>{t.nr_referencia ? `${t.nr_referencia} — ` : ''}{t.nome}</option>
+                    ))}
                   </select>
                 </DocField>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -277,10 +279,7 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px', gap: 12 }}>
                           <DocField label="Equipamento (EPI)">
-                            <select className="mp-input" value={it.equip} onChange={e => updItem(i, { equip: e.target.value })}>
-                              <option value="">Selecione…</option>
-                              {EPI_OPTS.map(n => <option key={n}>{n}</option>)}
-                            </select>
+                            <input className="mp-input" placeholder="Ex.: Capacete de segurança" value={it.equip} onChange={e => updItem(i, { equip: e.target.value })} />
                           </DocField>
                           <DocField label="CA do equipamento">
                             <input className="mp-input" placeholder="Ex.: 38.241" value={it.ca} onChange={e => updItem(i, { ca: e.target.value })} />
@@ -355,7 +354,18 @@ function DocumentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: s
           <p className="sub">Visão consolidada · documentos mestres das {empresas.length} empresas-cliente</p>
         </div>
         <div className="toolbar">
-          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar consolidado')}><Download size={14} /> Exportar consolidado</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('documentos_empresas.csv', [
+              { header: 'Empresa',        value: (e: EmpresaComContagem) => e.razao_social },
+              { header: 'CNPJ',           value: (e: EmpresaComContagem) => e.cnpj },
+              { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
+              { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
+              { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
+              { header: 'Colaboradores',  value: (e: EmpresaComContagem) => e.colaboradores_count },
+              { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
+            ], empresas)}
+          ><Download size={14} /> Exportar consolidado</button>
         </div>
       </div>
 
@@ -612,6 +622,7 @@ function EditarDocumentoModal({ doc, empresaId, onClose }: {
       await atualizar.mutateAsync({
         id: doc.id,
         empresaId,
+        colaboradorId: doc.colaborador_id,
         input: {
           tipo_id:     v.tipo_id,
           titulo:      v.titulo,
@@ -760,6 +771,9 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
       const stLabel = dbStatus === 'vencido' ? 'Vencido' : dbStatus === 'vencendo' ? 'Vencendo' : 'Em dia'
       const st: StatusResult = { key: stKey, label: stLabel, rel: '' }
       const tipoNome = d.tipo?.nome?.toLowerCase() ?? ''
+      // Faltavam os branches de certificado/EPI — todo registro caía no
+      // fallback 'laudos', e os filtros "Certificados de treinamento" e
+      // "Fichas de EPI" nunca mostravam nada.
       const cat =
         tipoNome.includes('pgr') ? 'pgr' :
         tipoNome.includes('pcmso') ? 'pcmso' :
@@ -767,7 +781,27 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
         tipoNome.includes('laudo') ? 'laudos' :
         tipoNome.includes('inventário') || tipoNome.includes('invent') ? 'inventario' :
         tipoNome.includes('aso') ? 'aso' :
+        tipoNome.includes('certificado') ? 'cert' :
+        tipoNome.includes('epi') ? 'epi' :
         'laudos'
+
+      // Certificado/EPI são registros por colaborador — renderizam como
+      // ColabReg (nome + avatar do colaborador), não como documento mestre.
+      if (cat === 'cert' || cat === 'epi') {
+        const colabNome = d.colaborador?.nome ?? '—'
+        const colabReg: ColabReg & { kind: 'colab'; st: StatusResult } = {
+          id: d.id, cat,
+          colab: colabNome,
+          cor: getAvatarColor(colabNome),
+          item: d.titulo,
+          realizado: d.emissao ?? '',
+          validade: d.vencimento ?? '',
+          ca: d.numero ?? undefined,
+          kind: 'colab',
+          st,
+        }
+        return colabReg
+      }
 
       const empresaDoc: EmpresaDoc & { kind: 'empresa'; st: StatusResult } = {
         id: d.id, cat,
@@ -832,7 +866,17 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
           </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar lista')}><Download size={14} /> Exportar lista</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('documentos.csv', [
+              { header: 'Categoria',    value: (r: DocRow) => CAT_LABEL[r.cat] },
+              { header: 'Nome/Registro', value: (r: DocRow) => r.kind === 'empresa' ? r.nome : r.item },
+              { header: 'Colaborador',  value: (r: DocRow) => r.kind === 'colab' ? r.colab : '' },
+              { header: 'Emissão/Realizado', value: (r: DocRow) => fmtBR(r.kind === 'empresa' ? r.emissao : r.realizado) },
+              { header: 'Validade',     value: (r: DocRow) => fmtBR(r.validade) },
+              { header: 'Status',       value: (r: DocRow) => r.st.label },
+            ], rows)}
+          ><Download size={14} /> Exportar lista</button>
           <button className="tbtn" onClick={() => setDateOpen(true)}><Calendar size={14} /> Registrar datas</button>
           <button className="tbtn primary" onClick={() => setNovoOpen(true)}><Plus size={14} /> Novo documento</button>
         </div>
@@ -981,12 +1025,12 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                           <>
                             <button className="icon-btn sm" title="Visualizar" onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}><Eye size={15} /></button>
                             <button className="icon-btn sm" title="Baixar" disabled={!r.arquivo_url} onClick={() => { if (r.arquivo_url) { const a = document.createElement('a'); a.href = r.arquivo_url; a.download = r.nome; a.target = '_blank'; a.click() } }}><Download size={15} /></button>
-                            <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => setNovoOpen(true)}>
+                            <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}>
                               {r.st.key !== 'ok' ? 'Renovar' : 'Nova versão'}
                             </button>
                           </>
                         ) : (
-                          <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => setDateOpen(true)}>
+                          <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}>
                             <Calendar size={13} /> {r.st.key !== 'ok' ? 'Atualizar data' : 'Editar datas'}
                           </button>
                         )}

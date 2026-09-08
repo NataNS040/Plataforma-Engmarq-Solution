@@ -15,6 +15,8 @@ import {
 } from "lucide-react"
 import { getChartColor } from "@/lib/theme"
 import { comingSoon } from "@/lib/comingSoon"
+import { exportToCsv } from "@/lib/csvExport"
+import type { EmpresaComContagem } from "@/services/empresasService"
 
 /* ============================================================
    Shared helpers
@@ -62,7 +64,18 @@ function DashboardAdmin() {
         <div className="toolbar">
           <button className="tbtn"><Calendar size={14} /> {currentDateLabel()}</button>
           <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Filtros do dashboard')}><Filter size={14} /> Filtros</button>
-          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar dashboard')}><Download size={14} /> Exportar</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('empresas.csv', [
+              { header: 'Empresa',        value: (e: EmpresaComContagem) => e.razao_social },
+              { header: 'CNPJ',           value: (e: EmpresaComContagem) => e.cnpj },
+              { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
+              { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
+              { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
+              { header: 'Colaboradores',  value: (e: EmpresaComContagem) => e.colaboradores_count },
+              { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
+            ], empresas)}
+          ><Download size={14} /> Exportar</button>
           <button className="tbtn primary" onClick={() => navigate('/empresas?nova=1')}><Plus size={14} /> Nova empresa</button>
         </div>
       </div>
@@ -338,7 +351,18 @@ function DashboardEmpresa() {
             <Calendar size={14} style={{ color: "var(--color-accent)" }} />
             {currentDateLabel()}
           </span>
-          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar relatório')}><Download size={14} /> Exportar relatório</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('compliance_por_nr.csv', [
+              { header: 'NR',              value: (n: typeof nrDetail[number]) => n.code },
+              { header: 'Treinamento',     value: (n: typeof nrDetail[number]) => n.titulo },
+              { header: 'Obrigatórios',    value: (n: typeof nrDetail[number]) => n.req },
+              { header: 'Em dia',          value: (n: typeof nrDetail[number]) => n.ok },
+              { header: 'Vencendo',        value: (n: typeof nrDetail[number]) => n.warn },
+              { header: 'Vencido',         value: (n: typeof nrDetail[number]) => n.crit },
+              { header: '% Conformidade',  value: (n: typeof nrDetail[number]) => Math.round((n.ok / n.req) * 100) },
+            ], nrDetail)}
+          ><Download size={14} /> Exportar relatório</button>
           <button className="tbtn primary" onClick={() => navigate('/colaboradores?add=1')}><Plus size={14} /> Novo colaborador</button>
         </div>
       </div>

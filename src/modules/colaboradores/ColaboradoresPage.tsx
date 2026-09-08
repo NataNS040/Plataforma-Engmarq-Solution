@@ -5,14 +5,19 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
   Search, Download, Plus, X, CheckCircle, AlertTriangle, Clock,
-  Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2,
+  Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2, Trash2,
 } from "lucide-react"
 import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
-import { useColaboradores, useCriarColaborador } from "@/hooks/queries/useColaboradores"
+import { useColaboradores, useCriarColaborador, useAtualizarColaborador } from "@/hooks/queries/useColaboradores"
 import { useSetores, useFuncoes, useAmbientes } from "@/hooks/queries/useCatalogos"
 import { useEmpresas } from "@/hooks/queries/useEmpresas"
 import { useDashboardKpis } from "@/hooks/queries/useDashboard"
+import { useMatrizTreinamentos, useTreinamentosDoColaborador, useTreinamentoTipos, useDeletarTreinamento } from "@/hooks/queries/useTreinamentos"
+import { useExamesDoColaborador } from "@/hooks/queries/useExames"
+import { useDocumentosDoColaborador } from "@/hooks/queries/useDocumentos"
+import { AddTreinamentoModal } from "@/modules/treinamentos/TreinamentosPage"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { criarColaborador } from "@/services/colaboradoresService"
 import type { ColaboradorComCatalogos } from "@/services/colaboradoresService"
 import { criarSetor, criarFuncao, criarAmbiente } from "@/services/catalogosService"
@@ -21,31 +26,25 @@ import { toast } from "sonner"
 import { qk } from "@/lib/queryKeys"
 import { getAvatarColor, getChartColor, getInitials } from "@/lib/theme"
 import { comingSoon } from "@/lib/comingSoon"
-
-/* ============================================================
-   Types
-   ============================================================ */
-
-/* ============================================================
-   NR data para o modal de perfil
-   ============================================================ */
-
-type NrStatus = "ok" | "warn" | "crit"
-
-interface NrEntry {
-  nr: string
-  desc: string
-  carga: string
-  aplica: boolean
-  status: NrStatus
-  venc: string
-}
-
-const STATUS_LABEL: Record<NrStatus, string> = { ok: "Em dia", warn: "Vencendo", crit: "Vencido" }
+import { downloadCsvRows, exportToCsv } from "@/lib/csvExport"
+import type { DocStatus, TreinamentoStatus } from "@/types/database"
 
 /* ============================================================
    ProfileModal
    ============================================================ */
+
+const DOC_CHIP: Record<DocStatus, { cls: string; label: string }> = {
+  vigente:  { cls: "ok",   label: "Vigente"  },
+  vencendo: { cls: "warn", label: "Vencendo" },
+  vencido:  { cls: "crit", label: "Vencido"  },
+}
+
+const TREINO_CHIP: Record<TreinamentoStatus, { cls: string; label: string }> = {
+  em_dia:   { cls: "ok",      label: "Em dia"   },
+  vencendo: { cls: "warn",    label: "Vencendo" },
+  vencido:  { cls: "crit",    label: "Vencido"  },
+  pendente: { cls: "neutral", label: "Pendente" },
+}
 
 interface ProfileModalProps {
   colab: ColaboradorComCatalogos
@@ -54,197 +53,347 @@ interface ProfileModalProps {
 
 function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
   const [editing, setEditing] = useState(false)
-  const [nrs, setNrs] = useState<NrEntry[]>([])
-  const [draft, setDraft] = useState<NrEntry[]>([])
+  const [addingTreino, setAddingTreino] = useState(false)
 
   const initials = getInitials(c.nome)
   const cor = getAvatarColor(c.nome)
 
-  const startEdit  = () => { setDraft(nrs.map(x => ({ ...x }))); setEditing(true) }
-  const cancelEdit = () => setEditing(false)
-  const saveEdit   = () => { setNrs(draft.map(x => ({ ...x }))); setEditing(false) }
+  // Dados reais — Treinamentos NR (matriz da função × registros do
+  // colaborador) e Saúde ocupacional (ASOs), no lugar do state local
+  // fake que existia antes (nunca persistia nada).
+  const matrizQuery   = useMatrizTreinamentos(c.empresa_id)
+  const treinosQuery  = useTreinamentosDoColaborador(c.id)
+  const examesQuery   = useExamesDoColaborador(c.id)
+  const documentosQuery = useDocumentosDoColaborador(c.id)
+  const tiposQuery    = useTreinamentoTipos()
+  const setoresQuery   = useSetores(c.empresa_id)
+  const funcoesQuery   = useFuncoes(c.empresa_id)
+  const ambientesQuery = useAmbientes(c.empresa_id)
 
-  const toggleAplica = (i: number) =>
-    setDraft(d => d.map((x, j) => j === i ? { ...x, aplica: !x.aplica } : x))
-  const pickStatus = (i: number, status: NrStatus) =>
-    setDraft(d => d.map((x, j) => j === i ? { ...x, status } : x))
+  const matriz  = matrizQuery.data ?? []
+  const treinos = treinosQuery.data ?? []
+  const exames  = examesQuery.data ?? []
+  const tipos   = tiposQuery.data ?? []
+  const fichasEpi = (documentosQuery.data ?? []).filter(d => d.tipo?.nome === 'Ficha de EPI')
 
-  const visiveis = nrs.filter(n => n.aplica)
+  // NRs obrigatórias pra função deste colaborador, cruzadas com o
+  // registro mais recente de cada uma — mais quaisquer treinamentos que o
+  // colaborador já tenha registrado mas que não constem na matriz da função
+  // (ex.: matriz incompleta, ou registro anterior a uma mudança de cargo);
+  // sem isso, esses registros ficavam invisíveis no perfil (e, portanto,
+  // impossíveis de excluir por lá).
+  const nrRows = useMemo(() => {
+    const daMatriz = matriz
+      .filter(m => m.funcao_id === c.funcao?.id && m.treinamento_tipo)
+      .map(m => {
+        const ultimo = treinos
+          .filter(t => t.treinamento_tipo_id === m.treinamento_tipo_id)
+          .sort((a, b) => (a.data_realizacao < b.data_realizacao ? 1 : -1))[0] ?? null
+        return { tipo: m.treinamento_tipo!, obrigatorio: m.obrigatorio, ultimo }
+      })
+    const cobertos = new Set(daMatriz.map(r => r.tipo.id))
+    const extras = new Map<string, typeof treinos>()
+    treinos.forEach(t => {
+      if (cobertos.has(t.treinamento_tipo_id) || !t.treinamento_tipo) return
+      const arr = extras.get(t.treinamento_tipo_id) ?? []
+      arr.push(t)
+      extras.set(t.treinamento_tipo_id, arr)
+    })
+    const registrosExtras = Array.from(extras.values()).map(regs => {
+      const ultimo = regs.sort((a, b) => (a.data_realizacao < b.data_realizacao ? 1 : -1))[0]
+      return { tipo: ultimo.treinamento_tipo!, obrigatorio: false, ultimo }
+    })
+    return [...daMatriz, ...registrosExtras]
+  }, [matriz, treinos, c.funcao?.id])
 
-  const documentos = [
-    { l: "ASO ocupacional",    status: "crit" as const, v: "Vence em 6 dias"  },
-    { l: "Ficha de EPI",       status: "ok"   as const, v: "Atualizada"       },
-    { l: "Exame audiométrico", status: "ok"   as const, v: "01/2026"          },
-    { l: "PCMSO individual",   status: "warn" as const, v: "Revisar em 28d"   },
-  ]
+  const obrigatorios = nrRows.filter(n => n.obrigatorio)
+  const emDia = obrigatorios.filter(n => n.ultimo?.status === "em_dia").length
+
+  const deletarTreino = useDeletarTreinamento()
+  const [deletingTreino, setDeletingTreino] = useState<{ id: string; label: string } | null>(null)
+  async function confirmDeleteTreino() {
+    if (!deletingTreino) return
+    await deletarTreino.mutateAsync({ id: deletingTreino.id, empresaId: c.empresa_id, colaboradorId: c.id })
+    setDeletingTreino(null)
+  }
+
+  // Edição de dados pessoais (função/setor/ambiente/matrícula) — antes só
+  // existia edição fake da lista de NRs, que nunca gravava nada.
+  const atualizar = useAtualizarColaborador()
+  const [fNome, setFNome]             = useState(c.nome)
+  const [fMatricula, setFMatricula]   = useState(c.matricula ?? "")
+  const [fFuncaoId, setFFuncaoId]     = useState(c.funcao?.id ?? "")
+  const [fSetorId, setFSetorId]       = useState(c.setor?.id ?? "")
+  const [fAmbienteId, setFAmbienteId] = useState(c.ambiente?.id ?? "")
+
+  const startEdit = () => setEditing(true)
+  const cancelEdit = () => {
+    setFNome(c.nome)
+    setFMatricula(c.matricula ?? "")
+    setFFuncaoId(c.funcao?.id ?? "")
+    setFSetorId(c.setor?.id ?? "")
+    setFAmbienteId(c.ambiente?.id ?? "")
+    setEditing(false)
+  }
+  async function saveEdit() {
+    try {
+      await atualizar.mutateAsync({
+        id: c.id,
+        empresaId: c.empresa_id,
+        input: {
+          nome: fNome,
+          matricula: fMatricula || null,
+          funcao_id: fFuncaoId,
+          setor_id: fSetorId,
+          ambiente_id: fAmbienteId || null,
+        },
+      })
+      onClose()
+    } catch { /* toast já disparado pelo hook */ }
+  }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-head">
-          <h2>{editing ? "Editar colaborador · Treinamentos NR" : "Perfil do colaborador"}</h2>
-          <div style={{ display: "flex", gap: 8 }}>
-            {!editing && <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar perfil em PDF')}><Download size={13} /> Exportar PDF</button>}
-            {!editing
-              ? <button className="tbtn primary" onClick={startEdit}><Edit size={13} /> Editar colaborador</button>
-              : <>
-                  <button className="tbtn" onClick={cancelEdit}>Cancelar</button>
-                  <button className="tbtn primary" onClick={saveEdit}><CheckCircle size={13} /> Salvar</button>
-                </>}
-            <button className="icon-btn" onClick={onClose}><X size={16} /></button>
-          </div>
-        </div>
-
-        <div className="modal-body">
-          {/* Hero */}
-          <div className="prof-hero">
-            <div className="avb" style={{ background: cor }}>{initials}</div>
-            <div>
-              <h3>{c.nome}</h3>
-              <div className="meta">
-                <span><Briefcase size={12} /> {c.funcao?.nome ?? '—'}</span>
-                <span><MapPin size={12} /> {c.setor?.nome ?? '—'}</span>
-                <span><Calendar size={12} /> Admissão {c.data_admissao ? new Date(c.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</span>
-              </div>
-            </div>
-            <div className="right-stat">
-              <div className="v">—</div>
-              <div className="l">Score SST · em breve</div>
+    <>
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-head">
+            <h2>{editing ? "Editar colaborador" : "Perfil do colaborador"}</h2>
+            <div style={{ display: "flex", gap: 8 }}>
+              {!editing && <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar perfil em PDF')}><Download size={13} /> Exportar PDF</button>}
+              {!editing
+                ? <button className="tbtn primary" onClick={startEdit}><Edit size={13} /> Editar colaborador</button>
+                : <>
+                    <button className="tbtn" onClick={cancelEdit}>Cancelar</button>
+                    <button className="tbtn primary" onClick={saveEdit} disabled={atualizar.isPending}>
+                      {atualizar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle size={13} />} Salvar
+                    </button>
+                  </>}
+              <button className="icon-btn" onClick={onClose}><X size={16} /></button>
             </div>
           </div>
 
-          {/* Quick stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Treinamentos</div>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
-                — <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>/ obrig.</span>
+          <div className="modal-body">
+            {/* Hero */}
+            <div className="prof-hero">
+              <div className="avb" style={{ background: cor }}>{initials}</div>
+              <div>
+                <h3>{c.nome}</h3>
+                <div className="meta">
+                  <span><Briefcase size={12} /> {c.funcao?.nome ?? '—'}</span>
+                  <span><MapPin size={12} /> {c.setor?.nome ?? '—'}</span>
+                  <span><Calendar size={12} /> Admissão {c.data_admissao ? new Date(c.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</span>
+                </div>
               </div>
-            </div>
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Documentos</div>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
-                — <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>arquivos</span>
-              </div>
-            </div>
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>CPF</div>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{c.cpf}</div>
-            </div>
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Matrícula</div>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{c.matricula ?? '—'}</div>
-            </div>
-          </div>
-
-          {/* Dados + Saúde ocupacional */}
-          <div className="prof-grid" style={{ marginTop: 16 }}>
-            <div className="prof-section">
-              <h4>Dados pessoais</h4>
-              <div className="field-grid">
-                <div><div className="f-lbl">CPF</div><div className="f-val">{c.cpf}</div></div>
-                <div><div className="f-lbl">Matrícula</div><div className="f-val">{c.matricula ?? '—'}</div></div>
-                <div><div className="f-lbl">Admissão</div><div className="f-val">{c.data_admissao ? new Date(c.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</div></div>
-                <div><div className="f-lbl">Setor</div><div className="f-val">{c.setor?.nome ?? '—'}</div></div>
-                <div><div className="f-lbl">Função</div><div className="f-val">{c.funcao?.nome ?? '—'}</div></div>
-                <div><div className="f-lbl">Ambiente</div><div className="f-val">{c.ambiente?.nome ?? '—'}</div></div>
+              <div className="right-stat">
+                <div className="v">—</div>
+                <div className="l">Score SST · em breve</div>
               </div>
             </div>
 
-            <div className="prof-section">
-              <h4>Saúde ocupacional · PCMSO</h4>
-              <div className="prof-list">
-                {documentos.map((d, i) => (
-                  <div key={i} className="prof-row">
-                    <span className="lbl">{d.l}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span className="val" style={{ color: d.status === "crit" ? "var(--red-500)" : d.status === "warn" ? "var(--orange-600)" : "var(--ink-900)" }}>
-                        {d.v}
-                      </span>
-                      <span className={`chip ${d.status}`} style={{ fontSize: 10.5 }}>
-                        {d.status === "ok" ? "OK" : d.status === "warn" ? "Aten." : "!"}
-                      </span>
-                    </span>
+            {/* Quick stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+              <div className="card" style={{ padding: 14 }}>
+                <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Treinamentos</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
+                  {obrigatorios.length > 0 ? emDia : '—'} <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>/ {obrigatorios.length} obrig.</span>
+                </div>
+              </div>
+              <div className="card" style={{ padding: 14 }}>
+                <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Documentos</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
+                  {exames.length + fichasEpi.length} <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>arquivos</span>
+                </div>
+              </div>
+              <div className="card" style={{ padding: 14 }}>
+                <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>CPF</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{c.cpf}</div>
+              </div>
+              <div className="card" style={{ padding: 14 }}>
+                <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Matrícula</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{c.matricula ?? '—'}</div>
+              </div>
+            </div>
+
+            {/* Dados + Saúde ocupacional */}
+            <div className="prof-grid" style={{ marginTop: 16 }}>
+              <div className="prof-section">
+                <h4>Dados pessoais</h4>
+                {!editing ? (
+                  <div className="field-grid">
+                    <div><div className="f-lbl">CPF</div><div className="f-val">{c.cpf}</div></div>
+                    <div><div className="f-lbl">Matrícula</div><div className="f-val">{c.matricula ?? '—'}</div></div>
+                    <div><div className="f-lbl">Admissão</div><div className="f-val">{c.data_admissao ? new Date(c.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</div></div>
+                    <div><div className="f-lbl">Setor</div><div className="f-val">{c.setor?.nome ?? '—'}</div></div>
+                    <div><div className="f-lbl">Função</div><div className="f-val">{c.funcao?.nome ?? '—'}</div></div>
+                    <div><div className="f-lbl">Ambiente</div><div className="f-val">{c.ambiente?.nome ?? '—'}</div></div>
                   </div>
-                ))}
+                ) : (
+                  <div className="mp-form" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div className="mp-field" style={{ gridColumn: "1 / -1" }}>
+                      <label>Nome</label>
+                      <input className="mp-input" value={fNome} onChange={e => setFNome(e.target.value)} />
+                    </div>
+                    <div className="mp-field">
+                      <label>Matrícula</label>
+                      <input className="mp-input" value={fMatricula} onChange={e => setFMatricula(e.target.value)} />
+                    </div>
+                    <div className="mp-field">
+                      <label>Função</label>
+                      <select className="mp-input" value={fFuncaoId} onChange={e => setFFuncaoId(e.target.value)} disabled={funcoesQuery.isLoading}>
+                        <option value="">Selecione…</option>
+                        {(funcoesQuery.data ?? []).map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                      </select>
+                    </div>
+                    <div className="mp-field">
+                      <label>Setor</label>
+                      <select className="mp-input" value={fSetorId} onChange={e => setFSetorId(e.target.value)} disabled={setoresQuery.isLoading}>
+                        <option value="">Selecione…</option>
+                        {(setoresQuery.data ?? []).map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}
+                      </select>
+                    </div>
+                    <div className="mp-field">
+                      <label>Ambiente</label>
+                      <select className="mp-input" value={fAmbienteId} onChange={e => setFAmbienteId(e.target.value)} disabled={ambientesQuery.isLoading}>
+                        <option value="">—</option>
+                        {(ambientesQuery.data ?? []).map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="prof-section">
+                <h4>Saúde ocupacional</h4>
+                <div className="prof-list">
+                  {examesQuery.isLoading ? (
+                    <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Carregando…</div>
+                  ) : exames.length === 0 ? (
+                    <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Nenhum ASO registrado para este colaborador.</div>
+                  ) : exames.map(d => {
+                    const chip = DOC_CHIP[d.status]
+                    return (
+                      <div key={d.id} className="prof-row">
+                        <span className="lbl">{d.titulo}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span className="val" style={{ color: chip.cls === "crit" ? "var(--red-500)" : chip.cls === "warn" ? "var(--orange-600)" : "var(--ink-900)" }}>
+                            {d.vencimento ? new Date(d.vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}
+                          </span>
+                          <span className={`chip ${chip.cls}`} style={{ fontSize: 10.5 }}>{chip.label}</span>
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Treinamentos NR */}
-          <div className="prof-section" style={{ marginTop: 18 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <h4 style={{ margin: 0 }}>
-                Treinamentos NR
-                {editing && <span style={{ fontWeight: 500, color: "var(--ink-500)", fontSize: 12, textTransform: "none", letterSpacing: 0 }}> · marque quais NRs se aplicam</span>}
-              </h4>
-              {!editing && <span style={{ fontSize: 11.5, color: "var(--ink-500)" }}>{visiveis.length} NRs aplicáveis ao cargo</span>}
+            {/* Fichas de EPI */}
+            <div className="prof-section" style={{ marginTop: 18 }}>
+              <h4>Fichas de EPI</h4>
+              <div className="prof-list">
+                {documentosQuery.isLoading ? (
+                  <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Carregando…</div>
+                ) : fichasEpi.length === 0 ? (
+                  <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Nenhuma ficha de EPI registrada para este colaborador.</div>
+                ) : fichasEpi.map(d => {
+                  const chip = DOC_CHIP[d.status]
+                  return (
+                    <div key={d.id} className="prof-row">
+                      <span className="lbl">{d.titulo}{d.numero ? ` · CA ${d.numero}` : ''}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span className="val" style={{ color: chip.cls === "crit" ? "var(--red-500)" : chip.cls === "warn" ? "var(--orange-600)" : "var(--ink-900)" }}>
+                          {d.vencimento ? new Date(d.vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}
+                        </span>
+                        <span className={`chip ${chip.cls}`} style={{ fontSize: 10.5 }}>{chip.label}</span>
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
-            <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    {editing && <th style={{ width: 90 }}>Aplica?</th>}
-                    <th>NR</th>
-                    <th>Descrição</th>
-                    <th>Carga</th>
-                    <th>{editing ? "Status" : "Validade"}</th>
-                    {!editing && <th>Status</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(editing ? draft : visiveis).length === 0 && (
-                    <tr><td colSpan={editing ? 5 : 5} style={{ textAlign:'center', padding:24, color:'var(--ink-400)', fontSize:12 }}>
-                      Nenhuma NR configurada. Em breve esta seção será integrada com a Matriz de Treinamentos.
-                    </td></tr>
-                  )}
-                  {(editing ? draft : visiveis).map((t, i) => (
-                    <tr key={i} style={editing && !t.aplica ? { opacity: 0.45 } : {}}>
-                      {editing && (
-                        <td>
-                          <button
-                            className={`nr-toggle ${t.aplica ? "on" : ""}`}
-                            onClick={() => toggleAplica(i)}
-                            role="switch"
-                            aria-checked={t.aplica}
-                          >
-                            <span className="knob" />
-                          </button>
-                        </td>
-                      )}
-                      <td><strong style={{ fontFamily: "var(--font-display)" }}>{t.nr}</strong></td>
-                      <td>{t.desc}</td>
-                      <td style={{ color: "var(--ink-500)" }}>{t.carga}</td>
-                      <td>
-                        {editing && t.aplica ? (
-                          <div className="seg" style={{ gap: 2 }}>
-                            {(["ok","warn","crit"] as NrStatus[]).map(s => (
-                              <button key={s} className={t.status === s ? "on" : ""} onClick={() => pickStatus(i, s)} style={{ padding: "3px 8px", fontSize: 11 }}>
-                                {STATUS_LABEL[s]}
-                              </button>
-                            ))}
-                          </div>
-                        ) : editing && !t.aplica ? (
-                          <span style={{ fontSize: 12, color: "var(--ink-500)" }}>Não obrigatório</span>
-                        ) : (
-                          <span style={{ color: t.status === "crit" ? "var(--red-500)" : t.status === "warn" ? "var(--orange-600)" : "var(--ink-700)", fontWeight: t.status !== "ok" ? 600 : 400 }}>
-                            {t.venc}
-                          </span>
-                        )}
-                      </td>
-                      {!editing && (
-                        <td><span className={`chip ${t.status}`}>{STATUS_LABEL[t.status]}</span></td>
-                      )}
+            {/* Treinamentos NR */}
+            <div className="prof-section" style={{ marginTop: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <h4 style={{ margin: 0 }}>Treinamentos NR</h4>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 11.5, color: "var(--ink-500)" }}>{obrigatorios.length} NRs obrigatórias pra função</span>
+                  <button className="tbtn sm" onClick={() => setAddingTreino(true)} disabled={tiposQuery.isLoading}><Plus size={12} /> Registrar</button>
+                </div>
+              </div>
+
+              <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>NR</th>
+                      <th>Descrição</th>
+                      <th>Última realização</th>
+                      <th>Vencimento</th>
+                      <th>Status</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {matrizQuery.isLoading || treinosQuery.isLoading ? (
+                      <tr><td colSpan={6} style={{ textAlign:'center', padding:24, color:'var(--ink-400)', fontSize:12 }}>Carregando…</td></tr>
+                    ) : nrRows.length === 0 ? (
+                      <tr><td colSpan={6} style={{ textAlign:'center', padding:24, color:'var(--ink-400)', fontSize:12 }}>
+                        Nenhuma NR configurada na matriz para a função "{c.funcao?.nome ?? '—'}".
+                      </td></tr>
+                    ) : nrRows.map(({ tipo, ultimo }) => {
+                      const chip = ultimo ? TREINO_CHIP[ultimo.status] : TREINO_CHIP.pendente
+                      return (
+                        <tr key={tipo.id}>
+                          <td><strong style={{ fontFamily: "var(--font-display)" }}>{tipo.nr_referencia ?? tipo.nome}</strong></td>
+                          <td>{tipo.nome}</td>
+                          <td style={{ color: "var(--ink-500)" }}>{ultimo?.data_realizacao ? new Date(ultimo.data_realizacao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+                          <td style={{ color: chip.cls === "crit" ? "var(--red-500)" : chip.cls === "warn" ? "var(--orange-600)" : "var(--ink-700)" }}>
+                            {ultimo?.data_vencimento ? new Date(ultimo.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}
+                          </td>
+                          <td><span className={`chip ${chip.cls}`}>{chip.label}</span></td>
+                          <td style={{ textAlign: "right" }}>
+                            {ultimo && (
+                              <button
+                                className="icon-btn sm"
+                                title="Excluir treinamento"
+                                style={{ color: "var(--red-500)" }}
+                                onClick={() => setDeletingTreino({ id: ultimo.id, label: `${tipo.nr_referencia ?? tipo.nome} · ${c.nome}` })}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {addingTreino && (
+        <AddTreinamentoModal
+          colab={{ id: c.id, nome: c.nome, cor, foto: initials }}
+          tipos={tipos}
+          empresaId={c.empresa_id}
+          onClose={() => setAddingTreino(false)}
+        />
+      )}
+
+      {deletingTreino && (
+        <ConfirmDialog
+          title="Excluir treinamento?"
+          description={<>Isso remove o registro de <strong>{deletingTreino.label}</strong> permanentemente.</>}
+          loading={deletarTreino.isPending}
+          onCancel={() => setDeletingTreino(null)}
+          onConfirm={confirmDeleteTreino}
+        />
+      )}
+    </>
   )
 }
 
@@ -289,17 +438,11 @@ function parseAdmissaoDate(raw: string): string | null {
 }
 
 function downloadCsvTemplate() {
-  const rows = [
+  downloadCsvRows('modelo_colaboradores.csv', [
     ['nome', 'cpf', 'matricula', 'funcao', 'setor', 'ambiente', 'data_admissao'],
     ['João Silva', '123.456.789-00', 'MAT001', 'Operador', 'Produção', 'Linha A', '2024-01-15'],
     ['Maria Souza', '987.654.321-00', '', 'Técnico de Segurança', 'Segurança', '', '01/06/2023'],
-  ]
-  const csv = rows.map(r => r.join(',')).join('\r\n')
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url; a.download = 'modelo_colaboradores.csv'; a.click()
-  URL.revokeObjectURL(url)
+  ])
 }
 
 /* ============================================================
@@ -465,7 +608,11 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
     await qc.invalidateQueries({ queryKey: qk.funcoes.list(empresaId) })
     await qc.invalidateQueries({ queryKey: qk.ambientes.list(empresaId) })
     if (ok > 0) {
-      toast.success(`${ok} colaborador(es) importado(s) com sucesso.`)
+      toast.success(
+        fail > 0
+          ? `${ok} colaborador(es) importado(s) · ${fail} falharam.`
+          : `${ok} colaborador(es) importado(s) com sucesso.`
+      )
       onClose()
     } else {
       toast.error('Nenhum colaborador pôde ser importado. Verifique os erros na planilha.')
@@ -789,7 +936,18 @@ function ColaboradoresEmpresa({ empresaIdProp, empresaNome, onBack }: {
           </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar CSV')}><Download size={14} /> Exportar CSV</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('colaboradores.csv', [
+              { header: 'Nome',      value: (c: ColaboradorComCatalogos) => c.nome },
+              { header: 'CPF',       value: (c: ColaboradorComCatalogos) => c.cpf },
+              { header: 'Matrícula', value: (c: ColaboradorComCatalogos) => c.matricula ?? '' },
+              { header: 'Função',    value: (c: ColaboradorComCatalogos) => c.funcao?.nome ?? '' },
+              { header: 'Setor',     value: (c: ColaboradorComCatalogos) => c.setor?.nome ?? '' },
+              { header: 'Ambiente',  value: (c: ColaboradorComCatalogos) => c.ambiente?.nome ?? '' },
+              { header: 'Admissão',  value: (c: ColaboradorComCatalogos) => c.data_admissao ?? '' },
+            ], filtered)}
+          ><Download size={14} /> Exportar CSV</button>
           <button className="tbtn primary" onClick={() => setAdding(true)} disabled={!empresaId}>
             <Plus size={14} /> Adicionar colaborador
           </button>

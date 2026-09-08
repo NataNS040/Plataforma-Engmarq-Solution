@@ -127,3 +127,8 @@ export async function atualizarTreinamento(
   if (error) throw handleSupabaseError(error, 'Não foi possível atualizar o treinamento.')
   return data as Treinamento
 }
+
+export async function deletarTreinamento(id: string): Promise<void> {
+  const { error } = await supabase.from('treinamentos').delete().eq('id', id)
+  if (error) throw handleSupabaseError(error, 'Não foi possível remover o treinamento.')
+}

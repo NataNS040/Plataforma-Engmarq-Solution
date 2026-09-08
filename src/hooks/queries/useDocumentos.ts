@@ -4,6 +4,7 @@ import { qk } from '@/lib/queryKeys'
 import {
   listarDocumentoTipos,
   listarDocumentos,
+  listarDocumentosDoColaborador,
   criarDocumento,
   atualizarDocumento,
   deletarDocumento,
@@ -26,12 +27,21 @@ export function useDocumentos(empresaId: string | null | undefined) {
   })
 }
 
+export function useDocumentosDoColaborador(colaboradorId: string | null | undefined) {
+  return useQuery({
+    queryKey: qk.documentos.byColaborador(colaboradorId ?? ''),
+    queryFn: () => listarDocumentosDoColaborador(colaboradorId!),
+    enabled: !!colaboradorId,
+  })
+}
+
 export function useCriarDocumento() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: DocumentoInput) => criarDocumento(input),
     onSuccess: doc => {
       qc.invalidateQueries({ queryKey: qk.documentos.list(doc.empresa_id) })
+      if (doc.colaborador_id) qc.invalidateQueries({ queryKey: qk.documentos.byColaborador(doc.colaborador_id) })
       toast.success('Documento cadastrado.')
     },
     onError: (err: Error) => toast.error(err.message),
@@ -41,13 +51,15 @@ export function useCriarDocumento() {
 export function useAtualizarDocumento() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input, empresaId }: {
+    mutationFn: ({ id, input, empresaId, colaboradorId }: {
       id: string
       input: Partial<Omit<DocumentoInput, 'empresa_id'>>
       empresaId: string
-    }) => atualizarDocumento(id, input).then(d => ({ ...d, empresaId })),
+      colaboradorId?: string | null
+    }) => atualizarDocumento(id, input).then(d => ({ ...d, empresaId, colaboradorId })),
     onSuccess: result => {
       qc.invalidateQueries({ queryKey: qk.documentos.list(result.empresaId) })
+      if (result.colaboradorId) qc.invalidateQueries({ queryKey: qk.documentos.byColaborador(result.colaboradorId) })
       toast.success('Documento atualizado.')
     },
     onError: (err: Error) => toast.error(err.message),

@@ -32,6 +32,8 @@ export const qk = {
     all: ['documentos'] as const,
     list: (empresaId: string) => [...qk.documentos.all, 'list', empresaId] as const,
     detail: (id: string) => [...qk.documentos.all, 'detail', id] as const,
+    byColaborador: (colaboradorId: string) =>
+      [...qk.documentos.all, 'colaborador', colaboradorId] as const,
   },
   treinamentoTipos: {
     all: ['treinamento_tipos'] as const,

@@ -12,6 +12,8 @@ import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { SubtipoExame } from '@/types/database'
 import { getAvatarColor, getInitials, getChartColor } from '@/lib/theme'
 import { comingSoon } from '@/lib/comingSoon'
+import { exportToCsv } from '@/lib/csvExport'
+import type { EmpresaComContagem } from '@/services/empresasService'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -402,7 +404,17 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
           </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar')}><Download size={14}/> Exportar</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('asos.csv', [
+              { header: 'Colaborador',   value: (r: typeof filtered[number]) => r.colab },
+              { header: 'Tipo de exame', value: (r: typeof filtered[number]) => r.tipo },
+              { header: 'Realizado em',  value: (r: typeof filtered[number]) => r.realizado },
+              { header: 'Validade',      value: (r: typeof filtered[number]) => r.validade },
+              { header: 'Resultado',     value: (r: typeof filtered[number]) => r.resultado },
+              { header: 'Status',        value: (r: typeof filtered[number]) => r.st.label },
+            ], filtered)}
+          ><Download size={14}/> Exportar</button>
           <button className="tbtn" onClick={() => { setPrefill(null); setSchedOpen(true) }}><Calendar size={14}/> Agendar exame</button>
           <button className="tbtn primary" onClick={() => setNewOpen(true)}><Plus size={14}/> Registrar ASO</button>
         </div>
@@ -581,7 +593,18 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
           <p className="sub">Saúde ocupacional consolidada · {empresas.length} empresas-cliente</p>
         </div>
         <div className="toolbar">
-          <button className="tbtn primary is-soon" title="Em breve" onClick={() => comingSoon('Exportar consolidado')}><Download size={14}/> Exportar consolidado</button>
+          <button
+            className="tbtn primary"
+            onClick={() => exportToCsv('exames_empresas.csv', [
+              { header: 'Empresa',        value: (e: EmpresaComContagem) => e.razao_social },
+              { header: 'CNPJ',           value: (e: EmpresaComContagem) => e.cnpj },
+              { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
+              { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
+              { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
+              { header: 'Colaboradores',  value: (e: EmpresaComContagem) => e.colaboradores_count },
+              { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
+            ], empresas)}
+          ><Download size={14}/> Exportar consolidado</button>
         </div>
       </div>
 

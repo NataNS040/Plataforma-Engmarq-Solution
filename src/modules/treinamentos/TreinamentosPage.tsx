@@ -1,13 +1,15 @@
 import { useState, useMemo, useEffect } from "react"
-import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus } from "lucide-react"
+import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus, Trash2 } from "lucide-react"
 import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores } from "@/hooks/queries/useColaboradores"
-import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento } from "@/hooks/queries/useTreinamentos"
+import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento, useDeletarTreinamento } from "@/hooks/queries/useTreinamentos"
 import { useEmpresas } from "@/hooks/queries/useEmpresas"
 import { useDashboardKpis } from "@/hooks/queries/useDashboard"
 import { STATUS_COLORS, getAvatarColor, getChartColor } from "@/lib/theme"
 import { comingSoon } from "@/lib/comingSoon"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
+import { exportToCsv } from "@/lib/csvExport"
 
 /* ============================================================
    Types
@@ -53,13 +55,31 @@ interface CellRef {
   realizacao?: string | null
   vencimento?: string | null
   cargaHoraria?: number | null
+  treinamentoId?: string | null
+  certificadoUrl?: string | null
 }
 
-function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: NrInfo[]; onClose: () => void }) {
+function CellDetail({ cell, nrCatalog, empresaId, onClose, onDeleted }: {
+  cell: CellRef
+  nrCatalog: NrInfo[]
+  empresaId?: string | null
+  onClose: () => void
+  onDeleted: () => void
+}) {
   const info = nrCatalog.find(n => n.nr === cell.nr) ?? nrCatalog[0]
   const st   = cell.status
   const col  = CELL_COLORS[st ?? 'na'].bg
   const labels: Record<CellStatus, string> = { ok: "Em dia", warn: "Vencendo", crit: "Vencido", na: "Não aplicável" }
+  const deletar = useDeletarTreinamento()
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const colabId = (cell.colab as ColabRow & { id?: string }).id
+
+  async function handleDelete() {
+    if (!cell.treinamentoId) return
+    await deletar.mutateAsync({ id: cell.treinamentoId, empresaId: empresaId ?? '', colaboradorId: colabId })
+    setConfirmingDelete(false)
+    onDeleted()
+  }
 
   return (
     <div style={{ padding: 16 }}>
@@ -114,11 +134,36 @@ function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: Nr
           Ver perfil do colaborador <ChevronRight size={13} />
         </button>
         {st !== "na" && (
-          <button className="tbtn ghost is-soon" style={{ justifyContent: "center" }} title="Em breve" onClick={() => comingSoon('Baixar certificado')}>
-            <Download size={13} /> Baixar certificado
+          cell.certificadoUrl ? (
+            <button className="tbtn ghost" style={{ justifyContent: "center" }} onClick={() => window.open(cell.certificadoUrl!, '_blank')}>
+              <Download size={13} /> Baixar certificado
+            </button>
+          ) : (
+            <button className="tbtn ghost is-soon" style={{ justifyContent: "center" }} title="Em breve" onClick={() => comingSoon('Baixar certificado')}>
+              <Download size={13} /> Baixar certificado
+            </button>
+          )
+        )}
+        {st !== "na" && cell.treinamentoId && (
+          <button
+            className="tbtn ghost"
+            style={{ justifyContent: "center", color: "var(--red-500)" }}
+            onClick={() => setConfirmingDelete(true)}
+          >
+            <Trash2 size={13} /> Excluir treinamento
           </button>
         )}
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Excluir treinamento?"
+          description={<>Isso remove o registro de <strong>{info.nr} · {cell.colab.nome}</strong> permanentemente.</>}
+          loading={deletar.isPending}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   )
 }
@@ -190,14 +235,14 @@ function NRRanking({ stats, activeNr, onPick }: { stats: NrStat[]; activeNr: str
 
 import type { TreinamentoTipo } from "@/types/database"
 
-interface AddTreinamentoModalProps {
+export interface AddTreinamentoModalProps {
   colab: { id: string; nome: string; cor: string; foto: string }
   tipos: TreinamentoTipo[]
   empresaId: string
   onClose: () => void
 }
 
-function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinamentoModalProps) {
+export function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinamentoModalProps) {
   const registrar = useRegistrarTreinamento()
   const [tipoId, setTipoId] = useState(tipos[0]?.id ?? "")
   const [dataRealizacao, setDataRealizacao] = useState("")
@@ -235,7 +280,10 @@ function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinament
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}
+      // z-index acima do `.modal-backdrop` (400, ver index.css) — este modal
+      // agora também é aberto de dentro do ProfileModal (Colaboradores), que
+      // já usa aquele backdrop; sem isso, ficava escondido atrás dele.
+      style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{ background: "var(--surface)", borderRadius: 16, padding: 24, width: 460, maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,0.18)" }}>
@@ -441,6 +489,36 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   const totalCells = okCount + warnCount + critCount
   const pctGeral = totalCells ? Math.round((okCount / totalCells) * 100) : 0
 
+  function handleExportMatriz() {
+    interface MatrizRow { colaborador: string; setor: string; nr: string; titulo: string; status: string; realizacao: string; vencimento: string }
+    const flat: MatrizRow[] = []
+    COLABS_MATRIX.forEach(c => {
+      NR_CATALOG.forEach(nr => {
+        const st = cellStatusReal(c as ColabRow & { id?: string }, nr as NrInfo & { tipoId?: string })
+        if (st === 'na') return
+        const t = treinMap.get(`${(c as ColabRow & { id?: string }).id}:${(nr as NrInfo & { tipoId?: string }).tipoId}`)
+        flat.push({
+          colaborador: c.nome,
+          setor: c.setor,
+          nr: nr.nr,
+          titulo: nr.titulo,
+          status: st === 'ok' ? 'Em dia' : st === 'warn' ? 'Vencendo' : 'Vencido',
+          realizacao: t?.data_realizacao ?? '',
+          vencimento: t?.data_vencimento ?? '',
+        })
+      })
+    })
+    exportToCsv<MatrizRow>(`treinamentos_matriz${empresaNome ? '_' + empresaNome : ''}.csv`, [
+      { header: 'Colaborador',        value: r => r.colaborador },
+      { header: 'Setor',              value: r => r.setor },
+      { header: 'NR',                 value: r => r.nr },
+      { header: 'Treinamento',        value: r => r.titulo },
+      { header: 'Status',             value: r => r.status },
+      { header: 'Última realização',  value: r => r.realizacao },
+      { header: 'Vencimento',         value: r => r.vencimento },
+    ], flat)
+  }
+
   return (
     <div className="content">
 
@@ -458,7 +536,7 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
           </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar matriz')}><Download size={14} /> Exportar matriz (CSV)</button>
+          <button className="tbtn" onClick={handleExportMatriz}><Download size={14} /> Exportar matriz (CSV)</button>
         </div>
       </div>
 
@@ -565,7 +643,7 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                               onClick={e => {
                                 e.stopPropagation()
                                 const trein = treinMap.get(`${(c as ColabRow & {id?: string}).id}:${(nrInfo as NrInfo & {tipoId?: string}).tipoId}`)
-                                setSelectedCell({ rowIdx: ri, colIdx: ci, nr, colab: c, status: st, realizacao: trein?.data_realizacao ?? null, vencimento: trein?.data_vencimento ?? null, cargaHoraria: trein?.carga_horaria ?? null })
+                                setSelectedCell({ rowIdx: ri, colIdx: ci, nr, colab: c, status: st, realizacao: trein?.data_realizacao ?? null, vencimento: trein?.data_vencimento ?? null, cargaHoraria: trein?.carga_horaria ?? null, treinamentoId: trein?.id ?? null, certificadoUrl: trein?.certificado_url ?? null })
                               }}
                               title={`${c.nome} · ${nr} · ${st}`}
                               style={{
@@ -620,7 +698,13 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
         {/* Painel lateral */}
         <div className="glass" style={{ position: "sticky", top: 80 }}>
           {selectedCell ? (
-            <CellDetail cell={selectedCell} nrCatalog={NR_CATALOG} onClose={() => setSelectedCell(null)} />
+            <CellDetail
+              cell={selectedCell}
+              nrCatalog={NR_CATALOG}
+              empresaId={empresaId}
+              onClose={() => setSelectedCell(null)}
+              onDeleted={() => setSelectedCell(null)}
+            />
           ) : (
             <NRRanking stats={nrStats} activeNr={activeNr} onPick={setActiveNr} />
           )}
