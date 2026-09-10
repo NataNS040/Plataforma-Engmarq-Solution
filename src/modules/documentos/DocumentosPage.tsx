@@ -12,7 +12,11 @@ import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useDocumentos, useDocumentoTipos, useCriarDocumento, useDeletarDocumento, useAtualizarDocumento } from '@/hooks/queries/useDocumentos'
 import { useTreinamentoTipos } from '@/hooks/queries/useTreinamentos'
+import { useFichasEpi } from '@/hooks/queries/useFichasEpi'
 import { uploadDocumentoArquivo, getTipoIdPorNome, type DocumentoComTipo } from '@/services/documentosService'
+import type { FichaEpiComItens } from '@/services/fichasEpiService'
+import { FichaEpiModal } from './FichaEpiModal'
+import { FichaEpiDetailModal } from './FichaEpiDetailModal'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
@@ -36,12 +40,13 @@ interface EmpresaDoc {
 interface ColabReg {
   id: string; cat: string; colab: string; cor: string
   item: string; realizado: string; validade: string; ca?: string
+  /** Só presente pra linhas de EPI vindas de fichas_epi (não de documentos
+   *  soltos) — usado pra abrir o detalhe/assinatura da ficha inteira. */
+  fichaEpi?: FichaEpiComItens
 }
 type DocRow =
   | (EmpresaDoc & { kind: 'empresa'; st: StatusResult })
   | (ColabReg  & { kind: 'colab';   st: StatusResult })
-
-interface EpiItem { equip: string; ca: string; entrega: string; validade: string }
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -141,68 +146,42 @@ function DocField({ label, children, full }: { label: string; children: React.Re
 }
 
 // ---------------------------------------------------------------------------
-// DateEntryModal
+// DateEntryModal — registro de certificado de treinamento por colaborador
+// (fichas de EPI agora têm modal próprio, FichaEpiModal — ver mais abaixo:
+// item com CA/validade em lista, mais assinatura por foto)
 // ---------------------------------------------------------------------------
 function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
-  const [tipo, setTipo] = useState<'cert' | 'epi'>('cert')
   const [colabId, setColabId] = useState('')
   const [tipoTreinoId, setTipoTreinoId] = useState('')
   const [realizado, setRealizado] = useState('')
   const [validade, setValidade] = useState('')
-  const [epiItems, setEpiItems] = useState<EpiItem[]>([{ equip: '', ca: '', entrega: '', validade: '' }])
 
   const colabsQuery = useColaboradores(empresaId)
   const nrTiposQuery = useTreinamentoTipos()
   const criar       = useCriarDocumento()
 
   const suggestCert = () => { if (realizado) setValidade(addYears(realizado, 2)) }
-  const updItem = (i: number, patch: Partial<EpiItem>) =>
-    setEpiItems(items => items.map((it, j) => j === i ? { ...it, ...patch } : it))
-  const addItem = () => setEpiItems(items => [...items, { equip: '', ca: '', entrega: '', validade: '' }])
-  const removeItem = (i: number) => setEpiItems(items => items.length === 1 ? items : items.filter((_, j) => j !== i))
 
-  const canSave = tipo === 'cert'
-    ? Boolean(colabId && tipoTreinoId && realizado && validade)
-    : Boolean(colabId && epiItems.some(it => it.equip && it.entrega))
+  const canSave = Boolean(colabId && tipoTreinoId && realizado && validade)
 
   async function handleSave() {
     const colab = (colabsQuery.data ?? []).find(c => c.id === colabId)
     if (!colab) return
-    if (tipo === 'cert') {
-      const nrTipo = (nrTiposQuery.data ?? []).find(t => t.id === tipoTreinoId)
-      if (!nrTipo) return
-      try {
-        const tipoId = await getTipoIdPorNome('Certificado de Treinamento')
-        await criar.mutateAsync({
-          empresa_id:     empresaId,
-          tipo_id:        tipoId,
-          colaborador_id: colab.id,
-          titulo:         `${nrTipo.nr_referencia ?? nrTipo.nome} — ${colab.nome}`,
-          emissao:        realizado || null,
-          vencimento:     validade || null,
-          observacoes:    nrTipo.nome,
-        })
-        onClose()
-      } catch (err) { toast.error((err as Error).message) }
-    } else {
-      const validItems = epiItems.filter(it => it.equip && it.entrega)
-      if (!validItems.length) return
-      try {
-        const tipoId = await getTipoIdPorNome('Ficha de EPI')
-        for (const item of validItems) {
-          await criar.mutateAsync({
-            empresa_id:     empresaId,
-            tipo_id:        tipoId,
-            colaborador_id: colab.id,
-            titulo:         item.equip,
-            numero:         item.ca || null,
-            emissao:        item.entrega || null,
-            vencimento:     item.validade || null,
-          })
-        }
-        onClose()
-      } catch (err) { toast.error((err as Error).message) }
-    }
+    const nrTipo = (nrTiposQuery.data ?? []).find(t => t.id === tipoTreinoId)
+    if (!nrTipo) return
+    try {
+      const tipoId = await getTipoIdPorNome('Certificado de Treinamento')
+      await criar.mutateAsync({
+        empresa_id:     empresaId,
+        tipo_id:        tipoId,
+        colaborador_id: colab.id,
+        titulo:         `${nrTipo.nr_referencia ?? nrTipo.nome} — ${colab.nome}`,
+        emissao:        realizado || null,
+        vencimento:     validade || null,
+        observacoes:    nrTipo.nome,
+      })
+      onClose()
+    } catch (err) { toast.error((err as Error).message) }
   }
 
   return (
@@ -210,22 +189,12 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
       <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
           <div>
-            <h2>Registrar datas</h2>
+            <h2>Registrar certificado de treinamento</h2>
             <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginTop: 2 }}>Registro por colaborador · sem upload · status automático</div>
           </div>
           <button className="icon-btn" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="modal-body">
-          <div style={{ paddingBottom: 16 }}>
-            <div className="seg" style={{ width: '100%' }}>
-              <button className={tipo === 'cert' ? 'on' : ''} style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => setTipo('cert')}>
-                <GraduationCap size={13} /> Certificado de treinamento
-              </button>
-              <button className={tipo === 'epi' ? 'on' : ''} style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => setTipo('epi')}>
-                <HardHat size={13} /> Ficha de EPI
-              </button>
-            </div>
-          </div>
           <div className="mp-form">
             <DocField label="Colaborador">
               <select className="mp-input" value={colabId} onChange={e => setColabId(e.target.value)} disabled={colabsQuery.isLoading}>
@@ -233,75 +202,31 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
                 {(colabsQuery.data ?? []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
             </DocField>
-            {tipo === 'cert' ? (
-              <>
-                <DocField label="Norma / treinamento">
-                  <select className="mp-input" value={tipoTreinoId} onChange={e => setTipoTreinoId(e.target.value)} disabled={nrTiposQuery.isLoading}>
-                    <option value="">Selecione…</option>
-                    {(nrTiposQuery.data ?? []).map(t => (
-                      <option key={t.id} value={t.id}>{t.nr_referencia ? `${t.nr_referencia} — ` : ''}{t.nome}</option>
-                    ))}
-                  </select>
-                </DocField>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <DocField label="Data de realização">
-                    <input className="mp-input" type="date" value={realizado}
-                      onChange={e => setRealizado(e.target.value)}
-                      onBlur={() => { if (!validade) suggestCert() }} />
-                  </DocField>
-                  <DocField label="Data de validade">
-                    <input className="mp-input" type="date" value={validade}
-                      onChange={e => setValidade(e.target.value)} />
-                  </DocField>
-                </div>
-                {realizado && !validade && (
-                  <button className="tbtn ghost" style={{ alignSelf: 'flex-start', fontSize: 12 }} onClick={suggestCert}>
-                    <Clock size={12} /> Sugerir validade (+2 anos)
-                  </button>
-                )}
-                <StatusPreview validade={validade} />
-              </>
-            ) : (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {epiItems.map((it, i) => {
-                    const st = statusFrom(it.validade)
-                    return (
-                      <div key={i} className="epi-item">
-                        <div className="epi-item-head">
-                          <span>Item {i + 1}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {it.validade && <span className={`chip ${st.key}`} style={{ fontSize: 11 }}>{st.label}</span>}
-                            {epiItems.length > 1 && (
-                              <button className="icon-btn sm danger" title="Remover item" onClick={() => removeItem(i)}><Trash2 size={14} /></button>
-                            )}
-                          </div>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px', gap: 12 }}>
-                          <DocField label="Equipamento (EPI)">
-                            <input className="mp-input" placeholder="Ex.: Capacete de segurança" value={it.equip} onChange={e => updItem(i, { equip: e.target.value })} />
-                          </DocField>
-                          <DocField label="CA do equipamento">
-                            <input className="mp-input" placeholder="Ex.: 38.241" value={it.ca} onChange={e => updItem(i, { ca: e.target.value })} />
-                          </DocField>
-                          <DocField label="Data de entrega">
-                            <input className="mp-input" type="date" value={it.entrega}
-                              onChange={e => updItem(i, { entrega: e.target.value })}
-                              onBlur={() => { if (it.entrega && !it.validade) updItem(i, { validade: addYears(it.entrega, 1) }) }} />
-                          </DocField>
-                          <DocField label="Validade">
-                            <input className="mp-input" type="date" value={it.validade} onChange={e => updItem(i, { validade: e.target.value })} />
-                          </DocField>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                <button className="tbtn ghost" style={{ alignSelf: 'flex-start' }} onClick={addItem}>
-                  <Plus size={13} /> Adicionar item
-                </button>
-              </>
+            <DocField label="Norma / treinamento">
+              <select className="mp-input" value={tipoTreinoId} onChange={e => setTipoTreinoId(e.target.value)} disabled={nrTiposQuery.isLoading}>
+                <option value="">Selecione…</option>
+                {(nrTiposQuery.data ?? []).map(t => (
+                  <option key={t.id} value={t.id}>{t.nr_referencia ? `${t.nr_referencia} — ` : ''}{t.nome}</option>
+                ))}
+              </select>
+            </DocField>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <DocField label="Data de realização">
+                <input className="mp-input" type="date" value={realizado}
+                  onChange={e => setRealizado(e.target.value)}
+                  onBlur={() => { if (!validade) suggestCert() }} />
+              </DocField>
+              <DocField label="Data de validade">
+                <input className="mp-input" type="date" value={validade}
+                  onChange={e => setValidade(e.target.value)} />
+              </DocField>
+            </div>
+            {realizado && !validade && (
+              <button className="tbtn ghost" style={{ alignSelf: 'flex-start', fontSize: 12 }} onClick={suggestCert}>
+                <Clock size={12} /> Sugerir validade (+2 anos)
+              </button>
             )}
+            <StatusPreview validade={validade} />
           </div>
           <div className="modal-foot">
             <button className="tbtn" onClick={onClose}>Cancelar</button>
@@ -312,7 +237,7 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
               onClick={() => void handleSave()}
             >
               {criar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13} />}
-              {criar.isPending ? 'Salvando...' : tipo === 'epi' ? `Salvar ficha (${epiItems.length} ${epiItems.length === 1 ? 'item' : 'itens'})` : 'Salvar registro'}
+              {criar.isPending ? 'Salvando...' : 'Salvar registro'}
             </button>
           </div>
         </div>
@@ -743,16 +668,20 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   const { empresaId: empresaIdPerfil } = useCurrentProfile()
   const empresaId = empresaIdProp ?? empresaIdPerfil
   const docQuery = useDocumentos(empresaId)
+  const fichasEpiQuery = useFichasEpi(empresaId)
   const deletar  = useDeletarDocumento()
 
   const [cat, setCat] = useState('all')
   const [q, setQ] = useState('')
   const [novoOpen, setNovoOpen] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
+  const [fichaEpiOpen, setFichaEpiOpen] = useState(false)
+  const [fichaEpiDetalhe, setFichaEpiDetalhe] = useState<FichaEpiComItens | null>(null)
   const [confirmDelId, setConfirmDelId] = useState<string | null>(null)
   const [viewDoc, setViewDoc] = useState<DocumentoComTipo | null>(null)
 
   const docsBanco = docQuery.data ?? []
+  const fichasEpi = useMemo(() => fichasEpiQuery.data ?? [], [fichasEpiQuery.data])
 
   const doDelete = async (id: string) => {
     if (!empresaId) return
@@ -763,7 +692,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   }
 
   // Adaptar documentos do banco para o shape que a UI usa
-  const allRows = useMemo<DocRow[]>(() => {
+  const docRows = useMemo<DocRow[]>(() => {
     return docsBanco.map(d => {
       const dbStatus = d.status as DbDocStatus
       // Converte status do banco (vigente/vencendo/vencido) para o shape local
@@ -818,6 +747,33 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
       return empresaDoc
     })
   }, [docsBanco])
+
+  // Fichas de EPI (tabela própria — ver Migration 011) — uma linha por
+  // item entregue, igual ao formato de exibição já usado pra certificados.
+  const epiRows = useMemo<DocRow[]>(() => {
+    return fichasEpi.flatMap(ficha => {
+      const colabNome = ficha.colaborador?.nome ?? '—'
+      return ficha.itens.map((it): ColabReg & { kind: 'colab'; st: StatusResult } => {
+        const dbStatus = it.status as DbDocStatus
+        const stKey: DocStatus = dbStatus === 'vencido' ? 'crit' : dbStatus === 'vencendo' ? 'warn' : 'ok'
+        const stLabel = dbStatus === 'vencido' ? 'Vencido' : dbStatus === 'vencendo' ? 'Vencendo' : 'Em dia'
+        return {
+          id: it.id, cat: 'epi',
+          colab: colabNome,
+          cor: getAvatarColor(colabNome),
+          item: it.equipamento,
+          realizado: ficha.data_entrega,
+          validade: it.data_validade ?? '',
+          ca: it.ca ?? undefined,
+          fichaEpi: ficha,
+          kind: 'colab',
+          st: { key: stKey, label: stLabel, rel: '' },
+        }
+      })
+    })
+  }, [fichasEpi])
+
+  const allRows = useMemo(() => [...docRows, ...epiRows], [docRows, epiRows])
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {}
@@ -877,7 +833,8 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
               { header: 'Status',       value: (r: DocRow) => r.st.label },
             ], rows)}
           ><Download size={14} /> Exportar lista</button>
-          <button className="tbtn" onClick={() => setDateOpen(true)}><Calendar size={14} /> Registrar datas</button>
+          <button className="tbtn" onClick={() => setDateOpen(true)}><Calendar size={14} /> Registrar certificado</button>
+          <button className="tbtn" onClick={() => setFichaEpiOpen(true)}><HardHat size={14} /> Nova ficha de EPI</button>
           <button className="tbtn primary" onClick={() => setNovoOpen(true)}><Plus size={14} /> Novo documento</button>
         </div>
       </div>
@@ -1028,13 +985,22 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                             <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}>
                               {r.st.key !== 'ok' ? 'Renovar' : 'Nova versão'}
                             </button>
+                            <button className="icon-btn sm danger" title="Excluir" onClick={() => setConfirmDelId(r.id)}><Trash2 size={15} /></button>
                           </>
-                        ) : (
-                          <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}>
-                            <Calendar size={13} /> {r.st.key !== 'ok' ? 'Atualizar data' : 'Editar datas'}
+                        ) : r.fichaEpi ? (
+                          // Ficha de EPI de verdade (Migration 011) — detalhe, assinatura
+                          // e exclusão vivem dentro do FichaEpiDetailModal.
+                          <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => setFichaEpiDetalhe(r.fichaEpi!)}>
+                            <HardHat size={13} /> Ver ficha
                           </button>
+                        ) : (
+                          <>
+                            <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}>
+                              <Calendar size={13} /> {r.st.key !== 'ok' ? 'Atualizar data' : 'Editar datas'}
+                            </button>
+                            <button className="icon-btn sm danger" title="Excluir" onClick={() => setConfirmDelId(r.id)}><Trash2 size={15} /></button>
+                          </>
                         )}
-                        <button className="icon-btn sm danger" title="Excluir" onClick={() => setConfirmDelId(r.id)}><Trash2 size={15} /></button>
                       </div>
                     </td>
                   </tr>
@@ -1048,6 +1014,10 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
       {novoOpen && empresaId && <NovoDocumentoModal onClose={() => setNovoOpen(false)} empresaId={empresaId} />}
       {viewDoc && empresaId && <EditarDocumentoModal doc={viewDoc} empresaId={empresaId} onClose={() => setViewDoc(null)} />}
       {dateOpen && empresaId && <DateEntryModal onClose={() => setDateOpen(false)} empresaId={empresaId} />}
+      {fichaEpiOpen && empresaId && <FichaEpiModal empresaId={empresaId} onClose={() => setFichaEpiOpen(false)} />}
+      {fichaEpiDetalhe && empresaId && (
+        <FichaEpiDetailModal ficha={fichaEpiDetalhe} empresaId={empresaId} onClose={() => setFichaEpiDetalhe(null)} />
+      )}
       {confirmDelId && (
         <div className="modal-backdrop" onClick={() => setConfirmDelId(null)}>
           <div className="modal" style={{ maxWidth: 430 }} onClick={e => e.stopPropagation()}>

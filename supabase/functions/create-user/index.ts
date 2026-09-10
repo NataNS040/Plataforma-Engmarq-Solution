@@ -32,12 +32,17 @@ Deno.serve(async (req) => {
 
     const { data: callerProfile } = await supabaseAdmin
       .from('user_profiles')
-      .select('role')
+      .select('role, empresa_id')
       .eq('id', caller.id)
       .single()
 
-    if (callerProfile?.role !== 'admin') {
-      return json({ error: 'Apenas administradores podem criar usuários' }, 403)
+    const isAdminCaller = callerProfile?.role === 'admin'
+    // Gestor/empresa também convidam gente pra própria equipe — só não
+    // podem criar outro admin nem apontar pra uma empresa que não é a deles.
+    const isCompanyManagerCaller = callerProfile?.role === 'gestor' || callerProfile?.role === 'empresa'
+
+    if (!isAdminCaller && !isCompanyManagerCaller) {
+      return json({ error: 'Sem permissão para criar usuários' }, 403)
     }
 
     const { email, password, full_name, role, empresa_id } = await req.json()
@@ -49,6 +54,15 @@ Deno.serve(async (req) => {
     const validRoles = ['admin', 'gestor', 'operacional', 'empresa']
     if (!validRoles.includes(role)) {
       return json({ error: 'Papel inválido' }, 400)
+    }
+
+    if (!isAdminCaller) {
+      if (role === 'admin') {
+        return json({ error: 'Sem permissão para criar um administrador' }, 403)
+      }
+      if (empresa_id !== callerProfile?.empresa_id) {
+        return json({ error: 'Só é possível convidar usuários para a própria empresa' }, 403)
+      }
     }
 
     // Create the auth user (email already confirmed)

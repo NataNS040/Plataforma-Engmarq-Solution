@@ -94,3 +94,22 @@ export async function atualizarEmpresa(id: string, input: Partial<EmpresaInput>)
 export async function desativarEmpresa(id: string): Promise<Empresa> {
   return atualizarEmpresa(id, { status: 'suspensa' })
 }
+
+/**
+ * Upload da logo da empresa (bucket 'logos', público). Sobrescreve o
+ * arquivo anterior (upsert) — diferente da foto de assinatura, aqui faz
+ * sentido trocar a logo quantas vezes for preciso.
+ */
+export async function uploadEmpresaLogo(empresaId: string, file: File): Promise<string> {
+  const ext = file.name.split('.').pop() ?? 'png'
+  const path = `${empresaId}/logo.${ext}`
+
+  const { error } = await supabase.storage
+    .from('logos')
+    .upload(path, file, { cacheControl: '3600', upsert: true })
+
+  if (error) throw handleSupabaseError(error, 'Não foi possível fazer o upload da logo.')
+
+  const { data } = supabase.storage.from('logos').getPublicUrl(path)
+  return `${data.publicUrl}?v=${Date.now()}`
+}

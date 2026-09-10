@@ -140,6 +140,33 @@ export interface Treinamento {
   treinamento_tipo?: TreinamentoTipo
 }
 
+export interface FichaEpi {
+  id: string
+  empresa_id: string
+  colaborador_id: string
+  data_entrega: string
+  observacoes: string | null
+  // Assinatura — hoje é uma foto capturada na hora (presencial), sem
+  // verificação automática de identidade ("validação facial" fica em
+  // breve). null = ficha ainda não assinada (rascunho, editável).
+  foto_assinatura_url: string | null
+  assinado_em: string | null
+  assinado_por: string | null
+  created_at: string
+  colaborador?: Colaborador
+}
+
+export interface FichaEpiItem {
+  id: string
+  ficha_epi_id: string
+  empresa_id: string
+  equipamento: string
+  ca: string | null
+  data_validade: string | null
+  status: DocStatus
+  created_at: string
+}
+
 // Supabase Database type stub (to be expanded as tables are created)
 // supabase-js exige que Row satisfaça Record<string,unknown> e Relationships
 // seja um array do formato correto. Usamos interseção para manter a interface
@@ -174,6 +201,8 @@ export interface Database {
       matriz_treinamentos: TableDef<MatrizTreinamento>
       treinamentos:        TableDef<Treinamento>
       exames_catalogo:     TableDef<ExameCatalogo>
+      fichas_epi:          TableDef<FichaEpi>
+      fichas_epi_itens:    TableDef<FichaEpiItem>
     }
     Views: {
       vw_dashboard_documentos: {

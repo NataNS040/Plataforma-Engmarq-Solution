@@ -1,22 +1,36 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import {
   Building2, Users, Shield, LayoutGrid, Star, MapPin,
-  Plus, Download, Pencil, CheckCircle2, Clock, MoreHorizontal,
-  HelpCircle, Layers,
+  Plus, Download, Pencil, CheckCircle2, MoreHorizontal, Ban,
+  HelpCircle, Layers, Loader2,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
+import { useEmpresa, useAtualizarEmpresa } from '@/hooks/queries/useEmpresas'
+import { useUsuariosDaEmpresa } from '@/hooks/queries/useUsuarios'
+import { uploadEmpresaLogo, type EmpresaInput } from '@/services/empresasService'
+import { getAvatarColor } from '@/lib/theme'
 import { CatalogosTab } from './CatalogosTab'
 import { CriarUsuarioModal } from './CriarUsuarioModal'
+import { EditarUsuarioModal } from './EditarUsuarioModal'
 import { APP_NAME } from '@/config/brand'
 import { comingSoon } from '@/lib/comingSoon'
 import { SoonPanel } from '@/components/ui/SoonPanel'
+import type { UserProfile, UserRole } from '@/types/database'
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 const initials = (n: string) =>
   n.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
+
+const ROLE_LABEL: Record<UserRole, string> = {
+  admin: 'Administrador',
+  gestor: 'Gestor',
+  operacional: 'Operacional',
+  empresa: 'Empresa-cliente',
+}
 
 // ---------------------------------------------------------------------------
 // Reusable bits
@@ -37,16 +51,17 @@ function Tabs({ tabs, tab, setTab }: {
   )
 }
 
-function CfgField({ label, v, editing, type = 'text', full, hint }: {
-  label: string; v: string; editing: boolean
-  type?: string; full?: boolean; hint?: string
+function CfgField({ label, value, editing, editable = true, type = 'text', full, hint, onChange }: {
+  label: string; value: string; editing: boolean; editable?: boolean
+  type?: string; full?: boolean; hint?: string; onChange?: (v: string) => void
 }) {
+  const showInput = editing && editable
   return (
     <div className="mp-field" style={full ? { gridColumn: '1 / -1' } : undefined}>
       <label>{label}</label>
-      {editing
-        ? <input className="mp-input" type={type} defaultValue={v}/>
-        : <div className="mp-input mp-input-static">{v}</div>}
+      {showInput
+        ? <input className="mp-input" type={type} value={value} onChange={e => onChange?.(e.target.value)}/>
+        : <div className="mp-input mp-input-static">{value || '—'}</div>}
       {hint && <div className="mp-hint">{hint}</div>}
     </div>
   )
@@ -61,58 +76,175 @@ function Avatar({ nome, cor, size = 34 }: { nome: string; cor: string; size?: nu
 }
 
 // ---------------------------------------------------------------------------
-// TeamTable
+// Dados da organização — cartão editável, real (empresas.*)
 // ---------------------------------------------------------------------------
-interface Member {
-  nome: string; email: string; funcao: string; papel: string
-  cor: string; status: string; you?: boolean; emp?: number
+function EmpresaDadosCard({ empresaId, editing, setEditing, cardTitle, responsavelLabel, missingFieldsHint }: {
+  empresaId: string
+  editing: boolean
+  setEditing: (v: boolean) => void
+  cardTitle: string
+  responsavelLabel: string
+  missingFieldsHint: string
+}) {
+  const { data: empresa } = useEmpresa(empresaId)
+  const atualizar = useAtualizarEmpresa()
+  const [form, setForm] = useState<EmpresaInput | null>(null)
+
+  // Popula o formulário de edição só quando "editing" liga (dado já
+  // carregado por essa altura) — ajuste de estado durante a renderização
+  // em vez de efeito, pra não disparar um render em cascata à toa.
+  const [wasEditing, setWasEditing] = useState(editing)
+  if (editing !== wasEditing) {
+    setWasEditing(editing)
+    if (editing && empresa) {
+      setForm({
+        razao_social: empresa.razao_social,
+        cnpj: empresa.cnpj,
+        setor: empresa.setor ?? '',
+        cidade: empresa.cidade ?? '',
+        uf: empresa.uf ?? '',
+        responsavel: empresa.responsavel ?? '',
+        email: empresa.email ?? '',
+        telefone: empresa.telefone ?? '',
+      })
+    }
+  }
+
+  const patch = (k: keyof EmpresaInput, v: string) => setForm(f => f ? { ...f, [k]: v } : f)
+
+  async function handleSave() {
+    if (!form) return
+    await atualizar.mutateAsync({ id: empresaId, input: form })
+    setEditing(false)
+  }
+
+  const v = (k: keyof EmpresaInput) => (editing ? form?.[k] as string : empresa?.[k] as string) ?? ''
+
+  return (
+    <div className="card mp-card">
+      <h3>{cardTitle}</h3>
+      <div className="mp-form" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+        <CfgField label="Razão social" full editing={editing} value={v('razao_social')} onChange={x => patch('razao_social', x)}/>
+        <CfgField label="CNPJ" editing={editing} value={v('cnpj')} onChange={x => patch('cnpj', x)}/>
+        <CfgField label="Setor" editing={editing} value={v('setor')} onChange={x => patch('setor', x)}/>
+        <CfgField label="Cidade" editing={editing} value={v('cidade')} onChange={x => patch('cidade', x)}/>
+        <CfgField label="UF" editing={editing} value={v('uf')} onChange={x => patch('uf', x)}/>
+        <CfgField label={responsavelLabel} editing={editing} value={v('responsavel')} onChange={x => patch('responsavel', x)}/>
+        <CfgField label="E-mail" type="email" editing={editing} value={v('email')} onChange={x => patch('email', x)}/>
+        <CfgField label="Telefone" full editing={editing} value={v('telefone')} onChange={x => patch('telefone', x)}/>
+      </div>
+      <div className="mp-hint" style={{ marginTop:12 }}>{missingFieldsHint}</div>
+      {editing && (
+        <div style={{ display:'flex', justifyContent:'flex-end', gap:8, marginTop:16 }}>
+          <button type="button" className="tbtn ghost" onClick={() => setEditing(false)} disabled={atualizar.isPending}>Cancelar</button>
+          <button type="button" className="tbtn primary" disabled={!form || atualizar.isPending} onClick={() => void handleSave()}>
+            {atualizar.isPending ? <Loader2 size={13} className="btn-spinner"/> : <CheckCircle2 size={13}/>} Salvar alterações
+          </button>
+        </div>
+      )}
+    </div>
+  )
 }
 
-function TeamTable({ members, showEmp, empHead = 'Empresas' }: {
-  members: Member[]; showEmp?: boolean; empHead?: string
+// ---------------------------------------------------------------------------
+// Identidade — logo real (bucket 'logos')
+// ---------------------------------------------------------------------------
+function LogoCard({ empresaId, brandLabel }: { empresaId: string; brandLabel: string }) {
+  const { data: empresa } = useEmpresa(empresaId)
+  const atualizar = useAtualizarEmpresa()
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadEmpresaLogo(empresaId, file)
+      await atualizar.mutateAsync({ id: empresaId, input: { logo_url: url } })
+    } catch (err) {
+      toast.error((err as Error).message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const logoUrl = empresa?.logo_url ?? null
+
+  return (
+    <div className="card mp-card">
+      <h3>Identidade</h3>
+      <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={`Logo de ${brandLabel}`}
+            style={{ width:48, height:48, borderRadius:10, objectFit:'contain', background:'var(--bg)', border:'1px solid var(--border)' }}
+          />
+        ) : (
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:10, background:'var(--navy-900)', color:'#fff', fontFamily:'var(--font-display)', fontWeight:800, fontSize:15 }}>
+            <Shield size={18} strokeWidth={2.5}/>
+            {brandLabel}
+          </div>
+        )}
+      </div>
+      <div style={{ display:'flex', gap:8, marginTop:16 }}>
+        <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onChange={e => void handleFile(e)}/>
+        <button className="tbtn" disabled={uploading} onClick={() => inputRef.current?.click()}>
+          {uploading ? <Loader2 size={13} className="btn-spinner"/> : <Plus size={13}/>} {logoUrl ? 'Trocar logo' : 'Adicionar logo'}
+        </button>
+        <button className="tbtn ghost is-soon" title="Em breve" onClick={() => comingSoon('Cor de marca')}>Cor de marca</button>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// TeamTable — equipe real (user_profiles)
+// ---------------------------------------------------------------------------
+function TeamTable({ usuarios, viewerId, onManage }: {
+  usuarios: UserProfile[]
+  viewerId: string | undefined
+  onManage: (u: UserProfile) => void
 }) {
+  if (usuarios.length === 0) {
+    return <div style={{ padding:'32px 20px', textAlign:'center', color:'var(--ink-500)', fontSize:12.5 }}>Nenhum usuário cadastrado ainda.</div>
+  }
   return (
     <div style={{ overflow: 'auto' }}>
       <table className="tbl">
         <thead>
           <tr>
             <th>Membro</th>
-            <th>Função</th>
             <th>Papel de acesso</th>
-            {showEmp && <th style={{ textAlign:'center' }}>{empHead}</th>}
             <th>Status</th>
             <th style={{ textAlign:'right' }}>Ações</th>
           </tr>
         </thead>
         <tbody>
-          {members.map((m, i) => (
-            <tr key={i}>
+          {usuarios.map(u => (
+            <tr key={u.id}>
               <td>
                 <div className="cell-person">
-                  <Avatar nome={m.nome} cor={m.cor}/>
+                  <Avatar nome={u.full_name} cor={getAvatarColor(u.full_name)}/>
                   <div>
                     <div className="name">
-                      {m.nome}
-                      {m.you && <span className="doc-ver" style={{ marginLeft:6 }}>você</span>}
+                      {u.full_name}
+                      {u.id === viewerId && <span className="doc-ver" style={{ marginLeft:6 }}>você</span>}
                     </div>
-                    <div className="role">{m.email}</div>
+                    <div className="role">{u.email}</div>
                   </div>
                 </div>
               </td>
-              <td style={{ fontSize:12.5 }}>{m.funcao}</td>
-              <td><span className="cfg-role-pill">{m.papel}</span></td>
-              {showEmp && (
-                <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>
-                  {m.emp || '—'}
-                </td>
-              )}
+              <td><span className="cfg-role-pill">{ROLE_LABEL[u.role]}</span></td>
               <td>
-                {m.status === 'ativo'
+                {u.active
                   ? <span className="chip ok"><CheckCircle2 size={11}/> Ativo</span>
-                  : <span className="chip warn"><Clock size={11}/> Convite pendente</span>}
+                  : <span className="chip crit"><Ban size={11}/> Inativo</span>}
               </td>
               <td style={{ textAlign:'right' }}>
-                <button className="icon-btn sm is-soon" title="Em breve" onClick={() => comingSoon('Ações da equipe')}><MoreHorizontal size={15}/></button>
+                <button className="icon-btn sm" title="Gerenciar acesso" onClick={() => onManage(u)}><MoreHorizontal size={15}/></button>
               </td>
             </tr>
           ))}
@@ -121,19 +253,6 @@ function TeamTable({ members, showEmp, empHead = 'Empresas' }: {
     </div>
   )
 }
-
-// ---------------------------------------------------------------------------
-// Dados — Norveo (admin)
-// ---------------------------------------------------------------------------
-const ENG_TEAM: Member[] = [
-  { nome:'Renata Almeida',       email:'renata@norveo.com.br',  funcao:'Coordenadora SST',  papel:'Administrador', emp:24, cor:'#F59E0B', status:'ativo', you:true },
-  { nome:'Dr. Aurélio Lima',     email:'aurelio@norveo.com.br', funcao:'Médico do Trabalho', papel:'Médico',        emp:9,  cor:'#10B981', status:'ativo' },
-  { nome:'Dra. Helena Vasquez',  email:'helena@norveo.com.br',  funcao:'Médica do Trabalho', papel:'Médico',        emp:7,  cor:'#0891B2', status:'ativo' },
-  { nome:'Eng. Marcelo Tannous', email:'marcelo@norveo.com.br', funcao:'Eng. de Segurança',  papel:'Engenheiro',    emp:12, cor:'#3B82F6', status:'ativo' },
-  { nome:'Eng. Ana Becker',      email:'ana@norveo.com.br',     funcao:'Eng. de Segurança',  papel:'Engenheiro',    emp:8,  cor:'#8B5CF6', status:'ativo' },
-  { nome:'Rui Campos',           email:'rui@norveo.com.br',     funcao:'Téc. Segurança',     papel:'Técnico',       emp:15, cor:'#DB2777', status:'ativo' },
-  { nome:'Beatriz Nunes',        email:'beatriz@norveo.com.br', funcao:'Téc. Segurança',     papel:'Técnico',       emp:0,  cor:'#475569', status:'convite' },
-]
 
 // ---------------------------------------------------------------------------
 // Configurações — Norveo Admin
@@ -147,45 +266,32 @@ const ADMIN_TABS = [
   { id:'plano',       label:'Plano e faturamento', icon:Star },
 ]
 
-function ConfiguracoesAdmin({ tab, editing, onCriarUsuario }: { tab: string; editing: boolean; onCriarUsuario: () => void }) {
+function ConfiguracoesAdmin({ tab, editing, setEditing, empresaId, onCriarUsuario, onGerenciarUsuario }: {
+  tab: string; editing: boolean; setEditing: (v: boolean) => void; empresaId: string
+  onCriarUsuario: () => void; onGerenciarUsuario: (u: UserProfile) => void
+}) {
+  const { profile } = useAuth()
+  const usuariosQuery = useUsuariosDaEmpresa(empresaId)
+
   if (tab === 'conta') {
     return (
       <div className="row-2" style={{ alignItems:'start' }}>
-        <div className="card mp-card">
-          <h3>Dados da organização</h3>
-          <div className="mp-form" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <CfgField label="Razão social" full editing={editing} v="Norveo Tecnologia e Gestão Ltda"/>
-            <CfgField label="Nome fantasia" editing={editing} v="Norveo"/>
-            <CfgField label="CNPJ" editing={editing} v="18.402.776/0001-55"/>
-            <CfgField label="Registro CREA-SP" editing={editing} v="CREA-SP 0.612.487"/>
-            <CfgField label="Responsável técnico" editing={editing} v="Eng. Marcelo Tannous"/>
-            <CfgField label="E-mail" editing={editing} type="email" v="contato@norveo.com.br"/>
-            <CfgField label="Telefone" editing={editing} v="(11) 4063-8800"/>
-            <CfgField label="Endereço" full editing={editing} v="Av. Paulista, 1842 · cj. 1205 · São Paulo · SP"/>
-          </div>
-        </div>
+        <EmpresaDadosCard
+          empresaId={empresaId}
+          editing={editing}
+          setEditing={setEditing}
+          cardTitle="Dados da organização"
+          responsavelLabel="Responsável técnico"
+          missingFieldsHint="Endereço completo e registro profissional (CREA) ainda não têm campo dedicado nesta versão."
+        />
 
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          <div className="card mp-card">
-            <h3>Identidade</h3>
-            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:10, background:'var(--navy-900)', color:'#fff', fontFamily:'var(--font-display)', fontWeight:800, fontSize:15 }}>
-                <Shield size={18} strokeWidth={2.5}/>
-                {APP_NAME}
-              </div>
-            </div>
-            <div style={{ display:'flex', gap:8, marginTop:16 }}>
-              <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Trocar logo')}><Plus size={13}/> Trocar logo</button>
-              <button className="tbtn ghost is-soon" title="Em breve" onClick={() => comingSoon('Cor de marca')}>Cor de marca</button>
-            </div>
-          </div>
+          <LogoCard empresaId={empresaId} brandLabel={APP_NAME}/>
 
           <div className="card mp-card mp-card-tint">
             <h3>Visão geral</h3>
             <div className="mp-status-grid">
-              <div><div className="mp-mini-l">Empresas</div><div className="mp-mini-v">24 ativas</div></div>
-              <div><div className="mp-mini-l">Equipe interna</div><div className="mp-mini-v">7 membros</div></div>
-              <div><div className="mp-mini-l">Colaboradores</div><div className="mp-mini-v">5.847</div></div>
+              <div><div className="mp-mini-l">Equipe interna</div><div className="mp-mini-v">{usuariosQuery.data?.length ?? '—'} membros</div></div>
               <div><div className="mp-mini-l">Plano</div><div className="mp-mini-v">Enterprise</div></div>
             </div>
           </div>
@@ -195,20 +301,21 @@ function ConfiguracoesAdmin({ tab, editing, onCriarUsuario }: { tab: string; edi
   }
 
   if (tab === 'equipe') {
-    const ativos = ENG_TEAM.filter(m => m.status === 'ativo').length
+    const usuarios = usuariosQuery.data ?? []
+    const ativos = usuarios.filter(u => u.active).length
     return (
       <div className="card mp-card" style={{ padding:0, overflow:'hidden' }}>
         <div style={{ padding:'18px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div>
             <h3 style={{ margin:0 }}>Equipe interna Norveo</h3>
-            <p className="mp-card-sub" style={{ margin:'4px 0 0' }}>{ativos} membros ativos · 1 convite pendente · profissionais alocados às empresas-cliente</p>
+            <p className="mp-card-sub" style={{ margin:'4px 0 0' }}>{ativos} membro(s) ativo(s) de {usuarios.length}</p>
           </div>
           <div className="toolbar">
             <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar equipe')}><Download size={13}/> Exportar</button>
             <button className="tbtn primary" onClick={onCriarUsuario}><Plus size={13}/> Criar acesso</button>
           </div>
         </div>
-        <TeamTable members={ENG_TEAM} showEmp empHead="Empresas"/>
+        <TeamTable usuarios={usuarios} viewerId={profile?.id} onManage={onGerenciarUsuario}/>
       </div>
     )
   }
@@ -250,17 +357,6 @@ function ConfiguracoesAdmin({ tab, editing, onCriarUsuario }: { tab: string; edi
 }
 
 // ---------------------------------------------------------------------------
-// Dados — Empresa cliente
-// ---------------------------------------------------------------------------
-const EMP_TEAM: Member[] = [
-  { nome:'Marcos Schiavon',  email:'marcos@logix.ind.br',   funcao:'Coord. DP / RH',     papel:'Administrador', cor:'#F59E0B', status:'ativo', you:true },
-  { nome:'Patrícia Almeida', email:'patricia@logix.ind.br', funcao:'Enfermeira do Trab.',  papel:'SESMT',         cor:'#A855F7', status:'ativo' },
-  { nome:'Letícia Cardoso',  email:'leticia@logix.ind.br',  funcao:'Téc. Segurança',      papel:'SESMT',         cor:'#8B5CF6', status:'ativo' },
-  { nome:'Ana Carla Mendes', email:'ana@logix.ind.br',       funcao:'Analista de RH',      papel:'Operador',      cor:'#06B6D4', status:'ativo' },
-  { nome:'Rodrigo Faria',    email:'rodrigo@logix.ind.br',  funcao:'Gerente Industrial',  papel:'Leitura',        cor:'#475569', status:'convite' },
-]
-
-// ---------------------------------------------------------------------------
 // Minha Empresa (empresa cliente)
 // ---------------------------------------------------------------------------
 const EMP_TABS = [
@@ -272,36 +368,28 @@ const EMP_TABS = [
   { id:'integracoes', label:'eSocial e integrações', icon:LayoutGrid },
 ]
 
-function MinhaEmpresa({ tab, editing, onCriarUsuario }: { tab: string; editing: boolean; onCriarUsuario: () => void }) {
+function MinhaEmpresa({ tab, editing, setEditing, empresaId, onCriarUsuario, onGerenciarUsuario }: {
+  tab: string; editing: boolean; setEditing: (v: boolean) => void; empresaId: string
+  onCriarUsuario: () => void; onGerenciarUsuario: (u: UserProfile) => void
+}) {
+  const { profile } = useAuth()
+  const usuariosQuery = useUsuariosDaEmpresa(empresaId)
+  const { data: empresa } = useEmpresa(empresaId)
+
   if (tab === 'dados') {
     return (
       <div className="row-2" style={{ alignItems:'start' }}>
-        <div className="card mp-card">
-          <h3>Dados cadastrais</h3>
-          <div className="mp-form" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            <CfgField label="Razão social" full editing={editing} v="Logix Industrial Ltda"/>
-            <CfgField label="Nome fantasia" editing={editing} v="Logix Industrial"/>
-            <CfgField label="CNPJ (matriz)" editing={editing} v="34.124.001/0001-12"/>
-            <CfgField label="CNAE principal" editing={editing} v="52.50-8 · Logística"/>
-            <CfgField label="Grau de risco (NR-4)" editing={editing} v="3"/>
-            <CfgField label="Inscrição estadual" editing={editing} v="635.842.119.004"/>
-            <CfgField label="Responsável legal" editing={editing} v="Eduardo Logix Pereira"/>
-            <CfgField label="E-mail" editing={editing} type="email" v="sst@logix.ind.br"/>
-            <CfgField label="Telefone" editing={editing} v="(11) 4071-2200"/>
-            <CfgField label="Endereço (matriz)" full editing={editing} v="Rua das Indústrias, 740 · Diadema · SP · 09960-000"/>
-          </div>
-        </div>
+        <EmpresaDadosCard
+          empresaId={empresaId}
+          editing={editing}
+          setEditing={setEditing}
+          cardTitle="Dados cadastrais"
+          responsavelLabel="Responsável legal"
+          missingFieldsHint="CNAE, grau de risco (NR-4), inscrição estadual e endereço completo ainda não têm campo dedicado nesta versão."
+        />
 
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          <div className="card mp-card mp-card-tint">
-            <h3>Perfil SST</h3>
-            <div className="mp-status-grid">
-              <div><div className="mp-mini-l">Colaboradores</div><div className="mp-mini-v">247</div></div>
-              <div><div className="mp-mini-l">Unidades</div><div className="mp-mini-v">3</div></div>
-              <div><div className="mp-mini-l">Grau de risco</div><div className="mp-mini-v">3</div></div>
-              <div><div className="mp-mini-l">Score SST</div><div className="mp-mini-v"><span className="chip ok">89%</span></div></div>
-            </div>
-          </div>
+          <LogoCard empresaId={empresaId} brandLabel={empresa?.razao_social ?? 'Sua empresa'}/>
 
           <div className="card mp-card">
             <h3>Responsáveis Norveo</h3>
@@ -339,16 +427,17 @@ function MinhaEmpresa({ tab, editing, onCriarUsuario }: { tab: string; editing: 
   }
 
   if (tab === 'equipe') {
+    const usuarios = usuariosQuery.data ?? []
     return (
       <div className="card mp-card" style={{ padding:0, overflow:'hidden' }}>
         <div style={{ padding:'18px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div>
             <h3 style={{ margin:0 }}>Equipe com acesso à plataforma</h3>
-            <p className="mp-card-sub" style={{ margin:'4px 0 0' }}>Usuários da Logix Industrial · RH, DP e SESMT · defina o papel de cada acesso</p>
+            <p className="mp-card-sub" style={{ margin:'4px 0 0' }}>RH, DP e SESMT · defina o papel de cada acesso</p>
           </div>
           <button className="tbtn primary" onClick={onCriarUsuario}><Plus size={13}/> Convidar usuário</button>
         </div>
-        <TeamTable members={EMP_TEAM}/>
+        <TeamTable usuarios={usuarios} viewerId={profile?.id} onManage={onGerenciarUsuario}/>
       </div>
     )
   }
@@ -382,16 +471,18 @@ function MinhaEmpresa({ tab, editing, onCriarUsuario }: { tab: string; editing: 
 // ---------------------------------------------------------------------------
 export default function ConfiguracoesPage() {
   const { profile } = useAuth()
-  const { empresaId } = useCurrentProfile()
+  const { empresaId, isAdmin: isAdminRole } = useCurrentProfile()
   const isAdmin = profile?.role === 'admin'
   const tabs = isAdmin ? ADMIN_TABS : EMP_TABS
   const [tab, setTab] = useState(tabs[0].id)
   const [editing, setEditing] = useState(false)
   const [showCriarModal, setShowCriarModal] = useState(false)
+  const [gerenciando, setGerenciando] = useState<UserProfile | null>(null)
 
   useEffect(() => {
     setTab(tabs[0].id)
     setEditing(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.role])
 
   const dataTab = isAdmin ? 'conta' : 'dados'
@@ -406,12 +497,12 @@ export default function ConfiguracoesPage() {
           <p className="sub">
             {isAdmin
               ? 'Norveo · conta da organização, equipe interna e integrações'
-              : 'Logix Industrial · cadastro, unidades, acessos e contrato Norveo'}
+              : 'Cadastro, unidades, acessos e contrato Norveo'}
           </p>
         </div>
         <div className="toolbar">
-          {onDataTab && (
-            <button className="tbtn primary is-soon" title="Em breve" onClick={() => comingSoon('Editar dados')}>
+          {onDataTab && !editing && (
+            <button className="tbtn primary" onClick={() => setEditing(true)} disabled={!empresaId}>
               <Pencil size={13}/> Editar dados
             </button>
           )}
@@ -421,16 +512,35 @@ export default function ConfiguracoesPage() {
 
       <Tabs tabs={tabs} tab={tab} setTab={setTab}/>
 
-      {onCatalogosTab
-        ? <CatalogosTab empresaId={empresaId} />
-        : isAdmin
-          ? <ConfiguracoesAdmin tab={tab} editing={editing} onCriarUsuario={() => setShowCriarModal(true)}/>
-          : <MinhaEmpresa tab={tab} editing={editing} onCriarUsuario={() => setShowCriarModal(true)}/>}
+      {onCatalogosTab ? (
+        <CatalogosTab empresaId={empresaId}/>
+      ) : !empresaId ? (
+        <div className="card mp-card" style={{ textAlign:'center', color:'var(--ink-500)', padding:'32px 20px' }}>Carregando dados da conta…</div>
+      ) : isAdmin ? (
+        <ConfiguracoesAdmin
+          tab={tab} editing={editing} setEditing={setEditing} empresaId={empresaId}
+          onCriarUsuario={() => setShowCriarModal(true)} onGerenciarUsuario={setGerenciando}
+        />
+      ) : (
+        <MinhaEmpresa
+          tab={tab} editing={editing} setEditing={setEditing} empresaId={empresaId}
+          onCriarUsuario={() => setShowCriarModal(true)} onGerenciarUsuario={setGerenciando}
+        />
+      )}
 
       {showCriarModal && empresaId && (
         <CriarUsuarioModal
           adminEmpresaId={empresaId}
           onClose={() => setShowCriarModal(false)}
+        />
+      )}
+
+      {gerenciando && (
+        <EditarUsuarioModal
+          usuario={gerenciando}
+          isSelf={gerenciando.id === profile?.id}
+          canAssignAdmin={isAdminRole}
+          onClose={() => setGerenciando(null)}
         />
       )}
     </div>

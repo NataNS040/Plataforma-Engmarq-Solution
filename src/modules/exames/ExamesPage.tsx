@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import {
   CheckCircle2, Clock, AlertTriangle, Calendar, Download, Plus,
-  Eye, Trash2, X, Search, Loader2,
+  Eye, Trash2, X, Search, Loader2, UploadCloud,
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
@@ -13,6 +13,7 @@ import type { SubtipoExame } from '@/types/database'
 import { getAvatarColor, getInitials, getChartColor } from '@/lib/theme'
 import { comingSoon } from '@/lib/comingSoon'
 import { exportToCsv } from '@/lib/csvExport'
+import { uploadAsoArquivo } from '@/services/examesService'
 import type { EmpresaComContagem } from '@/services/empresasService'
 
 // ---------------------------------------------------------------------------
@@ -106,6 +107,10 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
   const [realizado, setRealizado] = useState('')
   const [validade, setValidade] = useState('')
   const [examsSel, setExamsSel] = useState<string[]>([])
+  const [file, setFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const colabsQuery   = useColaboradores(empresaId)
   const catalogoQuery = useExamesCatalogo()
@@ -122,7 +127,10 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
   async function handleSave() {
     const colab = (colabsQuery.data ?? []).find(c => c.id === colabId)
     if (!colab) return
+    setIsUploading(true)
     try {
+      let arquivoUrl: string | null = null
+      if (file) arquivoUrl = await uploadAsoArquivo(empresaId, file)
       await criar.mutateAsync({
         empresa_id:        empresaId,
         colaborador_id:    colabId,
@@ -132,9 +140,11 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
         vencimento:        validade || null,
         observacoes:       resultado,
         exames_realizados: examsSel.length > 0 ? examsSel : null,
+        arquivo_url:       arquivoUrl,
       })
       onClose()
     } catch { /* toast já disparado */ }
+    finally { setIsUploading(false) }
   }
 
   return (
@@ -205,17 +215,42 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
                   </div>
               }
             </div>
+
+            <div
+              className="dropzone"
+              style={{ cursor:'pointer', borderColor: isDragging ? 'var(--navy-600)' : file ? 'var(--green-500)' : undefined, background: isDragging ? 'var(--bg-tint-1)' : file ? 'var(--green-50, #f0fdf4)' : undefined }}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) setFile(f) }}
+            >
+              <input ref={fileInputRef} type="file" accept=".pdf" style={{ display:'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) setFile(f) }}/>
+              {file ? (
+                <>
+                  <div className="dropzone-ic"><CheckCircle2 size={20} style={{ color:'var(--green-500)' }}/></div>
+                  <div className="dropzone-title">{file.name}</div>
+                  <div className="dropzone-sub">{(file.size / 1024).toFixed(0)} KB</div>
+                  <button type="button" className="tbtn ghost sm" style={{ marginTop:4, fontSize:11 }} onClick={e => { e.stopPropagation(); setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}><X size={12}/> Remover</button>
+                </>
+              ) : (
+                <>
+                  <div className="dropzone-ic"><UploadCloud size={20}/></div>
+                  <div className="dropzone-title">Arraste ou clique para anexar o PDF do ASO</div>
+                  <div className="dropzone-sub">PDF · opcional · máx. 10 MB</div>
+                </>
+              )}
+            </div>
           </div>
           <div className="modal-foot">
             <button className="tbtn" onClick={onClose}>Cancelar</button>
             <button
               className="tbtn primary"
-              disabled={!canSave || criar.isPending}
-              style={(!canSave || criar.isPending) ? { opacity:0.5, pointerEvents:'none' } : undefined}
+              disabled={!canSave || criar.isPending || isUploading}
+              style={(!canSave || criar.isPending || isUploading) ? { opacity:0.5, pointerEvents:'none' } : undefined}
               onClick={() => void handleSave()}
             >
-              {criar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13}/>}
-              {criar.isPending ? 'Salvando...' : 'Salvar ASO'}
+              {(criar.isPending || isUploading) ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13}/>}
+              {(criar.isPending || isUploading) ? 'Salvando...' : 'Salvar ASO'}
             </button>
           </div>
         </div>
@@ -351,6 +386,7 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
     validade:  a.vencimento ?? '',
     resultado: a.observacoes ?? 'Apto',
     exames:    a.exames_realizados ?? [],
+    arquivo_url: a.arquivo_url ?? null,
   })), [asosBanco])
 
   const [fTipo, setFTipo] = useState('Todos')
@@ -523,8 +559,8 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
                     <td><span className={`chip ${r.st.key}`}>{r.st.label}</span></td>
                     <td>
                       <div className="aso-actions">
-                        <button className="icon-btn sm is-soon" title="Em breve — upload de PDF ainda não existe" onClick={() => comingSoon('Visualizar PDF')}><Eye size={15}/></button>
-                        <button className="icon-btn sm is-soon" title="Em breve — upload de PDF ainda não existe" onClick={() => comingSoon('Baixar PDF')}><Download size={15}/></button>
+                        <button className="icon-btn sm" title={r.arquivo_url ? 'Visualizar PDF' : 'Sem PDF anexado'} disabled={!r.arquivo_url} onClick={() => r.arquivo_url && window.open(r.arquivo_url, '_blank')}><Eye size={15}/></button>
+                        <button className="icon-btn sm" title={r.arquivo_url ? 'Baixar PDF' : 'Sem PDF anexado'} disabled={!r.arquivo_url} onClick={() => { if (!r.arquivo_url) return; const a = document.createElement('a'); a.href = r.arquivo_url; a.download = `ASO - ${r.colab}.pdf`; a.target = '_blank'; a.click() }}><Download size={15}/></button>
                         {r.st.key !== 'ok'
                           ? <button className="tbtn ghost sm accent" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>
                           : <button className="tbtn ghost sm" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>}

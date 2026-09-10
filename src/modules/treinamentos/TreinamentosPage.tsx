@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus, Trash2 } from "lucide-react"
 import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
@@ -73,6 +74,7 @@ function CellDetail({ cell, nrCatalog, empresaId, onClose, onDeleted }: {
   const deletar = useDeletarTreinamento()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const colabId = (cell.colab as ColabRow & { id?: string }).id
+  const navigate = useNavigate()
 
   async function handleDelete() {
     if (!cell.treinamentoId) return
@@ -130,7 +132,12 @@ function CellDetail({ cell, nrCatalog, empresaId, onClose, onDeleted }: {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <button className="tbtn primary is-soon" style={{ justifyContent: "center" }} title="Em breve" onClick={() => comingSoon('Ver perfil do colaborador')}>
+        <button
+          className="tbtn primary"
+          style={{ justifyContent: "center" }}
+          disabled={!colabId}
+          onClick={() => colabId && navigate(`/colaboradores?open=${colabId}${empresaId ? `&empresa=${empresaId}` : ''}`)}
+        >
           Ver perfil do colaborador <ChevronRight size={13} />
         </button>
         {st !== "na" && (

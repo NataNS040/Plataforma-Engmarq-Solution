@@ -11,12 +11,15 @@ import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores, useCriarColaborador, useAtualizarColaborador } from "@/hooks/queries/useColaboradores"
 import { useSetores, useFuncoes, useAmbientes } from "@/hooks/queries/useCatalogos"
-import { useEmpresas } from "@/hooks/queries/useEmpresas"
+import { useEmpresas, useEmpresa } from "@/hooks/queries/useEmpresas"
 import { useDashboardKpis } from "@/hooks/queries/useDashboard"
 import { useMatrizTreinamentos, useTreinamentosDoColaborador, useTreinamentoTipos, useDeletarTreinamento } from "@/hooks/queries/useTreinamentos"
 import { useExamesDoColaborador } from "@/hooks/queries/useExames"
-import { useDocumentosDoColaborador } from "@/hooks/queries/useDocumentos"
+import { useFichasEpiDoColaborador } from "@/hooks/queries/useFichasEpi"
+import type { FichaEpiComItens } from "@/services/fichasEpiService"
 import { AddTreinamentoModal } from "@/modules/treinamentos/TreinamentosPage"
+import { FichaEpiModal } from "@/modules/documentos/FichaEpiModal"
+import { FichaEpiDetailModal } from "@/modules/documentos/FichaEpiDetailModal"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { criarColaborador } from "@/services/colaboradoresService"
 import type { ColaboradorComCatalogos } from "@/services/colaboradoresService"
@@ -64,7 +67,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
   const matrizQuery   = useMatrizTreinamentos(c.empresa_id)
   const treinosQuery  = useTreinamentosDoColaborador(c.id)
   const examesQuery   = useExamesDoColaborador(c.id)
-  const documentosQuery = useDocumentosDoColaborador(c.id)
+  const fichasEpiQuery = useFichasEpiDoColaborador(c.id)
   const tiposQuery    = useTreinamentoTipos()
   const setoresQuery   = useSetores(c.empresa_id)
   const funcoesQuery   = useFuncoes(c.empresa_id)
@@ -74,7 +77,9 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
   const treinos = treinosQuery.data ?? []
   const exames  = examesQuery.data ?? []
   const tipos   = tiposQuery.data ?? []
-  const fichasEpi = (documentosQuery.data ?? []).filter(d => d.tipo?.nome === 'Ficha de EPI')
+  const fichasEpi = fichasEpiQuery.data ?? []
+  const [addingFichaEpi, setAddingFichaEpi] = useState(false)
+  const [fichaEpiDetalhe, setFichaEpiDetalhe] = useState<FichaEpiComItens | null>(null)
 
   // NRs obrigatórias pra função deste colaborador, cruzadas com o
   // registro mais recente de cada uma — mais quaisquer treinamentos que o
@@ -201,7 +206,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
               <div className="card" style={{ padding: 14 }}>
                 <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Documentos</div>
                 <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
-                  {exames.length + fichasEpi.length} <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>arquivos</span>
+                  {exames.length + fichasEpi.reduce((s, f) => s + f.itens.length, 0)} <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>arquivos</span>
                 </div>
               </div>
               <div className="card" style={{ padding: 14 }}>
@@ -289,26 +294,25 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
 
             {/* Fichas de EPI */}
             <div className="prof-section" style={{ marginTop: 18 }}>
-              <h4>Fichas de EPI</h4>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <h4 style={{ margin: 0 }}>Fichas de EPI</h4>
+                <button className="tbtn sm" onClick={() => setAddingFichaEpi(true)}><Plus size={12} /> Nova ficha</button>
+              </div>
               <div className="prof-list">
-                {documentosQuery.isLoading ? (
+                {fichasEpiQuery.isLoading ? (
                   <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Carregando…</div>
                 ) : fichasEpi.length === 0 ? (
                   <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Nenhuma ficha de EPI registrada para este colaborador.</div>
-                ) : fichasEpi.map(d => {
-                  const chip = DOC_CHIP[d.status]
-                  return (
-                    <div key={d.id} className="prof-row">
-                      <span className="lbl">{d.titulo}{d.numero ? ` · CA ${d.numero}` : ''}</span>
-                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span className="val" style={{ color: chip.cls === "crit" ? "var(--red-500)" : chip.cls === "warn" ? "var(--orange-600)" : "var(--ink-900)" }}>
-                          {d.vencimento ? new Date(d.vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}
-                        </span>
-                        <span className={`chip ${chip.cls}`} style={{ fontSize: 10.5 }}>{chip.label}</span>
-                      </span>
-                    </div>
-                  )
-                })}
+                ) : fichasEpi.map(ficha => (
+                  <button key={ficha.id} className="prof-row" style={{ width: "100%", textAlign: "left", cursor: "pointer", background: "none", border: "none", font: "inherit" }} onClick={() => setFichaEpiDetalhe(ficha)}>
+                    <span className="lbl">
+                      {new Date(ficha.data_entrega + 'T00:00:00').toLocaleDateString('pt-BR')} · {ficha.itens.length} item{ficha.itens.length !== 1 ? 's' : ''}
+                    </span>
+                    <span className={`chip ${ficha.assinado_em ? 'ok' : 'neutral'}`} style={{ fontSize: 10.5 }}>
+                      {ficha.assinado_em ? 'Assinada' : 'Pendente'}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -391,6 +395,22 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
           loading={deletarTreino.isPending}
           onCancel={() => setDeletingTreino(null)}
           onConfirm={confirmDeleteTreino}
+        />
+      )}
+
+      {addingFichaEpi && (
+        <FichaEpiModal
+          colab={{ id: c.id, nome: c.nome, cor, foto: initials }}
+          empresaId={c.empresa_id}
+          onClose={() => setAddingFichaEpi(false)}
+        />
+      )}
+
+      {fichaEpiDetalhe && (
+        <FichaEpiDetailModal
+          ficha={fichaEpiDetalhe}
+          empresaId={c.empresa_id}
+          onClose={() => setFichaEpiDetalhe(null)}
         />
       )}
     </>
@@ -888,6 +908,19 @@ function ColaboradoresEmpresa({ empresaIdProp, empresaNome, onBack }: {
     if (currentQ) setQuery(currentQ)
   }
 
+  // Deep link vindo de outra página (ex.: "Ver perfil do colaborador" em
+  // Treinamentos, via navigate('/colaboradores?open=<id>')) — só é
+  // consumido quando a lista de colaboradores já carregou, pra não perder
+  // o link por chegar antes do fetch. Ajustado durante o render, mesmo
+  // padrão do sync de busca acima.
+  const [openParamHandled, setOpenParamHandled] = useState(false)
+  const openParam = searchParams.get("open")
+  if (openParam && !openParamHandled && colabs.length > 0) {
+    setOpenParamHandled(true)
+    const alvo = colabs.find(c => c.id === openParam)
+    if (alvo) setOpenProfile(alvo)
+  }
+
   // Derivação de status baseada em treinamentos/documentos (Fase 4.3)
   // Por ora: todos ficam 'ok' até a Fase 4.3 cruzar com treinamentos
   function getStatus(_c: ColaboradorComCatalogos): "ok" | "warn" | "crit" {
@@ -1188,6 +1221,20 @@ function ColaboradoresAdminList({ onSelect }: { onSelect: (e: { id: string; nome
 
 function ColaboradoresAdmin() {
   const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
+
+  // Deep link vindo de outra página com empresa já conhecida (ex.: "Ver
+  // perfil do colaborador" em Treinamentos, via
+  // navigate('/colaboradores?open=<id>&empresa=<empresaId>')) — pula
+  // direto pra lista da empresa em vez de cair no seletor de empresas.
+  // Ajustado durante o render, mesmo padrão usado no resto do arquivo.
+  const [searchParams] = useSearchParams()
+  const empresaParam = searchParams.get('empresa')
+  const { data: empresaDoParam } = useEmpresa(!selectedEmpresa ? empresaParam : null)
+  const [empresaParamHandled, setEmpresaParamHandled] = useState(false)
+  if (empresaParam && !empresaParamHandled && !selectedEmpresa && empresaDoParam) {
+    setEmpresaParamHandled(true)
+    setSelectedEmpresa({ id: empresaDoParam.id, nome: empresaDoParam.razao_social })
+  }
 
   if (selectedEmpresa) {
     return (

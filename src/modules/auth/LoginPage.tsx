@@ -10,6 +10,7 @@ import { handleSupabaseError } from '@/lib/errors'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, HardHat, Target, ShieldCheck, TrendingUp, Eye as EyeIcon, Compass } from 'lucide-react'
 import { BrandMark } from '@/components/ui/BrandMark'
 import { APP_COPYRIGHT } from '@/config/brand'
+import { comingSoon } from '@/lib/comingSoon'
 
 // Os 5 pilares da marca Norveo (manual de marca)
 const PILLARS = [
@@ -194,7 +195,7 @@ export default function LoginPage() {
                   <input type="checkbox" defaultChecked />
                   Manter conectado
                 </label>
-                <a href="#">Esqueci minha senha</a>
+                <a href="#" className="is-soon" title="Em breve" onClick={e => { e.preventDefault(); comingSoon('Recuperação de senha') }}>Esqueci minha senha</a>
               </div>
 
               {/* Botão de submit */}
@@ -217,7 +218,10 @@ export default function LoginPage() {
               Primeiro acesso?{' '}
               <a
                 href="#"
+                className="is-soon"
+                title="Em breve"
                 style={{ color: 'var(--color-accent)', fontWeight: 600, textDecoration: 'none' }}
+                onClick={e => { e.preventDefault(); comingSoon('Solicitação de acesso') }}
               >
                 Solicite acesso à sua empresa
               </a>

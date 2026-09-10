@@ -3,6 +3,7 @@ import { X, UserPlus, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import type { UserRole } from '@/types/database'
 import { APP_SHORT_NAME } from '@/config/brand'
 
@@ -21,7 +22,9 @@ interface Props {
 }
 
 export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props) {
+  const { isAdmin } = useCurrentProfile()
   const { data: empresas = [] } = useEmpresas()
+  const roles = isAdmin ? ROLES : ROLES.filter(r => r.value !== 'admin')
 
   const [fullName, setFullName]     = useState('')
   const [email, setEmail]           = useState('')
@@ -32,7 +35,9 @@ export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props)
   const [showPwd, setShowPwd]       = useState(false)
   const [loading, setLoading]       = useState(false)
 
-  const isEmpresaRole = role === 'empresa'
+  // Só admin convida pra uma empresa-cliente arbitrária (escolhida na tela).
+  // Gestor/empresa só convidam gente pra própria equipe.
+  const isEmpresaRole = isAdmin && role === 'empresa'
   const resolvedEmpresaId = isEmpresaRole ? empresaId : adminEmpresaId
 
   async function handleSubmit(e: React.FormEvent) {
@@ -178,7 +183,7 @@ export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props)
               value={role}
               onChange={e => setRole(e.target.value as UserRole)}
             >
-              {ROLES.map(r => (
+              {roles.map(r => (
                 <option key={r.value} value={r.value}>{r.label} — {r.desc}</option>
               ))}
             </select>
