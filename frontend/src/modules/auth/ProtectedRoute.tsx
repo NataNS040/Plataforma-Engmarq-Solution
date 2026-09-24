@@ -10,8 +10,8 @@ interface ProtectedRouteProps {
 
 function FullScreenSpinner() {
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-[#f8fafc]">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1a365d]" />
+    <div className="h-screen w-screen flex items-center justify-center bg-bg">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
     </div>
   )
 }
@@ -30,20 +30,20 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (profileError || !profile) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#f8fafc] p-6">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center">
-          <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-            <AlertTriangle size={22} className="text-amber-600" />
+      <div className="h-screen w-screen flex items-center justify-center bg-bg p-6">
+        <div className="max-w-md w-full bg-surface rounded-2xl shadow-lg border border-border p-8 text-center">
+          <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-warning-soft flex items-center justify-center">
+            <AlertTriangle size={22} className="text-warning" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-2">Conta indisponível</h2>
-          <p className="text-sm text-slate-600 mb-6">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Conta indisponível</h2>
+          <p className="text-sm text-text-secondary mb-6">
             Sua conta não está vinculada a uma empresa ativa ou foi desativada. Entre em
             contato com o administrador para regularizar seu acesso.
           </p>
           <button
             type="button"
             onClick={() => void signOut()}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-hover transition"
           >
             <LogOut size={14} />
             Sair

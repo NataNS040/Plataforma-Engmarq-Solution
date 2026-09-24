@@ -10,6 +10,7 @@ import {
   listarTreinamentosDoColaborador,
   registrarTreinamento,
   atualizarTreinamento,
+  deletarTreinamento,
   type MatrizInput,
   type TreinamentoInput,
 } from '@/services/treinamentosService'
@@ -97,6 +98,20 @@ export function useAtualizarTreinamento() {
       qc.invalidateQueries({ queryKey: qk.treinamentos.list(result.empresaId) })
       qc.invalidateQueries({ queryKey: qk.treinamentos.byColaborador(result.colaboradorId) })
       toast.success('Treinamento atualizado.')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+}
+
+export function useDeletarTreinamento() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, empresaId, colaboradorId }: { id: string; empresaId: string; colaboradorId?: string | null }) =>
+      deletarTreinamento(id).then(() => ({ empresaId, colaboradorId })),
+    onSuccess: ({ empresaId, colaboradorId }) => {
+      qc.invalidateQueries({ queryKey: qk.treinamentos.list(empresaId) })
+      if (colaboradorId) qc.invalidateQueries({ queryKey: qk.treinamentos.byColaborador(colaboradorId) })
+      toast.success('Treinamento removido.')
     },
     onError: (err: Error) => toast.error(err.message),
   })

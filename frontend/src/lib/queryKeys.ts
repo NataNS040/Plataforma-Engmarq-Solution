@@ -32,6 +32,8 @@ export const qk = {
     all: ['documentos'] as const,
     list: (empresaId: string) => [...qk.documentos.all, 'list', empresaId] as const,
     detail: (id: string) => [...qk.documentos.all, 'detail', id] as const,
+    byColaborador: (colaboradorId: string) =>
+      [...qk.documentos.all, 'colaborador', colaboradorId] as const,
   },
   treinamentoTipos: {
     all: ['treinamento_tipos'] as const,
@@ -58,6 +60,16 @@ export const qk = {
   examesCatalogo: {
     all: ['exames_catalogo'] as const,
     list: () => [...qk.examesCatalogo.all, 'list'] as const,
+  },
+  fichasEpi: {
+    all: ['fichas_epi'] as const,
+    list: (empresaId: string) => [...qk.fichasEpi.all, 'list', empresaId] as const,
+    byColaborador: (colaboradorId: string) =>
+      [...qk.fichasEpi.all, 'colaborador', colaboradorId] as const,
+  },
+  usuarios: {
+    all: ['usuarios'] as const,
+    list: (empresaId: string) => [...qk.usuarios.all, 'list', empresaId] as const,
   },
   dashboard: {
     all: ['dashboard'] as const,

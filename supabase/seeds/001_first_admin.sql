@@ -1,10 +1,10 @@
 -- =====================================================
--- ENGMARQ SST — Seed: Empresa + Primeiro Admin
+-- NORVEO — Seed: Empresa + Primeiro Admin
 -- =====================================================
 -- INSTRUÇÕES:
 -- 1. Primeiro crie o usuário no Supabase:
 --    Authentication → Users → "Add user"
---    Email: admin@engmarq.com
+--    Email: admin@norveo.com.br
 --    Senha: Admin@123456
 --
 -- 2. Rode este script inteiro no SQL Editor do Supabase
@@ -13,7 +13,7 @@
 -- PASSO 1: Criar a empresa
 INSERT INTO empresas (razao_social, cnpj)
 VALUES (
-  'EngMarq Solucoes em Engenharia',
+  'Norveo Tecnologia e Gestão Ltda',
   '12.345.678/0001-99'
 )
 ON CONFLICT (cnpj) DO UPDATE SET
@@ -23,7 +23,7 @@ ON CONFLICT (cnpj) DO UPDATE SET
 DO $$
 DECLARE
   admin_user_id UUID;
-  admin_email TEXT := 'admin@engmarq.com';
+  admin_email TEXT := 'admin@norveo.com.br';
   admin_empresa_id UUID;
 BEGIN
   SELECT id INTO admin_user_id

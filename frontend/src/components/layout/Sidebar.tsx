@@ -1,17 +1,23 @@
-import { NavLink } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "@/modules/auth/AuthProvider"
+import { useCurrentProfile } from "@/hooks/useCurrentProfile"
+import { useDashboardKpis } from "@/hooks/queries/useDashboard"
 import {
   LayoutDashboard, Building2, Users, GraduationCap,
-  FileText, Heart, BarChart3, Settings, LogOut, ShieldCheck,
+  FileText, Heart, BarChart3, Settings, LogOut, ChevronLeft,
 } from "lucide-react"
+import { BrandMark } from "@/components/ui/BrandMark"
+import { APP_SHORT_NAME } from "@/config/brand"
+import { comingSoon } from "@/lib/comingSoon"
+
+const COLLAPSE_KEY = "sidebar:collapsed"
 
 type NavItem = {
   to: string
   label: string
   icon: React.ElementType
   exact?: boolean
-  badge?: number
-  badgeDanger?: boolean
   soon?: boolean
 }
 
@@ -25,7 +31,7 @@ const ADMIN_NAV: NavGroup[] = [
     group: "Principal",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/empresas", label: "Empresas", icon: Building2, badge: 24 },
+      { to: "/empresas", label: "Empresas", icon: Building2 },
       { to: "/colaboradores", label: "Colaboradores", icon: Users },
     ],
   },
@@ -35,7 +41,7 @@ const ADMIN_NAV: NavGroup[] = [
       { to: "/treinamentos", label: "Treinamentos", icon: GraduationCap },
       { to: "/documentos", label: "Documentos", icon: FileText },
       { to: "/exames", label: "Exames", icon: Heart },
-      { to: "/relatorios", label: "Relatórios", icon: BarChart3, badge: 3, badgeDanger: true },
+      { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
     ],
   },
   {
@@ -51,7 +57,7 @@ const EMPRESA_NAV: NavGroup[] = [
     group: "Principal",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/colaboradores", label: "Colaboradores", icon: Users, badge: 247 },
+      { to: "/colaboradores", label: "Colaboradores", icon: Users },
     ],
   },
   {
@@ -59,7 +65,7 @@ const EMPRESA_NAV: NavGroup[] = [
     items: [
       { to: "/treinamentos", label: "Treinamentos NR", icon: GraduationCap },
       { to: "/documentos", label: "Documentos", icon: FileText },
-      { to: "/exames", label: "Exames", icon: Heart, badge: 8, badgeDanger: true },
+      { to: "/exames", label: "Exames", icon: Heart },
       { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
     ],
   },
@@ -73,28 +79,68 @@ const EMPRESA_NAV: NavGroup[] = [
 
 export function Sidebar() {
   const { profile, signOut } = useAuth()
+  const { empresaId, isAdmin } = useCurrentProfile()
+  const navigate = useNavigate()
+
+  // Sidebar auto-hide: expandida por padrão, usuário recolhe pra ganhar
+  // espaço de tela; preferência persistida por navegador.
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSE_KEY) === "1"
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0")
+    } catch {
+      // localStorage indisponível (modo privado etc.) — só não persiste
+    }
+  }, [collapsed])
+
+  const kpisQuery = useDashboardKpis(isAdmin ? 'all' : empresaId)
+  const kpis = kpisQuery.data
 
   const navGroups = profile?.role === "admin" ? ADMIN_NAV : EMPRESA_NAV
+
+  // Badges vêm só de métricas reais já calculadas no dashboard — nenhum
+  // número decorativo. Item sem métrica correspondente fica sem badge.
+  const badges: Record<string, { value: number; danger?: boolean }> = kpis ? (
+    isAdmin
+      ? {
+          "/empresas": { value: kpis.totalEmpresas },
+          "/relatorios": { value: kpis.docsVencidos + kpis.treinamentosVencidos, danger: true },
+        }
+      : {
+          "/colaboradores": { value: kpis.totalColaboradores },
+        }
+  ) : {}
 
   const initials = profile?.full_name
     ? profile.full_name.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()
     : "?"
   const roleLabel =
-    profile?.role === "admin" ? "EngMarq · Admin" :
+    profile?.role === "admin" ? `${APP_SHORT_NAME} · Admin` :
     profile?.role === "empresa" ? "Acesso Empresa" :
     profile?.role === "gestor" ? "Gestor" : "Operacional"
 
   return (
-    <aside className="sidebar">
+    <aside className={"sidebar" + (collapsed ? " collapsed" : "")}>
+      {/* Botão de recolher/expandir */}
+      <button
+        className="sb-toggle"
+        onClick={() => setCollapsed(c => !c)}
+        title={collapsed ? "Expandir menu" : "Recolher menu"}
+        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+      >
+        <ChevronLeft size={13} />
+      </button>
+
       {/* Brand */}
       <div className="sb-brand">
-        <div className="brand-mark">
-          <ShieldCheck size={20} color="#0B1426" strokeWidth={2.5} />
-        </div>
-        <div>
-          <div className="brand-name">EngMarq Vision</div>
-          <div className="brand-tag">Gestão SST</div>
-        </div>
+        <BrandMark />
       </div>
 
       {/* Navigation */}
@@ -102,45 +148,53 @@ export function Sidebar() {
         {navGroups.map(({ group, items }) => (
           <div key={group}>
             <div className="sb-section-label">{group}</div>
-            {items.map(({ to, label, icon: Icon, exact, badge, badgeDanger, soon }) => (
-              <NavLink
-                key={to}
-                to={soon ? "#" : to}
-                end={exact}
-                onClick={soon ? (e) => e.preventDefault() : undefined}
-                className={({ isActive }) =>
-                  "nav-item" + (isActive && !soon ? " active" : "")
-                }
-              >
-                <Icon size={16} />
-                <span style={{ flex: 1 }}>{label}</span>
-                {badge !== undefined && (
-                  <span className={"nav-badge" + (badgeDanger ? " danger" : "")}>
-                    {badge}
-                  </span>
-                )}
-              </NavLink>
-            ))}
+            {items.map(({ to, label, icon: Icon, exact, soon }) => {
+              const badge = badges[to]
+              return (
+                <NavLink
+                  key={to}
+                  to={soon ? "#" : to}
+                  end={exact}
+                  onClick={soon ? (e) => e.preventDefault() : undefined}
+                  title={collapsed ? label : undefined}
+                  className={({ isActive }) =>
+                    "nav-item" + (isActive && !soon ? " active" : "")
+                  }
+                >
+                  <Icon size={16} />
+                  <span style={{ flex: 1 }}>{label}</span>
+                  {badge !== undefined && badge.value > 0 && (
+                    <span className={"nav-badge" + (badge.danger ? " danger" : "")}>
+                      {badge.value}
+                    </span>
+                  )}
+                </NavLink>
+              )
+            })}
           </div>
         ))}
       </nav>
 
       {/* Footer CTA */}
       <div className="sb-footer">
-        <h4>{profile?.role === "admin" ? "Auditoria 2026" : "Suporte EngMarq"}</h4>
+        <h4>{profile?.role === "admin" ? "Auditoria 2026" : `Suporte ${APP_SHORT_NAME}`}</h4>
         <p>
           {profile?.role === "admin"
-            ? "3 empresas precisam de atenção esta semana."
+            ? (kpis && kpis.docsVencidos + kpis.treinamentosVencidos > 0
+                ? `${kpis.docsVencidos + kpis.treinamentosVencidos} pendências críticas precisam de atenção.`
+                : "Nenhuma pendência crítica no momento.")
             : "Tire dúvidas com os profissionais de SST."}
         </p>
-        <button className="cta">
-          {profile?.role === "admin" ? "Ver alertas" : "Falar com SST"}
-        </button>
+        {profile?.role === "admin" ? (
+          <button className="cta" onClick={() => navigate('/relatorios')}>Ver alertas</button>
+        ) : (
+          <button className="cta is-soon" title="Em breve" onClick={() => comingSoon('Falar com SST')}>Falar com SST</button>
+        )}
       </div>
 
       {/* User strip */}
       <div className="sb-user">
-        <div className="sb-ava">{initials}</div>
+        <div className="sb-ava" title={collapsed ? (profile?.full_name ?? "Usuário") : undefined}>{initials}</div>
         <div className="sb-user-info">
           <div className="sb-user-name">{profile?.full_name ?? "Usuário"}</div>
           <div className="sb-user-role">{roleLabel}</div>

@@ -1,4 +1,5 @@
 import { useMemo } from "react"
+import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useDashboardKpis, useDashboardAlertas } from "@/hooks/queries/useDashboard"
@@ -12,6 +13,10 @@ import {
   Calendar, Download, Plus, ArrowRight,
   Filter, AlertTriangle,
 } from "lucide-react"
+import { getChartColor } from "@/lib/theme"
+import { comingSoon } from "@/lib/comingSoon"
+import { exportToCsv } from "@/lib/csvExport"
+import type { EmpresaComContagem } from "@/services/empresasService"
 
 /* ============================================================
    Shared helpers
@@ -26,13 +31,12 @@ function currentDateLabel() {
 
 type TimelineKind = "crit" | "warn" | "ok"
 
-const EMPRESA_COLORS = ["#1F2A44","#10B981","#3B82F6","#8B5CF6","#F59E0B"]
-
 /* ============================================================
    ADMIN — dashboard cross-company
    ============================================================ */
 
 function DashboardAdmin() {
+  const navigate = useNavigate()
   const kpisQuery = useDashboardKpis('all')
   const kpis = kpisQuery.data
   const alertasQuery = useDashboardAlertas('all', 5)
@@ -42,10 +46,10 @@ function DashboardAdmin() {
 
   const compliancePct = kpis?.compliancePct ?? 0
   const donutData = kpis ? [
-    { l: 'Docs em dia',         v: kpis.totalDocumentos - kpis.docsVencidos - kpis.docsVencendo,   c: '#10B981' },
-    { l: 'Docs vencendo',       v: kpis.docsVencendo,                                               c: '#F59E0B' },
-    { l: 'Docs vencidos',       v: kpis.docsVencidos,                                               c: '#EF4444' },
-    { l: 'Trein. monitorados',  v: kpis.totalTreinamentos,                                          c: '#3B82F6' },
+    { l: 'Docs em dia',         v: kpis.totalDocumentos - kpis.docsVencidos - kpis.docsVencendo,   c: 'var(--color-success)' },
+    { l: 'Docs vencendo',       v: kpis.docsVencendo,                                               c: 'var(--color-warning)' },
+    { l: 'Docs vencidos',       v: kpis.docsVencidos,                                               c: 'var(--color-danger)' },
+    { l: 'Trein. monitorados',  v: kpis.totalTreinamentos,                                          c: 'var(--blue-500)' },
   ].filter(d => d.v > 0) : []
 
   return (
@@ -54,14 +58,25 @@ function DashboardAdmin() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1>Dashboard EngMarq</h1>
+          <h1>Dashboard</h1>
           <p className="sub">Visão consolidada de conformidade SST · {kpis?.totalEmpresas ?? '—'} empresas · {kpis?.totalColaboradores?.toLocaleString('pt-BR') ?? '—'} colaboradores</p>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Calendar size={14} /> Fev 2026</button>
-          <button className="tbtn"><Filter size={14} /> Filtros</button>
-          <button className="tbtn"><Download size={14} /> Exportar</button>
-          <button className="tbtn primary"><Plus size={14} /> Nova empresa</button>
+          <button className="tbtn"><Calendar size={14} /> {currentDateLabel()}</button>
+          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Filtros do dashboard')}><Filter size={14} /> Filtros</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('empresas.csv', [
+              { header: 'Empresa',        value: (e: EmpresaComContagem) => e.razao_social },
+              { header: 'CNPJ',           value: (e: EmpresaComContagem) => e.cnpj },
+              { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
+              { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
+              { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
+              { header: 'Colaboradores',  value: (e: EmpresaComContagem) => e.colaboradores_count },
+              { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
+            ], empresas)}
+          ><Download size={14} /> Exportar</button>
+          <button className="tbtn primary" onClick={() => navigate('/empresas?nova=1')}><Plus size={14} /> Nova empresa</button>
         </div>
       </div>
 
@@ -136,13 +151,13 @@ function DashboardAdmin() {
                     innerRadius={58} outerRadius={76}
                     dataKey="value" strokeWidth={0}
                   >
-                    <Cell fill="#F59E0B" />
-                    <Cell fill="#F4F6FB" />
+                    <Cell fill="var(--blue-600)" />
+                    <Cell fill="var(--bg-tint-1)" />
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                   {kpis ? `${compliancePct}%` : '—'}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--ink-400)", marginTop: 4 }}>compliance</span>
@@ -182,7 +197,7 @@ function DashboardAdmin() {
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>
                   {kpis ? kpis.docsVencidos + kpis.docsVencendo + kpis.treinamentosVencidos + kpis.treinamentosVencendo : '—'}
                 </span>
                 <span style={{ fontSize: 10, color: "var(--ink-400)", marginTop: 3 }}>pendências</span>
@@ -219,7 +234,7 @@ function DashboardAdmin() {
                   <span className="when">{when}</span>
                   <span className="dot" />
                   <div className="body">{t.titulo}<span className="meta">{t.nome_envolvido ?? t.tipo}</span></div>
-                  <ArrowRight size={14} style={{ color: "var(--ink-400)" }} />
+                  <button className="tbtn primary is-soon" title="Em breve" onClick={() => comingSoon('Ir direto ao item')}>Resolver <ArrowRight size={13} /></button>
                 </div>
               )
             })}
@@ -231,16 +246,16 @@ function DashboardAdmin() {
       <div className="glass" style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
-            <div className="ctitle">Empresas que requerem atenção</div>
-            <div className="csub">Ordenadas por score de risco · ações sugeridas</div>
+            <div className="ctitle">Empresas cadastradas</div>
+            <div className="csub">10 mais recentes</div>
           </div>
           <div className="toolbar">
             <div className="seg">
               <button className="on">Todas</button>
-              <button>Crítico</button>
-              <button>Atenção</button>
+              <button className="is-soon" title="Em breve" onClick={() => comingSoon('Filtro por risco crítico')}>Crítico</button>
+              <button className="is-soon" title="Em breve" onClick={() => comingSoon('Filtro por atenção')}>Atenção</button>
             </div>
-            <button className="tbtn"><ArrowRight size={14} /> Ver todas</button>
+            <button className="tbtn" onClick={() => navigate('/empresas')}><ArrowRight size={14} /> Ver todas</button>
           </div>
         </div>
         <table className="tbl">
@@ -257,10 +272,10 @@ function DashboardAdmin() {
               <tr><td colSpan={4} style={{ textAlign:'center', padding:32, color:'var(--ink-400)', fontSize:12 }}>Nenhuma empresa cadastrada.</td></tr>
             )}
             {empresas.slice(0, 10).map((e, i) => (
-              <tr key={e.id}>
+              <tr key={e.id} onClick={() => navigate('/empresas')} style={{ cursor: 'pointer' }}>
                 <td>
                   <div className="cell-person">
-                    <div className="ava" style={{ background: EMPRESA_COLORS[i % 5], borderRadius: 8 }}>
+                    <div className="ava" style={{ background: getChartColor(i), borderRadius: 8 }}>
                       {e.razao_social.slice(0, 1)}
                     </div>
                     <div>
@@ -271,7 +286,7 @@ function DashboardAdmin() {
                 </td>
                 <td>{e.setor ?? '—'}</td>
                 <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
-                <td><button className="tbtn ghost"><ArrowRight size={14} /></button></td>
+                <td><button className="tbtn ghost" onClick={e2 => { e2.stopPropagation(); navigate('/empresas') }}><ArrowRight size={14} /></button></td>
               </tr>
             ))}
           </tbody>
@@ -289,6 +304,7 @@ function DashboardAdmin() {
 const COMPLIANCE_TARGET = 95
 
 function DashboardEmpresa() {
+  const navigate = useNavigate()
   const { empresaId } = useCurrentProfile()
   const kpisQuery = useDashboardKpis(empresaId)
   const kpis = kpisQuery.data
@@ -311,9 +327,9 @@ function DashboardEmpresa() {
   }).filter(n => n.req > 0), [tipos, treinos])
 
   const donutData = kpis ? [
-    { value: kpis.totalDocumentos - kpis.docsVencidos - kpis.docsVencendo, fill: '#10B981', label: 'Em dia' },
-    { value: kpis.docsVencendo,  fill: '#F59E0B', label: 'Vencendo' },
-    { value: kpis.docsVencidos,  fill: '#EF4444', label: 'Vencido'  },
+    { value: kpis.totalDocumentos - kpis.docsVencidos - kpis.docsVencendo, fill: 'var(--color-success)', label: 'Em dia' },
+    { value: kpis.docsVencendo,  fill: 'var(--color-warning)', label: 'Vencendo' },
+    { value: kpis.docsVencidos,  fill: 'var(--color-danger)', label: 'Vencido'  },
   ].filter(d => d.value > 0) : []
 
   return (
@@ -332,10 +348,22 @@ function DashboardEmpresa() {
             background: "var(--surface)", border: "1px solid var(--border)",
             fontSize: 12.5, fontWeight: 600, color: "var(--ink-700)", textTransform: "capitalize",
           }}>
-            <Calendar size={14} style={{ color: "var(--orange-600)" }} />
+            <Calendar size={14} style={{ color: "var(--color-accent)" }} />
             {currentDateLabel()}
           </span>
-
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('compliance_por_nr.csv', [
+              { header: 'NR',              value: (n: typeof nrDetail[number]) => n.code },
+              { header: 'Treinamento',     value: (n: typeof nrDetail[number]) => n.titulo },
+              { header: 'Obrigatórios',    value: (n: typeof nrDetail[number]) => n.req },
+              { header: 'Em dia',          value: (n: typeof nrDetail[number]) => n.ok },
+              { header: 'Vencendo',        value: (n: typeof nrDetail[number]) => n.warn },
+              { header: 'Vencido',         value: (n: typeof nrDetail[number]) => n.crit },
+              { header: '% Conformidade',  value: (n: typeof nrDetail[number]) => Math.round((n.ok / n.req) * 100) },
+            ], nrDetail)}
+          ><Download size={14} /> Exportar relatório</button>
+          <button className="tbtn primary" onClick={() => navigate('/colaboradores?add=1')}><Plus size={14} /> Novo colaborador</button>
         </div>
       </div>
 
@@ -410,13 +438,13 @@ function DashboardEmpresa() {
                     innerRadius={58} outerRadius={76}
                     dataKey="value" strokeWidth={0}
                   >
-                    <Cell fill="#F59E0B" />
-                    <Cell fill="#F4F6FB" />
+                    <Cell fill="var(--blue-600)" />
+                    <Cell fill="var(--bg-tint-1)" />
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                   {kpis ? `${compliancePct}%` : '—'}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--ink-400)", marginTop: 4 }}>compliance</span>
@@ -439,9 +467,9 @@ function DashboardEmpresa() {
               <div className="csub">Detalhamento por norma · em dia · vencendo · vencido</div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <span className="legend-pill"><span className="sw" style={{ background: "#10B981" }} />Em dia</span>
-              <span className="legend-pill"><span className="sw" style={{ background: "#F59E0B" }} />Vencendo</span>
-              <span className="legend-pill"><span className="sw" style={{ background: "#EF4444" }} />Vencido</span>
+              <span className="legend-pill"><span className="sw" style={{ background: "var(--color-success)" }} />Em dia</span>
+              <span className="legend-pill"><span className="sw" style={{ background: "var(--color-warning)" }} />Vencendo</span>
+              <span className="legend-pill"><span className="sw" style={{ background: "var(--color-danger)" }} />Vencido</span>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -450,23 +478,23 @@ function DashboardEmpresa() {
               return (
                 <div key={nr.code} style={{ display: "grid", gridTemplateColumns: "140px 1fr 44px", gap: 14, alignItems: "center" }}>
                   <div>
-                    <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em" }}>{nr.code}</div>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em" }}>{nr.code}</div>
                     <div style={{ fontSize: 11, color: "var(--ink-500)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nr.titulo}</div>
                   </div>
                   <div>
                     <div style={{ height: 12, background: "var(--bg)", borderRadius: 6, overflow: "hidden", display: "flex" }}>
-                      <div style={{ width: `${(nr.ok   / nr.req) * 100}%`, background: "#10B981" }} />
-                      <div style={{ width: `${(nr.warn / nr.req) * 100}%`, background: "#F59E0B" }} />
-                      <div style={{ width: `${(nr.crit / nr.req) * 100}%`, background: "#EF4444" }} />
+                      <div style={{ width: `${(nr.ok   / nr.req) * 100}%`, background: "var(--color-success)" }} />
+                      <div style={{ width: `${(nr.warn / nr.req) * 100}%`, background: "var(--color-warning)" }} />
+                      <div style={{ width: `${(nr.crit / nr.req) * 100}%`, background: "var(--color-danger)" }} />
                     </div>
                     <div style={{ display: "flex", gap: 10, marginTop: 5, fontSize: 10.5, color: "var(--ink-500)" }}>
-                      <span><strong style={{ color: "#059669" }}>{nr.ok}</strong> em dia</span>
-                      <span><strong style={{ color: "#D97706" }}>{nr.warn}</strong> vencendo</span>
-                      <span><strong style={{ color: "#EF4444" }}>{nr.crit}</strong> vencido</span>
+                      <span><strong style={{ color: "var(--color-success)" }}>{nr.ok}</strong> em dia</span>
+                      <span><strong style={{ color: "var(--color-warning)" }}>{nr.warn}</strong> vencendo</span>
+                      <span><strong style={{ color: "var(--color-danger)" }}>{nr.crit}</strong> vencido</span>
                       <span style={{ marginLeft: "auto" }}>{nr.req} obrigatórios</span>
                     </div>
                   </div>
-                  <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 13, textAlign: "right", fontVariantNumeric: "tabular-nums", color: pct >= 85 ? "#059669" : pct >= 70 ? "#D97706" : "#EF4444" }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, textAlign: "right", fontVariantNumeric: "tabular-nums", color: pct >= 85 ? "var(--color-success)" : pct >= 70 ? "var(--color-warning)" : "var(--color-danger)" }}>
                     {pct}%
                   </div>
                 </div>
@@ -498,7 +526,7 @@ function DashboardEmpresa() {
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>{kpis ? `${compliancePct}%` : '—'}</span>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>{kpis ? `${compliancePct}%` : '—'}</span>
                 <span style={{ fontSize: 10, color: "var(--ink-400)", marginTop: 3 }}>em dia</span>
               </div>
             </div>
@@ -534,7 +562,7 @@ function DashboardEmpresa() {
                 <span className="when">{when}</span>
                 <span className="dot" />
                 <div className="body">{t.titulo}<span className="meta">{t.nome_envolvido ?? t.tipo}</span></div>
-                <button className="tbtn primary">Resolver <ArrowRight size={13} /></button>
+                <button className="tbtn primary is-soon" title="Em breve" onClick={() => comingSoon('Ir direto ao item')}>Resolver <ArrowRight size={13} /></button>
               </div>
             )
           })}

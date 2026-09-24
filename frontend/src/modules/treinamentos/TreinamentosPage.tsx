@@ -1,9 +1,17 @@
 import { useState, useMemo, useEffect, useRef } from "react"
-import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus, UploadCloud, FileText } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus, UploadCloud, FileText, Trash2 } from "lucide-react"
 import { uploadCertificado } from "@/services/treinamentosService"
+import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores } from "@/hooks/queries/useColaboradores"
-import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento } from "@/hooks/queries/useTreinamentos"
+import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento, useDeletarTreinamento } from "@/hooks/queries/useTreinamentos"
+import { useEmpresas } from "@/hooks/queries/useEmpresas"
+import { useDashboardKpis } from "@/hooks/queries/useDashboard"
+import { STATUS_COLORS, getAvatarColor, getChartColor } from "@/lib/theme"
+import { comingSoon } from "@/lib/comingSoon"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
+import { exportToCsv } from "@/lib/csvExport"
 
 /* ============================================================
    Types
@@ -30,12 +38,7 @@ interface ColabRow {
    Constants
    ============================================================ */
 
-const CELL_COLORS: Record<CellStatus, { bg: string; border: string }> = {
-  ok:   { bg: "#10B981", border: "rgba(16,185,129,0.18)" },
-  warn: { bg: "#F59E0B", border: "rgba(245,158,11,0.18)"  },
-  crit: { bg: "#EF4444", border: "rgba(239,68,68,0.18)"   },
-  na:   { bg: "#CBD5E1", border: "rgba(203,213,225,0.30)" },
-}
+const CELL_COLORS: Record<CellStatus, { bg: string; border: string }> = STATUS_COLORS
 
 const CELL_SYMBOL: Record<CellStatus, string> = { ok: "✓", warn: "!", crit: "✕", na: "—" }
 
@@ -54,13 +57,32 @@ interface CellRef {
   realizacao?: string | null
   vencimento?: string | null
   cargaHoraria?: number | null
+  treinamentoId?: string | null
+  certificadoUrl?: string | null
 }
 
-function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: NrInfo[]; onClose: () => void }) {
+function CellDetail({ cell, nrCatalog, empresaId, onClose, onDeleted }: {
+  cell: CellRef
+  nrCatalog: NrInfo[]
+  empresaId?: string | null
+  onClose: () => void
+  onDeleted: () => void
+}) {
   const info = nrCatalog.find(n => n.nr === cell.nr) ?? nrCatalog[0]
   const st   = cell.status
   const col  = CELL_COLORS[st ?? 'na'].bg
   const labels: Record<CellStatus, string> = { ok: "Em dia", warn: "Vencendo", crit: "Vencido", na: "Não aplicável" }
+  const deletar = useDeletarTreinamento()
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const colabId = (cell.colab as ColabRow & { id?: string }).id
+  const navigate = useNavigate()
+
+  async function handleDelete() {
+    if (!cell.treinamentoId) return
+    await deletar.mutateAsync({ id: cell.treinamentoId, empresaId: empresaId ?? '', colaboradorId: colabId })
+    setConfirmingDelete(false)
+    onDeleted()
+  }
 
   return (
     <div style={{ padding: 16 }}>
@@ -79,7 +101,7 @@ function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: Nr
 
       <div style={{ padding: 14, borderRadius: 12, background: `${col}15`, border: `1px solid ${col}40`, marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 18, letterSpacing: "-0.01em" }}>{info.nr}</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, letterSpacing: "-0.01em" }}>{info.nr}</div>
           <span className={`chip ${st === "na" ? "neutral" : st}`} style={{ fontSize: 11 }}>{labels[st]}</span>
         </div>
         <div style={{ fontSize: 12.5, color: "var(--ink-700)", marginBottom: 10, fontWeight: 500 }}>{info.titulo}</div>
@@ -111,15 +133,45 @@ function CellDetail({ cell, nrCatalog, onClose }: { cell: CellRef; nrCatalog: Nr
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <button className="tbtn primary" style={{ justifyContent: "center" }}>
+        <button
+          className="tbtn primary"
+          style={{ justifyContent: "center" }}
+          disabled={!colabId}
+          onClick={() => colabId && navigate(`/colaboradores?open=${colabId}${empresaId ? `&empresa=${empresaId}` : ''}`)}
+        >
           Ver perfil do colaborador <ChevronRight size={13} />
         </button>
         {st !== "na" && (
-          <button className="tbtn ghost" style={{ justifyContent: "center" }}>
-            <Download size={13} /> Baixar certificado
+          cell.certificadoUrl ? (
+            <button className="tbtn ghost" style={{ justifyContent: "center" }} onClick={() => window.open(cell.certificadoUrl!, '_blank')}>
+              <Download size={13} /> Baixar certificado
+            </button>
+          ) : (
+            <button className="tbtn ghost is-soon" style={{ justifyContent: "center" }} title="Em breve" onClick={() => comingSoon('Baixar certificado')}>
+              <Download size={13} /> Baixar certificado
+            </button>
+          )
+        )}
+        {st !== "na" && cell.treinamentoId && (
+          <button
+            className="tbtn ghost"
+            style={{ justifyContent: "center", color: "var(--red-500)" }}
+            onClick={() => setConfirmingDelete(true)}
+          >
+            <Trash2 size={13} /> Excluir treinamento
           </button>
         )}
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Excluir treinamento?"
+          description={<>Isso remove o registro de <strong>{info.nr} · {cell.colab.nome}</strong> permanentemente.</>}
+          loading={deletar.isPending}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   )
 }
@@ -150,7 +202,7 @@ function NRRanking({ stats, activeNr, onPick }: { stats: NrStat[]; activeNr: str
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <AlertTriangle size={16} style={{ color: "var(--red-500)", marginTop: 2 }} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4, fontFamily: "Plus Jakarta Sans" }}>Atenção prioritária</div>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4, fontFamily: "var(--font-display)" }}>Atenção prioritária</div>
               <div style={{ fontSize: 11.5, color: "var(--ink-700)", lineHeight: 1.4 }}>
                 <strong>{worst.nr} · {worst.titulo}</strong> está em {worst.pct}% — {worst.crit} colaborador{worst.crit > 1 ? "es" : ""} com treinamento vencido.
               </div>
@@ -167,10 +219,10 @@ function NRRanking({ stats, activeNr, onPick }: { stats: NrStat[]; activeNr: str
             <button key={n.nr} className={`nr-rank-row ${active ? "active" : ""}`} onClick={() => onPick(active ? null : n.nr)}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
                 <span style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-                  <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 12.5 }}>{n.nr}</span>
+                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 12.5 }}>{n.nr}</span>
                   <span style={{ fontSize: 10.5, color: "var(--ink-500)", maxWidth: 170, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.titulo}</span>
                 </span>
-                <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 13, color: col, fontVariantNumeric: "tabular-nums" }}>{n.pct}%</span>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, color: col, fontVariantNumeric: "tabular-nums" }}>{n.pct}%</span>
               </div>
               <div className="nr-chip-bar">
                 <div style={{ width: `${(n.ok   / (n.valid || 1)) * 100}%`, background: CELL_COLORS.ok.bg   }} />
@@ -191,14 +243,14 @@ function NRRanking({ stats, activeNr, onPick }: { stats: NrStat[]; activeNr: str
 
 import type { TreinamentoTipo } from "@/types/database"
 
-interface AddTreinamentoModalProps {
+export interface AddTreinamentoModalProps {
   colab: { id: string; nome: string; cor: string; foto: string }
   tipos: TreinamentoTipo[]
   empresaId: string
   onClose: () => void
 }
 
-function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinamentoModalProps) {
+export function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinamentoModalProps) {
   const registrar = useRegistrarTreinamento()
   const [tipoId, setTipoId] = useState(tipos[0]?.id ?? "")
   const [dataRealizacao, setDataRealizacao] = useState("")
@@ -248,12 +300,15 @@ function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinament
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}
+      // z-index acima do `.modal-backdrop` (400, ver index.css) — este modal
+      // agora também é aberto de dentro do ProfileModal (Colaboradores), que
+      // já usa aquele backdrop; sem isso, ficava escondido atrás dele.
+      style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{ background: "var(--surface)", borderRadius: 16, padding: 24, width: 460, maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,0.18)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-          <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 16 }}>Registrar Treinamento</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>Registrar Treinamento</div>
           <button className="icon-btn" onClick={onClose} style={{ width: 28, height: 28 }}><X size={13} /></button>
         </div>
 
@@ -405,8 +460,13 @@ function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinament
    TreinamentosPage
    ============================================================ */
 
-export default function TreinamentosPage() {
-  const { empresaId } = useCurrentProfile()
+function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
+  empresaIdProp?: string | null
+  empresaNome?: string
+  onBack?: () => void
+}) {
+  const { empresaId: empresaIdPerfil } = useCurrentProfile()
+  const empresaId = empresaIdProp ?? empresaIdPerfil
 
   const colabsQuery = useColaboradores(empresaId)
   const treinamentosQuery = useTreinamentos(empresaId)
@@ -426,23 +486,18 @@ export default function TreinamentosPage() {
         titulo:   t.nome,
         carga:    '—',
         validade: t.validade_meses ? `${t.validade_meses} meses` : '—',
-        color:    '#3B82F6',
+        color:    'var(--blue-500)',
         tipoId:   t.id,
       }))
   }, [nrTipos, treinamentos])
 
   // Montar COLABS_MATRIX dinâmico
   const COLABS_MATRIX: ColabRow[] = useMemo(() => {
-    const AVATAR_COLORS = ['#3B82F6','#F59E0B','#10B981','#8B5CF6','#EF4444','#06B6D4','#1F2A44','#F472B6','#22C55E','#A855F7']
-    function avatarColor(nome: string) {
-      let h = 0; for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h)
-      return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
-    }
     return colabs.map(c => ({
       nome:  c.nome,
       setor: c.setor?.nome ?? '—',
       foto:  c.nome.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase(),
-      cor:   avatarColor(c.nome),
+      cor:   getAvatarColor(c.nome),
       id:    c.id,
     }))
   }, [colabs])
@@ -504,17 +559,54 @@ export default function TreinamentosPage() {
   const totalCells = okCount + warnCount + critCount
   const pctGeral = totalCells ? Math.round((okCount / totalCells) * 100) : 0
 
+  function handleExportMatriz() {
+    interface MatrizRow { colaborador: string; setor: string; nr: string; titulo: string; status: string; realizacao: string; vencimento: string }
+    const flat: MatrizRow[] = []
+    COLABS_MATRIX.forEach(c => {
+      NR_CATALOG.forEach(nr => {
+        const st = cellStatusReal(c as ColabRow & { id?: string }, nr as NrInfo & { tipoId?: string })
+        if (st === 'na') return
+        const t = treinMap.get(`${(c as ColabRow & { id?: string }).id}:${(nr as NrInfo & { tipoId?: string }).tipoId}`)
+        flat.push({
+          colaborador: c.nome,
+          setor: c.setor,
+          nr: nr.nr,
+          titulo: nr.titulo,
+          status: st === 'ok' ? 'Em dia' : st === 'warn' ? 'Vencendo' : 'Vencido',
+          realizacao: t?.data_realizacao ?? '',
+          vencimento: t?.data_vencimento ?? '',
+        })
+      })
+    })
+    exportToCsv<MatrizRow>(`treinamentos_matriz${empresaNome ? '_' + empresaNome : ''}.csv`, [
+      { header: 'Colaborador',        value: r => r.colaborador },
+      { header: 'Setor',              value: r => r.setor },
+      { header: 'NR',                 value: r => r.nr },
+      { header: 'Treinamento',        value: r => r.titulo },
+      { header: 'Status',             value: r => r.status },
+      { header: 'Última realização',  value: r => r.realizacao },
+      { header: 'Vencimento',         value: r => r.vencimento },
+    ], flat)
+  }
+
   return (
     <div className="content">
 
       {/* Header */}
       <div className="page-header">
-        <div>
-          <h1>Matriz de Treinamentos NR</h1>
-          <p className="sub">{colabs.length} colaboradores · {NR_CATALOG.length} NRs monitoradas</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {onBack && (
+            <button className="icon-btn sm" title="Voltar" onClick={onBack} style={{ marginRight:4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          )}
+          <div>
+            <h1>Matriz de Treinamentos NR{empresaNome ? ` · ${empresaNome}` : ''}</h1>
+            <p className="sub">{colabs.length} colaboradores · {NR_CATALOG.length} NRs monitoradas</p>
+          </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Download size={14} /> Exportar matriz (CSV)</button>
+          <button className="tbtn" onClick={handleExportMatriz}><Download size={14} /> Exportar matriz (CSV)</button>
         </div>
       </div>
 
@@ -621,7 +713,7 @@ export default function TreinamentosPage() {
                               onClick={e => {
                                 e.stopPropagation()
                                 const trein = treinMap.get(`${(c as ColabRow & {id?: string}).id}:${(nrInfo as NrInfo & {tipoId?: string}).tipoId}`)
-                                setSelectedCell({ rowIdx: ri, colIdx: ci, nr, colab: c, status: st, realizacao: trein?.data_realizacao ?? null, vencimento: trein?.data_vencimento ?? null, cargaHoraria: trein?.carga_horaria ?? null })
+                                setSelectedCell({ rowIdx: ri, colIdx: ci, nr, colab: c, status: st, realizacao: trein?.data_realizacao ?? null, vencimento: trein?.data_vencimento ?? null, cargaHoraria: trein?.carga_horaria ?? null, treinamentoId: trein?.id ?? null, certificadoUrl: trein?.certificado_url ?? null })
                               }}
                               title={`${c.nome} · ${nr} · ${st}`}
                               style={{
@@ -644,7 +736,7 @@ export default function TreinamentosPage() {
                         )
                       })}
                       <td style={{ textAlign: "right" }}>
-                        <span style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: score >= 85 ? "var(--green-600)" : score >= 70 ? "var(--orange-600)" : "var(--red-500)" }}>
+                        <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: score >= 85 ? "var(--green-600)" : score >= 70 ? "var(--orange-600)" : "var(--red-500)" }}>
                           {score}%
                         </span>
                       </td>
@@ -661,7 +753,7 @@ export default function TreinamentosPage() {
                     <td
                       key={n.nr}
                       className={activeNr === n.nr ? "col-active" : ""}
-                      style={{ textAlign: "center", fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 12, fontVariantNumeric: "tabular-nums", color: n.pct >= 85 ? "var(--green-600)" : n.pct >= 70 ? "var(--orange-600)" : "var(--red-500)" }}
+                      style={{ textAlign: "center", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 12, fontVariantNumeric: "tabular-nums", color: n.pct >= 85 ? "var(--green-600)" : n.pct >= 70 ? "var(--orange-600)" : "var(--red-500)" }}
                     >
                       {n.pct}%
                     </td>
@@ -676,7 +768,13 @@ export default function TreinamentosPage() {
         {/* Painel lateral */}
         <div className="glass" style={{ position: "sticky", top: 80 }}>
           {selectedCell ? (
-            <CellDetail cell={selectedCell} nrCatalog={NR_CATALOG} onClose={() => setSelectedCell(null)} />
+            <CellDetail
+              cell={selectedCell}
+              nrCatalog={NR_CATALOG}
+              empresaId={empresaId}
+              onClose={() => setSelectedCell(null)}
+              onDeleted={() => setSelectedCell(null)}
+            />
           ) : (
             <NRRanking stats={nrStats} activeNr={activeNr} onPick={setActiveNr} />
           )}
@@ -694,4 +792,107 @@ export default function TreinamentosPage() {
 
     </div>
   )
+}
+
+/* ============================================================
+   TreinamentosAdmin — escolha de empresa-cliente antes de ver a
+   matriz (mesmo motivo do ColaboradoresAdmin: admin acompanha
+   várias empresas, não só a do próprio perfil).
+   ============================================================ */
+
+function TreinamentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
+  const empresasQuery = useEmpresas()
+  const empresas = empresasQuery.data ?? []
+  const kpisQuery = useDashboardKpis('all')
+  const kpis = kpisQuery.data
+
+  return (
+    <div className="content">
+      <div className="page-header">
+        <div>
+          <h1>Matriz de Treinamentos NR</h1>
+          <p className="sub">Selecione uma empresa-cliente para ver a matriz · {empresas.length} empresas</p>
+        </div>
+      </div>
+
+      <div className="kpi-row">
+        <div className="glass kpi">
+          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic blue"><GraduationCap size={15}/></span></div>
+          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
+        </div>
+        <div className="glass kpi">
+          <div className="kpi-label"><span>Treinamentos vencidos</span><span className="kpi-ic red"><AlertTriangle size={15}/></span></div>
+          <div className="kpi-value" style={{ color: (kpis?.treinamentosVencidos ?? 0) > 0 ? "var(--red-500)" : undefined }}>{kpis?.treinamentosVencidos ?? '—'}</div>
+        </div>
+      </div>
+
+      <div className="glass" style={{ padding:0, overflow:'hidden' }}>
+        <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
+          <div className="ctitle">Empresas-cliente</div>
+          <div className="csub">Clique numa empresa para ver a matriz de treinamentos</div>
+        </div>
+        <div style={{ overflow:'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Setor</th>
+                <th>Cidade / UF</th>
+                <th style={{ textAlign:'center' }}>Colaboradores</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {empresas.length === 0 && (
+                <tr><td colSpan={5} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
+              )}
+              {empresas.map((e, i) => (
+                <tr key={e.id} style={{ cursor:'pointer' }} onClick={() => onSelect({ id: e.id, nome: e.razao_social })}>
+                  <td>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
+                        {e.razao_social.slice(0,1)}
+                      </span>
+                      <div>
+                        <div style={{ fontWeight:600, fontSize:13 }}>{e.razao_social}</div>
+                        <div style={{ fontSize:11, color:'var(--ink-500)' }}>{e.cnpj}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{e.setor ?? '—'}</td>
+                  <td style={{ fontSize:12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
+                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{e.colaboradores_count}</td>
+                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TreinamentosAdmin() {
+  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
+
+  if (selectedEmpresa) {
+    return (
+      <TreinamentosEmpresa
+        empresaIdProp={selectedEmpresa.id}
+        empresaNome={selectedEmpresa.nome}
+        onBack={() => setSelectedEmpresa(null)}
+      />
+    )
+  }
+
+  return <TreinamentosAdminList onSelect={setSelectedEmpresa} />
+}
+
+// ---------------------------------------------------------------------------
+// Export
+// ---------------------------------------------------------------------------
+export default function TreinamentosPage() {
+  const { profile } = useAuth()
+  return profile?.role === 'admin' ? <TreinamentosAdmin /> : <TreinamentosEmpresa />
 }

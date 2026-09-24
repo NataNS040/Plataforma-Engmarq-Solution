@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import {
   CheckCircle2, Clock, AlertTriangle, Calendar, Download, Plus,
-  Eye, Trash2, X, Search, Loader2,
+  Eye, Trash2, X, Search, Loader2, UploadCloud,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useExames, useCriarExame, useDeletarExame, useExamesCatalogo } from '@/hooks/queries/useExames'
@@ -11,6 +10,11 @@ import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { SubtipoExame } from '@/types/database'
+import { getAvatarColor, getInitials, getChartColor } from '@/lib/theme'
+import { comingSoon } from '@/lib/comingSoon'
+import { exportToCsv } from '@/lib/csvExport'
+import { uploadAsoArquivo } from '@/services/examesService'
+import type { EmpresaComContagem } from '@/services/empresasService'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -43,12 +47,8 @@ function asoStatus(validadeISO: string | undefined | null) {
 
 type AsoStatusKey = 'ok' | 'warn' | 'crit' | 'neutral'
 
-const AVATAR_COLORS = ['#2563EB','#DB2777','#7C3AED','#0891B2','#059669','#D97706','#475569','#BE185D']
-function avatarColor(nome: string) {
-  let h = 0; for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h)
-  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
-}
-const initials = (n: string) => n.split(' ').filter(Boolean).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
+const avatarColor = getAvatarColor
+const initials = getInitials
 
 // ---------------------------------------------------------------------------
 // Static data
@@ -107,6 +107,10 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
   const [realizado, setRealizado] = useState('')
   const [validade, setValidade] = useState('')
   const [examsSel, setExamsSel] = useState<string[]>([])
+  const [file, setFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const colabsQuery   = useColaboradores(empresaId)
   const catalogoQuery = useExamesCatalogo()
@@ -123,7 +127,10 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
   async function handleSave() {
     const colab = (colabsQuery.data ?? []).find(c => c.id === colabId)
     if (!colab) return
+    setIsUploading(true)
     try {
+      let arquivoUrl: string | null = null
+      if (file) arquivoUrl = await uploadAsoArquivo(empresaId, file)
       await criar.mutateAsync({
         empresa_id:        empresaId,
         colaborador_id:    colabId,
@@ -133,9 +140,11 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
         vencimento:        validade || null,
         observacoes:       resultado,
         exames_realizados: examsSel.length > 0 ? examsSel : null,
+        arquivo_url:       arquivoUrl,
       })
       onClose()
     } catch { /* toast já disparado */ }
+    finally { setIsUploading(false) }
   }
 
   return (
@@ -206,17 +215,42 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
                   </div>
               }
             </div>
+
+            <div
+              className="dropzone"
+              style={{ cursor:'pointer', borderColor: isDragging ? 'var(--navy-600)' : file ? 'var(--green-500)' : undefined, background: isDragging ? 'var(--bg-tint-1)' : file ? 'var(--green-50, #f0fdf4)' : undefined }}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) setFile(f) }}
+            >
+              <input ref={fileInputRef} type="file" accept=".pdf" style={{ display:'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) setFile(f) }}/>
+              {file ? (
+                <>
+                  <div className="dropzone-ic"><CheckCircle2 size={20} style={{ color:'var(--green-500)' }}/></div>
+                  <div className="dropzone-title">{file.name}</div>
+                  <div className="dropzone-sub">{(file.size / 1024).toFixed(0)} KB</div>
+                  <button type="button" className="tbtn ghost sm" style={{ marginTop:4, fontSize:11 }} onClick={e => { e.stopPropagation(); setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}><X size={12}/> Remover</button>
+                </>
+              ) : (
+                <>
+                  <div className="dropzone-ic"><UploadCloud size={20}/></div>
+                  <div className="dropzone-title">Arraste ou clique para anexar o PDF do ASO</div>
+                  <div className="dropzone-sub">PDF · opcional · máx. 10 MB</div>
+                </>
+              )}
+            </div>
           </div>
           <div className="modal-foot">
             <button className="tbtn" onClick={onClose}>Cancelar</button>
             <button
               className="tbtn primary"
-              disabled={!canSave || criar.isPending}
-              style={(!canSave || criar.isPending) ? { opacity:0.5, pointerEvents:'none' } : undefined}
+              disabled={!canSave || criar.isPending || isUploading}
+              style={(!canSave || criar.isPending || isUploading) ? { opacity:0.5, pointerEvents:'none' } : undefined}
               onClick={() => void handleSave()}
             >
-              {criar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13}/>}
-              {criar.isPending ? 'Salvando...' : 'Salvar ASO'}
+              {(criar.isPending || isUploading) ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13}/>}
+              {(criar.isPending || isUploading) ? 'Salvando...' : 'Salvar ASO'}
             </button>
           </div>
         </div>
@@ -228,8 +262,22 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
 // ---------------------------------------------------------------------------
 // ScheduleModal
 // ---------------------------------------------------------------------------
-function ScheduleModal({ prefill, onClose }: { prefill: string | null; onClose: () => void }) {
-  const [colab, setColab] = useState(prefill ?? '')
+function ScheduleModal({ prefill, onClose, empresaId }: { prefill: string | null; onClose: () => void; empresaId: string | null }) {
+  const colabsQuery = useColaboradores(empresaId)
+  const colabs = colabsQuery.data ?? []
+
+  // Pré-seleciona o colaborador quando o modal é aberto a partir da linha de
+  // uma ASO específica (prefill = nome) — ajustado durante o render (não em
+  // efeito) assim que a lista de colaboradores carrega, guardado pela
+  // comparação com o último prefill já aplicado.
+  const prefillId = useMemo(() => colabs.find(c => c.nome === prefill)?.id ?? '', [colabs, prefill])
+  const [colab, setColab] = useState('')
+  const [lastPrefillId, setLastPrefillId] = useState('')
+  if (prefillId && prefillId !== lastPrefillId) {
+    setLastPrefillId(prefillId)
+    setColab(prefillId)
+  }
+
   const [tipo, setTipo] = useState('Periódico')
   const [data, setData] = useState('')
   const [hora, setHora] = useState('')
@@ -241,15 +289,16 @@ function ScheduleModal({ prefill, onClose }: { prefill: string | null; onClose: 
         <div className="modal-head">
           <div>
             <h2>Agendar exame</h2>
-            <div style={{ fontSize:12.5, color:'var(--ink-500)', marginTop:2 }}>Agenda da clínica ocupacional · junho/2026</div>
+            <div style={{ fontSize:12.5, color:'var(--ink-500)', marginTop:2 }}>Agenda da clínica ocupacional</div>
           </div>
           <button className="icon-btn sm" onClick={onClose}><X size={16}/></button>
         </div>
         <div className="modal-body">
           <div className="mp-form">
             <Field label="Colaborador" full>
-              <select className="mp-input" value={colab} onChange={e => setColab(e.target.value)}>
+              <select className="mp-input" value={colab} onChange={e => setColab(e.target.value)} disabled={colabsQuery.isLoading}>
                 <option value="">Selecione…</option>
+                {colabs.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
             </Field>
             <Field label="Tipo de exame" full>
@@ -265,10 +314,11 @@ function ScheduleModal({ prefill, onClose }: { prefill: string | null; onClose: 
           <div className="modal-foot">
             <button className="tbtn" onClick={onClose}>Cancelar</button>
             <button
-              className="tbtn primary"
+              className="tbtn primary is-soon"
               disabled={!canSave}
+              title="Em breve"
               style={!canSave ? { opacity:0.5, pointerEvents:'none' } : undefined}
-              onClick={() => { toast.success('Exame agendado com sucesso.'); onClose() }}
+              onClick={() => { comingSoon('Agenda de exames'); onClose() }}
             >
               <CheckCircle2 size={13}/> Agendar
             </button>
@@ -336,6 +386,7 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
     validade:  a.vencimento ?? '',
     resultado: a.observacoes ?? 'Apto',
     exames:    a.exames_realizados ?? [],
+    arquivo_url: a.arquivo_url ?? null,
   })), [asosBanco])
 
   const [fTipo, setFTipo] = useState('Todos')
@@ -389,7 +440,17 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
           </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Download size={14}/> Exportar</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('asos.csv', [
+              { header: 'Colaborador',   value: (r: typeof filtered[number]) => r.colab },
+              { header: 'Tipo de exame', value: (r: typeof filtered[number]) => r.tipo },
+              { header: 'Realizado em',  value: (r: typeof filtered[number]) => r.realizado },
+              { header: 'Validade',      value: (r: typeof filtered[number]) => r.validade },
+              { header: 'Resultado',     value: (r: typeof filtered[number]) => r.resultado },
+              { header: 'Status',        value: (r: typeof filtered[number]) => r.st.label },
+            ], filtered)}
+          ><Download size={14}/> Exportar</button>
           <button className="tbtn" onClick={() => { setPrefill(null); setSchedOpen(true) }}><Calendar size={14}/> Agendar exame</button>
           <button className="tbtn primary" onClick={() => setNewOpen(true)}><Plus size={14}/> Registrar ASO</button>
         </div>
@@ -498,8 +559,8 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
                     <td><span className={`chip ${r.st.key}`}>{r.st.label}</span></td>
                     <td>
                       <div className="aso-actions">
-                        <button className="icon-btn sm" title="Visualizar PDF"><Eye size={15}/></button>
-                        <button className="icon-btn sm" title="Baixar PDF"><Download size={15}/></button>
+                        <button className="icon-btn sm" title={r.arquivo_url ? 'Visualizar PDF' : 'Sem PDF anexado'} disabled={!r.arquivo_url} onClick={() => r.arquivo_url && window.open(r.arquivo_url, '_blank')}><Eye size={15}/></button>
+                        <button className="icon-btn sm" title={r.arquivo_url ? 'Baixar PDF' : 'Sem PDF anexado'} disabled={!r.arquivo_url} onClick={() => { if (!r.arquivo_url) return; const a = document.createElement('a'); a.href = r.arquivo_url; a.download = `ASO - ${r.colab}.pdf`; a.target = '_blank'; a.click() }}><Download size={15}/></button>
                         {r.st.key !== 'ok'
                           ? <button className="tbtn ghost sm accent" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>
                           : <button className="tbtn ghost sm" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>}
@@ -529,7 +590,7 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
       </div>
 
       {newOpen && empresaId && <NewAsoModal onClose={() => setNewOpen(false)} empresaId={empresaId}/>}
-      {schedOpen && <ScheduleModal prefill={prefill} onClose={() => setSchedOpen(false)}/>}
+      {schedOpen && <ScheduleModal prefill={prefill} onClose={() => setSchedOpen(false)} empresaId={empresaId}/>}
       {confirmDel && <ConfirmDelete row={confirmDel} onCancel={() => setConfirmDel(null)} onConfirm={() => doDelete(confirmDel)}/>}
     </div>
   )
@@ -559,17 +620,27 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
   const empresas = empresasQuery.data ?? []
   const kpisQuery = useDashboardKpis('all')
   const kpis = kpisQuery.data
-  const COLORS = ['#1F2A44','#10B981','#3B82F6','#8B5CF6','#F59E0B']
 
   return (
     <div className="content">
       <div className="page-header">
         <div>
-          <h1>Exames médicos · PCMSO · EngMarq</h1>
+          <h1>Exames médicos · PCMSO</h1>
           <p className="sub">Saúde ocupacional consolidada · {empresas.length} empresas-cliente</p>
         </div>
         <div className="toolbar">
-          <button className="tbtn primary"><Download size={14}/> Exportar consolidado</button>
+          <button
+            className="tbtn primary"
+            onClick={() => exportToCsv('exames_empresas.csv', [
+              { header: 'Empresa',        value: (e: EmpresaComContagem) => e.razao_social },
+              { header: 'CNPJ',           value: (e: EmpresaComContagem) => e.cnpj },
+              { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
+              { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
+              { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
+              { header: 'Colaboradores',  value: (e: EmpresaComContagem) => e.colaboradores_count },
+              { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
+            ], empresas)}
+          ><Download size={14}/> Exportar consolidado</button>
         </div>
       </div>
 
@@ -621,7 +692,7 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
                 >
                   <td>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <span className="ava" style={{ background: COLORS[i % COLORS.length], borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
+                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
                         {e.razao_social.slice(0,1)}
                       </span>
                       <div>

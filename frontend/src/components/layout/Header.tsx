@@ -7,8 +7,11 @@ import {
   Search, Bell, HelpCircle, User, Settings,
   Activity, ShieldCheck, ChevronRight, LogOut,
 } from "lucide-react"
+import { APP_SHORT_NAME } from "@/config/brand"
+import { comingSoon } from "@/lib/comingSoon"
 
 type NotifTone = "crit" | "warn" | "ok" | "info"
+type NotifFilter = "todas" | "crit" | "warn"
 
 type Notification = {
   id: number
@@ -17,22 +20,6 @@ type Notification = {
   meta: string
   unread: boolean
 }
-
-const NOTIFS_ADMIN: Notification[] = [
-  { id: 1, tone: "crit", title: "Logix Industrial: 3 ASOs vencidos", meta: "há 12 min · setor de produção", unread: true },
-  { id: 2, tone: "warn", title: "Auditoria MTE agendada para Metalcorp", meta: "há 1 h · 12 de junho, 09:00", unread: true },
-  { id: 3, tone: "warn", title: "PGR de Construtora Atlas expira em 14 dias", meta: "há 3 h · renovação pendente", unread: true },
-  { id: 4, tone: "ok",   title: "Treinamento NR-35 concluído — 18 colaboradores", meta: "ontem · Frota Sul Logística", unread: false },
-  { id: 5, tone: "info", title: "Novo eSocial S-2240 enviado com sucesso", meta: "ontem · 247 eventos", unread: false },
-]
-
-const NOTIFS_EMPRESA: Notification[] = [
-  { id: 1, tone: "crit", title: "8 ASOs vencem nesta semana", meta: "há 22 min · turno A — produção", unread: true },
-  { id: 2, tone: "warn", title: "NR-10 obrigatório: 4 eletricistas pendentes", meta: "há 2 h · prazo: 30 de maio", unread: true },
-  { id: 3, tone: "ok",   title: "Ficha de EPI atualizada — João Silveira", meta: "hoje, 09:14", unread: true },
-  { id: 4, tone: "info", title: "Novo PGR disponível para download", meta: "ontem · revisão 2026.05", unread: false },
-  { id: 5, tone: "ok",   title: "PCMSO anual entregue ao MTE", meta: "3 dias atrás", unread: false },
-]
 
 function useClickOutside<T extends HTMLElement>(
   ref: React.RefObject<T | null>,
@@ -61,38 +48,46 @@ export function Header() {
 
   // Alertas reais do banco como notificações
   const alertasQuery = useDashboardAlertas(isAdmin ? 'all' : empresaId, 5)
-  const alertasReais = alertasQuery.data ?? []
+  // `.data` só vira um array estável quando a query resolve — usar
+  // `alertasQuery.data ?? []` aqui geraria uma referência nova a cada
+  // render (inclusive durante o loading) e viraria dependência instável
+  // do efeito abaixo, causando loop de setState ("Maximum update depth
+  // exceeded"). Depender de `alertasQuery.data` direto evita isso.
+  const alertasReais = alertasQuery.data
 
   const [openNotif, setOpenNotif] = useState(false)
   const [openProfile, setOpenProfile] = useState(false)
   const [notifs, setNotifs] = useState<Notification[]>([])
+  const [notifFilter, setNotifFilter] = useState<NotifFilter>("todas")
+  const [searchTerm, setSearchTerm] = useState("")
 
   const notifRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
 
+  // Notificações vêm só de alertas reais (documentos/treinamentos vencendo
+  // ou vencidos) — sem lista fake de fallback quando não há nada pendente.
   useEffect(() => {
-    if (alertasReais.length > 0) {
-      setNotifs(alertasReais.map((a, i) => ({
-        id: i + 1,
-        tone: a.status === 'vencido' ? 'crit' : 'warn',
-        title: a.nome_envolvido
-          ? `${a.nome_envolvido} — ${a.titulo}`
-          : a.titulo,
-        meta: a.vencimento
-          ? `vence ${new Date(a.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}`
-          : '',
-        unread: true,
-      })))
-    } else {
-      setNotifs(profile?.role === "admin" ? NOTIFS_ADMIN : NOTIFS_EMPRESA)
-    }
-  }, [alertasReais.length, profile?.role])
+    setNotifs((alertasReais ?? []).map((a, i) => ({
+      id: i + 1,
+      tone: a.status === 'vencido' ? 'crit' : 'warn',
+      title: a.nome_envolvido
+        ? `${a.nome_envolvido} — ${a.titulo}`
+        : a.titulo,
+      meta: a.vencimento
+        ? `vence ${new Date(a.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}`
+        : '',
+      unread: true,
+    })))
+  }, [alertasReais])
 
   useClickOutside(notifRef, () => setOpenNotif(false))
   useClickOutside(profileRef, () => setOpenProfile(false))
 
   const unreadCount = notifs.filter(n => n.unread).length
   const markAllRead = () => setNotifs(prev => prev.map(n => ({ ...n, unread: false })))
+  const visibleNotifs = notifs.filter(n =>
+    notifFilter === "todas" ? true : n.tone === notifFilter
+  )
 
   const initials = profile?.full_name
     ? profile.full_name.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()
@@ -103,14 +98,25 @@ export function Header() {
     : "Buscar colaborador, treinamento…"
 
   const roleName = profile?.role === "admin" ? "Coordenadora SST" : "DP / RH"
-  const companyName = profile?.role === "admin" ? "EngMarq" : "Empresa"
+  const companyName = profile?.role === "admin" ? APP_SHORT_NAME : "Empresa"
+
+  function submitSearch() {
+    const term = searchTerm.trim()
+    if (!term) return
+    navigate(`/colaboradores?q=${encodeURIComponent(term)}`)
+  }
 
   return (
     <header className="topbar">
-      {/* Search */}
+      {/* Search — leva para Colaboradores com o termo pré-filtrado */}
       <div className="topbar-search">
         <Search size={14} />
-        <input placeholder={searchPlaceholder} />
+        <input
+          placeholder={searchPlaceholder}
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") submitSearch() }}
+        />
         <kbd>⌘K</kbd>
       </div>
 
@@ -143,36 +149,44 @@ export function Header() {
             </div>
 
             <div className="pop-tabs">
-              <button className="on">
+              <button className={notifFilter === "todas" ? "on" : ""} onClick={() => setNotifFilter("todas")}>
                 Todas <span className="count">{notifs.length}</span>
               </button>
-              <button>
+              <button className={notifFilter === "crit" ? "on" : ""} onClick={() => setNotifFilter("crit")}>
                 Críticas <span className="count">{notifs.filter(n => n.tone === "crit").length}</span>
               </button>
-              <button>
+              <button className={notifFilter === "warn" ? "on" : ""} onClick={() => setNotifFilter("warn")}>
                 Compliance <span className="count">{notifs.filter(n => n.tone === "warn").length}</span>
               </button>
             </div>
 
-            <ul className="notif-list">
-              {notifs.map(n => (
-                <li
-                  key={n.id}
-                  className={["notif-item", n.tone, n.unread ? "unread" : ""].filter(Boolean).join(" ")}
-                >
-                  <span className="nf-dot" />
-                  <div className="nf-body">
-                    <div className="nf-title">{n.title}</div>
-                    <div className="nf-meta">{n.meta}</div>
-                  </div>
-                  {n.unread && <span className="nf-pill">novo</span>}
-                </li>
-              ))}
-            </ul>
+            {visibleNotifs.length === 0 ? (
+              <div style={{ padding: "28px 16px", textAlign: "center", color: "var(--ink-500)", fontSize: 12.5 }}>
+                {notifs.length === 0 ? "Nenhum alerta no momento — tudo em dia." : "Nenhum alerta nessa categoria."}
+              </div>
+            ) : (
+              <ul className="notif-list">
+                {visibleNotifs.map(n => (
+                  <li
+                    key={n.id}
+                    className={["notif-item", n.tone, n.unread ? "unread" : ""].filter(Boolean).join(" ")}
+                  >
+                    <span className="nf-dot" />
+                    <div className="nf-body">
+                      <div className="nf-title">{n.title}</div>
+                      <div className="nf-meta">{n.meta}</div>
+                    </div>
+                    {n.unread && <span className="nf-pill">novo</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
 
             <div className="pop-foot">
-              <button className="tbtn ghost">Configurar alertas</button>
-              <button className="tbtn">
+              <button className="tbtn ghost is-soon" title="Em breve" onClick={() => comingSoon('Configurar alertas')}>
+                Configurar alertas
+              </button>
+              <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Central de notificações')}>
                 Ver tudo <ChevronRight size={13} />
               </button>
             </div>
@@ -181,7 +195,7 @@ export function Header() {
       </div>
 
       {/* Help */}
-      <button className="icon-btn" title="Ajuda" aria-label="Ajuda">
+      <button className="icon-btn is-soon" title="Ajuda — em breve" aria-label="Ajuda" onClick={() => comingSoon('Central de ajuda')}>
         <HelpCircle size={17} />
       </button>
 
@@ -217,17 +231,17 @@ export function Header() {
               <button className="pp-item" onClick={() => { navigate("/configuracoes"); setOpenProfile(false) }}>
                 <Settings size={15} /><span>Configurações</span>
               </button>
-              <button className="pp-item">
+              <button className="pp-item is-soon" title="Em breve" onClick={() => comingSoon('Atividade recente')}>
                 <Activity size={15} /><span>Atividade recente</span>
               </button>
             </div>
 
             <div className="pp-section">
               <div className="pp-label">Preferências</div>
-              <button className="pp-item">
-                <Bell size={15} /><span>Notificações</span><span className="pp-kbd">⌘N</span>
+              <button className="pp-item is-soon" title="Em breve" onClick={() => comingSoon('Preferências de notificação')}>
+                <Bell size={15} /><span>Notificações</span>
               </button>
-              <button className="pp-item">
+              <button className="pp-item is-soon" title="Em breve" onClick={() => comingSoon('Ajuda & suporte')}>
                 <HelpCircle size={15} /><span>Ajuda &amp; suporte</span>
               </button>
             </div>

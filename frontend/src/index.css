@@ -1,55 +1,81 @@
 @import "tailwindcss";
 
 /* ============================================================
-   EngMarq Vision — Design System Tokens
+   Norveo — Design System Tokens
    ============================================================ */
 :root {
-  /* Brand navy */
-  --navy-900: #0B1426;
-  --navy-800: #111E37;
-  --navy-700: #1A2942;
-  --navy-600: #233354;
-  --navy-500: #2E4068;
-  --navy-300: #6B7B98;
+  /* ==========================================================
+     Paleta física — cores "cruas" da marca atual (Norveo).
+     Isto é o único bloco que muda quando a identidade visual
+     for trocada de novo (ver src/config/brand.ts para nome/
+     tagline). Componentes de página NÃO devem referenciar estes
+     tokens diretamente — usar sempre a camada semântica abaixo.
 
-  /* Brand orange (accent) */
-  --orange-500: #F59E0B;
-  --orange-400: #FBBF24;
-  --orange-600: #D97706;
-  --orange-50:  #FEF3E2;
+     Origem: manual de marca Norveo — Norte #071A2B, Graphite
+     #202938, Vision Blue #176FFF, Horizon #4385FF, Signal
+     #FFB020, Cloud #F5F7FA. Os tons intermediários da rampa
+     (ex.: --navy-600/500/300) foram interpolados a partir
+     desses pontos oficiais para manter a progressão de escala
+     já usada em todo o CSS legado.
+     ========================================================== */
+
+  /* Brand navy (Norte / Graphite) */
+  --navy-900: #071A2B; /* Norte */
+  --navy-800: #142235;
+  --navy-700: #202938; /* Graphite */
+  --navy-600: #34415A;
+  --navy-500: #4A5A78;
+  --navy-300: #8794AC;
+  --navy-100: #E2E7F0;
+  --navy-50:  #F1F4F8;
+
+  /* Brand orange — mapeado ao "Signal" (tom de atenção da Norveo) */
+  --orange-700: #B5790F;
+  --orange-600: #E09A17;
+  --orange-500: #FFB020; /* Signal */
+  --orange-400: #FFC658;
+  --orange-50:  #FFF6E6;
 
   /* Status */
+  --green-700: #047857;
+  --green-600: #059669;
   --green-500: #10B981;
   --green-400: #34D399;
-  --green-600: #059669;
   --green-50:  #ECFDF5;
+  --red-700:   #B91C1C;
+  --red-600:   #DC2626;
   --red-500:   #EF4444;
   --red-50:    #FEF2F2;
-  --blue-500:  #3B82F6;
-  --blue-50:   #EFF6FF;
+  --blue-700:  #0F5DD1; /* Vision Blue, hover */
+  --blue-600:  #176FFF; /* Vision Blue — cor de ação/CTA da marca */
+  --blue-500:  #4385FF; /* Horizon — azul secundário/info */
+  --blue-50:   #EAF2FF;
   --violet-500: #8B5CF6;
   --violet-50:  #F5F3FF;
 
   /* Neutrals */
-  --bg:            #F4F6FB;
+  --bg:            #F5F7FA; /* Cloud */
+  --bg-tint-1:     #EEF1F8;
   --surface:       #FFFFFF;
+  --surface-2:     var(--bg-tint-1);
   --border:        #E5E8F0;
   --border-strong: #D5DAE5;
   --ink-900:       #0F172A;
+  --ink-800:       #1E293B;
   --ink-700:       #334155;
   --ink-500:       #64748B;
   --ink-400:       #94A3B8;
   --ink-300:       #CBD5E1;
+  --ink-200:       #E2E8F0;
 
-  /* Glassmorphism */
-  --glass-bg:       rgba(255, 255, 255, 0.55);
-  --glass-bg-dark:  rgba(255, 255, 255, 0.08);
-  --glass-border:   rgba(255, 255, 255, 0.18);
-  --glass-blur:     22px;
-  --glass-shadow:   0 8px 24px -8px rgba(15, 23, 42, 0.12), 0 2px 4px -1px rgba(15, 23, 42, 0.05);
+  /* Elevação — cards sólidos (sem blur/transparência), sombra suave e difusa.
+     Substitui os tokens antigos de glassmorphism (removido do app inteiro). */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 28px -10px rgba(15, 23, 42, 0.14), 0 2px 6px -2px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 24px 48px -16px rgba(15, 23, 42, 0.18), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
 
-  /* Typography */
-  --font-display: "Plus Jakarta Sans", -apple-system, system-ui, sans-serif;
+  /* Typography — manual de marca Norveo: Sora (títulos/logo/destaques), Inter (interface/textos) */
+  --font-display: "Sora", -apple-system, system-ui, sans-serif;
   --font-body:    "Inter", -apple-system, system-ui, sans-serif;
 
   /* Radii */
@@ -60,6 +86,89 @@
   --r-xl:   20px;
   --r-2xl:  24px;
   --r-full: 999px;
+
+  /* ==========================================================
+     Camada semântica — é ISTO que componentes/páginas devem
+     usar. Ao trocar a identidade visual (Etapa C), só o bloco
+     físico acima muda; estes nomes continuam os mesmos.
+     ========================================================== */
+  --color-primary:         var(--navy-900);
+  --color-primary-hover:   var(--navy-800);
+  --color-primary-soft:    var(--navy-50);
+  /* Accent = Vision Blue, a cor de ação/CTA da Norveo (ver botão
+     "Acessar" no manual de marca) — não confundir com --orange-*
+     (Signal), que fica reservado ao estado "warning". */
+  --color-accent:          var(--blue-600);
+  --color-accent-hover:    var(--blue-700);
+  --color-accent-soft:     var(--blue-50);
+
+  --color-surface:         var(--surface);
+  --color-surface-alt:     var(--surface-2);
+  --color-bg:              var(--bg);
+  --color-border:          var(--border);
+  --color-border-strong:   var(--border-strong);
+
+  --color-text-primary:    var(--ink-900);
+  --color-text-secondary:  var(--ink-700);
+  --color-text-muted:      var(--ink-500);
+
+  --color-success:         var(--green-600);
+  --color-success-soft:    var(--green-50);
+  --color-warning:         var(--orange-600);
+  --color-warning-soft:    var(--orange-50);
+  --color-danger:          var(--red-500);
+  --color-danger-soft:     var(--red-50);
+  --color-info:            var(--blue-500);
+  --color-info-soft:       var(--blue-50);
+}
+
+/* ============================================================
+   Tailwind v4 theme — mapeia a camada semântica acima para
+   classes utilitárias (bg-primary, text-accent, ...), usadas
+   pelos componentes novos em src/components/ui/. Não migra o
+   CSS legado abaixo, que continua em classes customizadas.
+   ============================================================ */
+@theme {
+  --color-primary:        var(--color-primary);
+  --color-primary-hover:  var(--color-primary-hover);
+  --color-primary-soft:   var(--color-primary-soft);
+  --color-accent:         var(--color-accent);
+  --color-accent-hover:   var(--color-accent-hover);
+  --color-accent-soft:    var(--color-accent-soft);
+
+  --color-surface:        var(--color-surface);
+  --color-surface-alt:    var(--color-surface-alt);
+  --color-bg:             var(--color-bg);
+  --color-border:         var(--color-border);
+  --color-border-strong:  var(--color-border-strong);
+
+  --color-text-primary:   var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted:     var(--color-text-muted);
+
+  --color-success:        var(--color-success);
+  --color-success-soft:   var(--color-success-soft);
+  --color-warning:        var(--color-warning);
+  --color-warning-soft:   var(--color-warning-soft);
+  --color-danger:         var(--color-danger);
+  --color-danger-soft:    var(--color-danger-soft);
+  --color-info:           var(--color-info);
+  --color-info-soft:      var(--color-info-soft);
+
+  --font-display: var(--font-display);
+  --font-body:    var(--font-body);
+
+  --radius-xs:   var(--r-xs);
+  --radius-sm:   var(--r-sm);
+  --radius-md:   var(--r-md);
+  --radius-lg:   var(--r-lg);
+  --radius-xl:   var(--r-xl);
+  --radius-2xl:  var(--r-2xl);
+  --radius-full: var(--r-full);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 }
 
 /* ============================================================
@@ -104,9 +213,9 @@ html, body {
   border-radius: 50%;
   background: radial-gradient(
     circle at 40% 40%,
-    rgba(245, 158, 11, 0.15) 0%,
-    rgba(59, 130, 246, 0.10) 40%,
-    rgba(139, 92, 246, 0.06) 70%,
+    rgba(67, 133, 255, 0.16) 0%,
+    rgba(23, 111, 255, 0.11) 45%,
+    rgba(7, 26, 43, 0.05) 75%,
     transparent 100%
   );
   animation: aurora-drift 20s ease-in-out infinite alternate;
@@ -151,8 +260,21 @@ html, body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 85% 15%, rgba(245, 158, 11, 0.14) 0%, transparent 55%),
-    radial-gradient(ellipse at 15% 85%, rgba(59, 130, 246, 0.10) 0%, transparent 55%);
+    radial-gradient(ellipse at 85% 15%, rgba(67, 133, 255, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 85%, rgba(23, 111, 255, 0.12) 0%, transparent 55%);
+  pointer-events: none;
+}
+/* marca d'água do mark, bem discreta, ancorada no canto inferior direito */
+.login-left::after {
+  content: '';
+  position: absolute;
+  right: -60px;
+  bottom: -60px;
+  width: 340px;
+  height: 340px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M49 4 L25 39 L49 24 Z' fill='%234385FF'/%3E%3Cpath d='M49 4 L49 24 L73 39 Z' fill='%23176FFF'/%3E%3Cpath d='M14 38 L30 38 L30 96 L14 96 Z' fill='%23FFFFFF'/%3E%3Cpath d='M14 38 L30 38 L84 96 L68 96 Z' fill='%234385FF'/%3E%3Cpath d='M68 38 L84 38 L84 96 L68 96 Z' fill='%23176FFF'/%3E%3C/svg%3E") no-repeat center / contain;
+  opacity: 0.05;
+  transform: rotate(-8deg);
   pointer-events: none;
 }
 
@@ -164,16 +286,17 @@ html, body {
   position: relative;
   z-index: 1;
 }
-.brand-mark {
-  width: 42px;
-  height: 42px;
-  background: var(--orange-500);
+/* painel branco sólido atrás do ícone — dá destaque ao mark sobre fundo escuro */
+.brand-icon-panel {
+  width: 46px;
+  height: 46px;
   border-radius: var(--r-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20);
 }
 .brand-name {
   font-family: var(--font-display);
@@ -186,7 +309,7 @@ html, body {
 .brand-tag {
   font-size: 10px;
   font-weight: 700;
-  color: var(--orange-400);
+  color: var(--blue-500);
   letter-spacing: 1.8px;
   text-transform: uppercase;
   margin-top: 1px;
@@ -207,10 +330,10 @@ html, body {
   align-items: center;
   gap: 7px;
   padding: 5px 12px;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.30);
+  background: rgba(67, 133, 255, 0.14);
+  border: 1px solid rgba(67, 133, 255, 0.35);
   border-radius: var(--r-full);
-  color: var(--orange-400);
+  color: var(--blue-500);
   font-size: 12px;
   font-weight: 600;
   width: fit-content;
@@ -227,7 +350,7 @@ html, body {
 }
 .lcopy h2 em {
   font-style: normal;
-  color: var(--orange-400);
+  color: var(--blue-500);
 }
 .lcopy p {
   font-size: 15px;
@@ -237,15 +360,47 @@ html, body {
   margin-bottom: 36px;
 }
 
-/* glassmorphism stats card */
+/* Pilares da marca (Clareza, Controle, Antecipação, Inteligência, Direção) */
+.lpillars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  max-width: 460px;
+  margin-bottom: 36px;
+}
+.lpillar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 72px;
+}
+.lpillar-ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue-500);
+  background: rgba(67, 133, 255, 0.10);
+  border: 1.5px solid rgba(67, 133, 255, 0.40);
+}
+.lpillar-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 0.1px;
+}
+
+/* card de métricas do hero — sólido (sem blur), sobre o painel navy */
 .lglass {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: var(--navy-800);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: var(--r-lg);
   overflow: hidden;
-  backdrop-filter: blur(16px);
 }
 .lglass-stat {
   padding: 20px 18px;
@@ -310,16 +465,7 @@ html, body {
   gap: 10px;
   margin-bottom: 32px;
 }
-.login-mobile-brand .brand-mark-sm {
-  width: 38px;
-  height: 38px;
-  background: var(--navy-700);
-  border-radius: var(--r-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.login-mobile-brand .brand-text {
+.brand-text {
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 800;
@@ -400,8 +546,9 @@ html, body {
   cursor: pointer;
   font-weight: 500;
 }
+.field-row label input[type="checkbox"] { accent-color: var(--color-accent); }
 .field-row a {
-  color: var(--orange-600);
+  color: var(--color-accent);
   font-weight: 600;
   text-decoration: none;
   font-size: 13px;
@@ -424,16 +571,16 @@ html, body {
   gap: 8px;
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 }
-.btn-primary.orange {
-  background: var(--orange-500);
+.btn-primary.accent {
+  background: var(--color-accent);
   color: white;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 14px rgba(23, 111, 255, 0.35);
 }
-.btn-primary.orange:hover {
-  background: var(--orange-600);
-  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.45);
+.btn-primary.accent:hover {
+  background: var(--color-accent-hover);
+  box-shadow: 0 4px 18px rgba(23, 111, 255, 0.45);
 }
-.btn-primary.orange:active { transform: scale(0.98); }
+.btn-primary.accent:active { transform: scale(0.98); }
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -483,14 +630,40 @@ html, body {
    SIDEBAR
    ============================================================ */
 .sidebar {
+  position: relative;
   width: 232px;
   height: 100vh;
   background: var(--navy-900);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible;
+  transition: width 0.18s ease;
 }
+.sidebar.collapsed { width: 76px; }
+
+/* Botão de recolher/expandir — pastilha flutuando na borda direita */
+.sb-toggle {
+  position: absolute;
+  top: 22px;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  z-index: 15;
+  transition: color 0.15s;
+}
+.sb-toggle:hover { color: var(--color-accent); }
+.sb-toggle svg { transition: transform 0.18s ease; }
+.sidebar.collapsed .sb-toggle svg { transform: rotate(180deg); }
 
 .sb-brand {
   padding: 20px 16px 16px;
@@ -499,7 +672,11 @@ html, body {
   gap: 10px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   flex-shrink: 0;
+  overflow: hidden;
 }
+.sidebar.collapsed .sb-brand { justify-content: center; padding: 20px 0 16px; }
+.sidebar.collapsed .brand-name,
+.sidebar.collapsed .brand-tag { display: none; }
 
 .sb-section-label {
   padding: 18px 16px 6px;
@@ -513,11 +690,15 @@ html, body {
 .sb-nav {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0 8px 8px;
 }
 .sb-nav::-webkit-scrollbar { width: 3px; }
 .sb-nav::-webkit-scrollbar-track { background: transparent; }
 .sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 2px; }
+.sidebar.collapsed .sb-section-label { display: none; }
+.sidebar.collapsed .nav-item { justify-content: center; padding: 10px 0; gap: 0; }
+.sidebar.collapsed .nav-item span { display: none; }
 
 .nav-item {
   display: flex;
@@ -542,8 +723,8 @@ html, body {
   color: rgba(255,255,255,0.85);
 }
 .nav-item.active {
-  background: rgba(245,158,11,0.14);
-  color: var(--orange-400);
+  background: rgba(67,133,255,0.16);
+  color: var(--blue-500);
 }
 
 .nav-badge {
@@ -565,8 +746,8 @@ html, body {
 .sb-footer {
   margin: 8px;
   padding: 16px;
-  background: rgba(245,158,11,0.07);
-  border: 1px solid rgba(245,158,11,0.16);
+  background: rgba(67,133,255,0.10);
+  border: 1px solid rgba(67,133,255,0.20);
   border-radius: var(--r-lg);
   flex-shrink: 0;
 }
@@ -586,17 +767,18 @@ html, body {
 .sb-footer .cta {
   width: 100%;
   padding: 8px 12px;
-  background: var(--orange-500);
-  color: var(--navy-900);
+  background: var(--blue-600);
+  color: white;
   border: none;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-full);
   font-family: var(--font-display);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
 }
-.sb-footer .cta:hover { background: var(--orange-400); }
+.sb-footer .cta:hover { background: var(--blue-700); }
+.sidebar.collapsed .sb-footer { display: none; }
 
 .sb-user {
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -606,6 +788,8 @@ html, body {
   gap: 10px;
   flex-shrink: 0;
 }
+.sidebar.collapsed .sb-user { justify-content: center; padding: 12px 8px; }
+.sidebar.collapsed .sb-user-info { display: none; }
 .sb-ava {
   width: 34px;
   height: 34px;
@@ -673,17 +857,17 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 0 0 260px;
-  padding: 0 12px;
-  height: 34px;
+  flex: 0 0 280px;
+  padding: 0 14px;
+  height: 36px;
   background: var(--bg);
   border: 1.5px solid var(--border);
-  border-radius: var(--r-md);
+  border-radius: var(--r-full);
   color: var(--ink-400);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 .topbar-search:focus-within {
-  border-color: var(--navy-600);
+  border-color: var(--color-accent);
   background: var(--surface);
 }
 .topbar-search input {
@@ -774,8 +958,8 @@ html, body {
   right: 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-xl);
-  box-shadow: 0 8px 32px -8px rgba(15,23,42,0.18), 0 2px 8px -2px rgba(15,23,42,0.08);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-lg);
   z-index: 200;
   overflow: hidden;
 }
@@ -802,7 +986,7 @@ html, body {
 .pop-link {
   font-size: 12px;
   font-weight: 600;
-  color: var(--orange-600);
+  color: var(--color-accent);
   background: none;
   border: none;
   cursor: pointer;
@@ -867,7 +1051,7 @@ html, body {
   transition: background 0.1s;
 }
 .notif-item:hover { background: var(--bg); }
-.notif-item.unread { background: rgba(245,158,11,0.03); }
+.notif-item.unread { background: rgba(67,133,255,0.05); }
 
 .nf-dot {
   width: 7px;
@@ -880,7 +1064,7 @@ html, body {
 .notif-item.crit .nf-dot { background: var(--red-500); }
 .notif-item.warn .nf-dot { background: var(--orange-500); }
 .notif-item.ok   .nf-dot { background: var(--green-500); }
-.notif-item.unread .nf-dot { box-shadow: 0 0 0 2px rgba(245,158,11,0.25); }
+.notif-item.unread .nf-dot { box-shadow: 0 0 0 2px rgba(67,133,255,0.25); }
 
 .nf-body { flex: 1; min-width: 0; }
 .nf-title {
@@ -899,8 +1083,8 @@ html, body {
   font-weight: 700;
   padding: 2px 7px;
   border-radius: var(--r-full);
-  background: var(--orange-50);
-  color: var(--orange-600);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -1071,6 +1255,9 @@ html, body {
   background: var(--navy-700);
   border-color: var(--navy-700);
   color: white;
+  border-radius: var(--r-full);
+  padding-left: 16px;
+  padding-right: 16px;
 }
 .tbtn.primary:hover { background: var(--navy-900); border-color: var(--navy-900); }
 .tbtn.ghost {
@@ -1111,13 +1298,14 @@ html, body {
   box-shadow: 0 1px 3px rgba(15,23,42,0.08);
 }
 
-/* ---- Glass card ---- */
+/* ---- Card sólido (nome ".glass" é resíduo do protótipo com blur real,
+   removido — hoje é só um card branco elevado, sem transparência) ---- */
 .glass {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-2xl);
   padding: 20px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--shadow-md);
 }
 
 /* ---- KPI cards ---- */
@@ -1278,6 +1466,7 @@ html, body {
   border-radius: var(--r-full);
   font-size: 11.5px;
   font-weight: 600;
+  white-space: nowrap;
 }
 .chip.ok   { background: var(--green-50);   color: var(--green-600);  }
 .chip.warn { background: var(--orange-50);  color: var(--orange-600); }
@@ -1408,13 +1597,38 @@ html, body {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-2xl);
   padding: 20px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--shadow-md);
 }
 
 /* ---- Status chip extra ---- */
 .chip.neutral { background: var(--bg); color: var(--ink-400); }
+
+/* ---- "Em breve" — botão/aba honestamente sem back-end ainda ----
+   Continua um elemento normal (clicável, com tooltip nativo confiável em
+   todo navegador) — só apagado visualmente; o clique mostra um toast via
+   comingSoon() (src/lib/comingSoon.ts) em vez de fingir que funciona. */
+.is-soon {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.is-soon:hover { background: inherit; color: inherit; }
+
+/* ---- Painel "em breve" — conteúdo de aba/seção inteira ainda sem back-end ---- */
+.soon-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--ink-400);
+  gap: 4px;
+}
+.soon-panel svg { opacity: 0.3; margin-bottom: 10px; }
+.soon-panel .soon-title { font-size: 14px; font-weight: 600; color: var(--ink-600); }
+.soon-panel .soon-sub { font-size: 12.5px; max-width: 360px; }
 
 /* ---- Botão ativo (paginação) ---- */
 .tbtn.active {
@@ -1447,7 +1661,7 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 64px -12px rgba(15, 23, 42, 0.30), 0 8px 20px -6px rgba(15, 23, 42, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 .modal-head {
   display: flex;
@@ -1541,7 +1755,10 @@ html, body {
   border-radius: var(--r-lg);
   flex-wrap: wrap;
 }
-.prof-hero .avb {
+/* Avatar de iniciais — usado no hero do ProfileModal (Colaboradores) e no
+   Meu Perfil; extraído de ".prof-hero .avb" pra funcionar como classe
+   independente também fora daquele container. */
+.avb {
   width: 56px;
   height: 56px;
   border-radius: var(--r-md);
@@ -1683,10 +1900,10 @@ html, body {
   color: var(--red-500);
 }
 .tbtn.danger:hover { background: var(--red-500); color: white; }
-.tbtn.accent { color: var(--orange-600); border-color: var(--orange-500); }
-.tbtn.accent:hover { background: var(--orange-50); }
+.tbtn.accent { color: var(--color-accent); border-color: var(--color-accent); }
+.tbtn.accent:hover { background: var(--color-accent-soft); }
 .tbtn.ghost.sm { height: 28px; padding: 0 10px; font-size: 12px; }
-.tbtn.ghost.accent { color: var(--orange-600); }
+.tbtn.ghost.accent { color: var(--color-accent); }
 
 .icon-btn.sm { width: 28px; height: 28px; border-radius: var(--r-sm); }
 .icon-btn.sm.danger { color: var(--red-500); }
@@ -2150,8 +2367,20 @@ html, body {
 }
 
 /* ============================================================
-   EMPRESAS — Detail panel + stat items
+   EMPRESAS — layout (tabela + painel de detalhes) + stat items
    ============================================================ */
+/* Antes reaproveitava ".row-2" (1fr 1fr) — com a tabela de 6 colunas
+   espremida em 50%, o chip de status ("Suspensa") ficava cortado.
+   Mesmo padrão assimétrico já usado em ".aso-layout" (Exames). */
+.emp-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .emp-layout { grid-template-columns: 1fr; }
+}
 .emp-detail-panel {
   border-radius: 14px;
   padding: 20px;
@@ -2234,8 +2463,8 @@ html, body {
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 20px;
-  background: var(--navy-100, #E0E7FF);
-  color: var(--navy-600, #4338CA);
+  background: var(--navy-100);
+  color: var(--navy-600);
 }
 .pcmso-vig {
   font-size: 12px;
@@ -2435,8 +2664,8 @@ html, body {
 .aso-tipo {
   font-size: 12px;
   font-weight: 600;
-  color: var(--navy-700, #3730A3);
-  background: var(--navy-50, #EEF2FF);
+  color: var(--navy-700);
+  background: var(--navy-50);
   padding: 3px 8px;
   border-radius: 6px;
   white-space: nowrap;
@@ -2549,26 +2778,26 @@ html, body {
 .cal-cell.has {
   cursor: pointer;
   font-weight: 700;
-  color: var(--navy-700, #3730A3);
+  color: var(--navy-700);
 }
 .cal-cell.has:hover {
-  background: var(--navy-50, #EEF2FF);
+  background: var(--navy-50);
 }
 .cal-cell.today {
-  color: var(--orange-600);
+  color: var(--color-accent);
 }
 .cal-cell.sel {
-  background: var(--orange-500);
+  background: var(--color-accent);
   color: #fff;
 }
 .cal-cell.sel:hover {
-  background: var(--orange-600);
+  background: var(--color-accent-hover);
 }
 .cal-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--navy-500, #4338CA);
+  background: var(--navy-500);
   font-size: 0;
 }
 .cal-cell.sel .cal-dot {
@@ -2595,13 +2824,13 @@ html, body {
   gap: 9px;
   padding: 8px 10px;
   border-radius: 9px;
-  background: var(--surface-2, var(--bg-tint-1));
+  background: var(--surface-2);
   border: 1px solid var(--border);
 }
 .cal-event-time {
   font-size: 11px;
   font-weight: 700;
-  color: var(--navy-600, #4338CA);
+  color: var(--navy-600);
   font-variant-numeric: tabular-nums;
   min-width: 34px;
 }
@@ -2656,9 +2885,9 @@ html, body {
 }
 .mp-tab:hover { color: var(--ink-900); background: var(--bg-tint-1); }
 .mp-tab.on {
-  color: var(--navy-700, #3730A3);
+  color: var(--navy-700);
   font-weight: 600;
-  border-bottom-color: var(--navy-700, #3730A3);
+  border-bottom-color: var(--navy-700);
   background: transparent;
 }
 
@@ -2761,8 +2990,8 @@ html, body {
   border-radius: 20px;
   font-size: 11.5px;
   font-weight: 600;
-  background: var(--navy-50, #EEF2FF);
-  color: var(--navy-700, #3730A3);
+  background: var(--navy-50);
+  color: var(--navy-700);
   white-space: nowrap;
 }
 
@@ -2779,7 +3008,7 @@ html, body {
    CONFIGURAÇÕES — plan card
    ============================================================ */
 .cfg-plan {
-  background: linear-gradient(135deg, var(--navy-900, #0B1426) 0%, var(--navy-800, #1E3A5F) 100%);
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 100%);
   color: #fff;
   border: none;
 }
@@ -2821,9 +3050,10 @@ html, body {
 }
 .cfg-plan .tbtn:hover { background: rgba(255,255,255,.25); }
 .cfg-plan .tbtn.primary {
-  background: var(--orange-500);
-  border-color: var(--orange-500);
+  background: var(--blue-600);
+  border-color: var(--blue-600);
   color: #fff;
 }
+.cfg-plan .tbtn.primary:hover { background: var(--blue-700); border-color: var(--blue-700); }
 .cfg-plan .mp-status-grid .mp-mini-l { color: rgba(255,255,255,.5); }
 .cfg-plan .mp-status-grid .mp-mini-v { color: #fff; }

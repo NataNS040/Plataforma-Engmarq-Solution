@@ -7,7 +7,19 @@ import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, HardHat } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, HardHat, Target, ShieldCheck, TrendingUp, Eye as EyeIcon, Compass } from 'lucide-react'
+import { BrandMark } from '@/components/ui/BrandMark'
+import { APP_COPYRIGHT } from '@/config/brand'
+import { comingSoon } from '@/lib/comingSoon'
+
+// Os 5 pilares da marca Norveo (manual de marca)
+const PILLARS = [
+  { icon: Target,      label: 'Clareza' },
+  { icon: ShieldCheck, label: 'Controle' },
+  { icon: TrendingUp,  label: 'Antecipação' },
+  { icon: EyeIcon,     label: 'Inteligência' },
+  { icon: Compass,     label: 'Direção' },
+]
 
 const schema = z.object({
   email: z.string().min(1, 'Informe o e-mail').email('E-mail inválido'),
@@ -66,13 +78,7 @@ export default function LoginPage() {
 
           {/* Logo no topo */}
           <div className="lbrand">
-            <div className="brand-mark">
-              <ShieldCheck size={20} color="#0B1426" strokeWidth={2.5} />
-            </div>
-            <div>
-              <div className="brand-name">EngMarq Vision</div>
-              <div className="brand-tag">Gestão SST</div>
-            </div>
+            <BrandMark />
           </div>
 
           {/* Conteúdo central: título + stats */}
@@ -87,11 +93,14 @@ export default function LoginPage() {
               <em>Segurança Jurídica</em>
             </h2>
 
-            <p>
-              Gestão completa de conformidade, NRs, ASOs e PCMSO em uma única
-              plataforma — colaboradores seguros, documentação em dia e
-              tranquilidade para operar.
-            </p>
+            <div className="lpillars">
+              {PILLARS.map(({ icon: Icon, label }) => (
+                <div className="lpillar" key={label}>
+                  <div className="lpillar-ic"><Icon size={17} /></div>
+                  <div className="lpillar-label">{label}</div>
+                </div>
+              ))}
+            </div>
 
             {/* Card glassmorphism com métricas */}
             <div className="lglass">
@@ -111,7 +120,7 @@ export default function LoginPage() {
           </div>
 
           <div className="lfoot">
-            © 2026 EngMarq Solution · Política de privacidade
+            {APP_COPYRIGHT} · Política de privacidade
           </div>
         </div>
 
@@ -123,10 +132,7 @@ export default function LoginPage() {
 
             {/* Logo mobile (aparece só em telas pequenas) */}
             <div className="login-mobile-brand">
-              <div className="brand-mark-sm">
-                <ShieldCheck size={18} color="#F59E0B" strokeWidth={2.5} />
-              </div>
-              <span className="brand-text">EngMarq Vision</span>
+              <BrandMark size="sm" />
             </div>
 
             <h1>Acessar plataforma</h1>
@@ -189,11 +195,11 @@ export default function LoginPage() {
                   <input type="checkbox" defaultChecked />
                   Manter conectado
                 </label>
-                <a href="#">Esqueci minha senha</a>
+                <a href="#" className="is-soon" title="Em breve" onClick={e => { e.preventDefault(); comingSoon('Recuperação de senha') }}>Esqueci minha senha</a>
               </div>
 
               {/* Botão de submit */}
-              <button type="submit" className="btn-primary orange" disabled={isSubmitting}>
+              <button type="submit" className="btn-primary accent" disabled={isSubmitting}>
                 {isSubmitting
                   ? <Loader2 size={15} className="btn-spinner" />
                   : null}
@@ -212,7 +218,10 @@ export default function LoginPage() {
               Primeiro acesso?{' '}
               <a
                 href="#"
-                style={{ color: 'var(--orange-600)', fontWeight: 600, textDecoration: 'none' }}
+                className="is-soon"
+                title="Em breve"
+                style={{ color: 'var(--color-accent)', fontWeight: 600, textDecoration: 'none' }}
+                onClick={e => { e.preventDefault(); comingSoon('Solicitação de acesso') }}
               >
                 Solicite acesso à sua empresa
               </a>

@@ -1,45 +1,53 @@
 import { useState, useMemo, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
   Search, Download, Plus, X, CheckCircle, AlertTriangle, Clock,
-  Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2,
+  Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2, Trash2,
 } from "lucide-react"
+import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
-import { useColaboradores, useCriarColaborador } from "@/hooks/queries/useColaboradores"
+import { useColaboradores, useCriarColaborador, useAtualizarColaborador } from "@/hooks/queries/useColaboradores"
 import { useSetores, useFuncoes, useAmbientes } from "@/hooks/queries/useCatalogos"
+import { useEmpresas, useEmpresa } from "@/hooks/queries/useEmpresas"
+import { useDashboardKpis } from "@/hooks/queries/useDashboard"
+import { useMatrizTreinamentos, useTreinamentosDoColaborador, useTreinamentoTipos, useDeletarTreinamento } from "@/hooks/queries/useTreinamentos"
+import { useExamesDoColaborador } from "@/hooks/queries/useExames"
+import { useFichasEpiDoColaborador } from "@/hooks/queries/useFichasEpi"
+import type { FichaEpiComItens } from "@/services/fichasEpiService"
+import { AddTreinamentoModal } from "@/modules/treinamentos/TreinamentosPage"
+import { FichaEpiModal } from "@/modules/documentos/FichaEpiModal"
+import { FichaEpiDetailModal } from "@/modules/documentos/FichaEpiDetailModal"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { criarColaborador } from "@/services/colaboradoresService"
 import type { ColaboradorComCatalogos } from "@/services/colaboradoresService"
 import { criarSetor, criarFuncao, criarAmbiente } from "@/services/catalogosService"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { qk } from "@/lib/queryKeys"
-
-/* ============================================================
-   Types
-   ============================================================ */
-
-/* ============================================================
-   NR data para o modal de perfil
-   ============================================================ */
-
-type NrStatus = "ok" | "warn" | "crit"
-
-interface NrEntry {
-  nr: string
-  desc: string
-  carga: string
-  aplica: boolean
-  status: NrStatus
-  venc: string
-}
-
-const STATUS_LABEL: Record<NrStatus, string> = { ok: "Em dia", warn: "Vencendo", crit: "Vencido" }
+import { getAvatarColor, getChartColor, getInitials } from "@/lib/theme"
+import { comingSoon } from "@/lib/comingSoon"
+import { downloadCsvRows, exportToCsv } from "@/lib/csvExport"
+import type { DocStatus, TreinamentoStatus } from "@/types/database"
 
 /* ============================================================
    ProfileModal
    ============================================================ */
+
+const DOC_CHIP: Record<DocStatus, { cls: string; label: string }> = {
+  vigente:  { cls: "ok",   label: "Vigente"  },
+  vencendo: { cls: "warn", label: "Vencendo" },
+  vencido:  { cls: "crit", label: "Vencido"  },
+}
+
+const TREINO_CHIP: Record<TreinamentoStatus, { cls: string; label: string }> = {
+  em_dia:   { cls: "ok",      label: "Em dia"   },
+  vencendo: { cls: "warn",    label: "Vencendo" },
+  vencido:  { cls: "crit",    label: "Vencido"  },
+  pendente: { cls: "neutral", label: "Pendente" },
+}
 
 interface ProfileModalProps {
   colab: ColaboradorComCatalogos
@@ -48,201 +56,364 @@ interface ProfileModalProps {
 
 function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
   const [editing, setEditing] = useState(false)
-  const [nrs, setNrs] = useState<NrEntry[]>([])
-  const [draft, setDraft] = useState<NrEntry[]>([])
+  const [addingTreino, setAddingTreino] = useState(false)
 
-  const initials = c.nome.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase()
-  const cor = (() => {
-    const COLORS = ['#3B82F6','#F59E0B','#10B981','#8B5CF6','#EF4444','#06B6D4','#1F2A44','#F472B6','#22C55E','#A855F7']
-    let h = 0; for (let i = 0; i < c.nome.length; i++) h = c.nome.charCodeAt(i) + ((h << 5) - h)
-    return COLORS[Math.abs(h) % COLORS.length]
-  })()
+  const initials = getInitials(c.nome)
+  const cor = getAvatarColor(c.nome)
 
-  const startEdit  = () => { setDraft(nrs.map(x => ({ ...x }))); setEditing(true) }
-  const cancelEdit = () => setEditing(false)
-  const saveEdit   = () => { setNrs(draft.map(x => ({ ...x }))); setEditing(false) }
+  // Dados reais — Treinamentos NR (matriz da função × registros do
+  // colaborador) e Saúde ocupacional (ASOs), no lugar do state local
+  // fake que existia antes (nunca persistia nada).
+  const matrizQuery   = useMatrizTreinamentos(c.empresa_id)
+  const treinosQuery  = useTreinamentosDoColaborador(c.id)
+  const examesQuery   = useExamesDoColaborador(c.id)
+  const fichasEpiQuery = useFichasEpiDoColaborador(c.id)
+  const tiposQuery    = useTreinamentoTipos()
+  const setoresQuery   = useSetores(c.empresa_id)
+  const funcoesQuery   = useFuncoes(c.empresa_id)
+  const ambientesQuery = useAmbientes(c.empresa_id)
 
-  const toggleAplica = (i: number) =>
-    setDraft(d => d.map((x, j) => j === i ? { ...x, aplica: !x.aplica } : x))
-  const pickStatus = (i: number, status: NrStatus) =>
-    setDraft(d => d.map((x, j) => j === i ? { ...x, status } : x))
+  const matriz  = matrizQuery.data ?? []
+  const treinos = treinosQuery.data ?? []
+  const exames  = examesQuery.data ?? []
+  const tipos   = tiposQuery.data ?? []
+  const fichasEpi = fichasEpiQuery.data ?? []
+  const [addingFichaEpi, setAddingFichaEpi] = useState(false)
+  const [fichaEpiDetalhe, setFichaEpiDetalhe] = useState<FichaEpiComItens | null>(null)
 
-  const visiveis = nrs.filter(n => n.aplica)
+  // NRs obrigatórias pra função deste colaborador, cruzadas com o
+  // registro mais recente de cada uma — mais quaisquer treinamentos que o
+  // colaborador já tenha registrado mas que não constem na matriz da função
+  // (ex.: matriz incompleta, ou registro anterior a uma mudança de cargo);
+  // sem isso, esses registros ficavam invisíveis no perfil (e, portanto,
+  // impossíveis de excluir por lá).
+  const nrRows = useMemo(() => {
+    const daMatriz = matriz
+      .filter(m => m.funcao_id === c.funcao?.id && m.treinamento_tipo)
+      .map(m => {
+        const ultimo = treinos
+          .filter(t => t.treinamento_tipo_id === m.treinamento_tipo_id)
+          .sort((a, b) => (a.data_realizacao < b.data_realizacao ? 1 : -1))[0] ?? null
+        return { tipo: m.treinamento_tipo!, obrigatorio: m.obrigatorio, ultimo }
+      })
+    const cobertos = new Set(daMatriz.map(r => r.tipo.id))
+    const extras = new Map<string, typeof treinos>()
+    treinos.forEach(t => {
+      if (cobertos.has(t.treinamento_tipo_id) || !t.treinamento_tipo) return
+      const arr = extras.get(t.treinamento_tipo_id) ?? []
+      arr.push(t)
+      extras.set(t.treinamento_tipo_id, arr)
+    })
+    const registrosExtras = Array.from(extras.values()).map(regs => {
+      const ultimo = regs.sort((a, b) => (a.data_realizacao < b.data_realizacao ? 1 : -1))[0]
+      return { tipo: ultimo.treinamento_tipo!, obrigatorio: false, ultimo }
+    })
+    return [...daMatriz, ...registrosExtras]
+  }, [matriz, treinos, c.funcao?.id])
 
-  const documentos = [
-    { l: "ASO ocupacional",    status: "crit" as const, v: "Vence em 6 dias"  },
-    { l: "Ficha de EPI",       status: "ok"   as const, v: "Atualizada"       },
-    { l: "Exame audiométrico", status: "ok"   as const, v: "01/2026"          },
-    { l: "PCMSO individual",   status: "warn" as const, v: "Revisar em 28d"   },
-  ]
+  const obrigatorios = nrRows.filter(n => n.obrigatorio)
+  const emDia = obrigatorios.filter(n => n.ultimo?.status === "em_dia").length
+
+  const deletarTreino = useDeletarTreinamento()
+  const [deletingTreino, setDeletingTreino] = useState<{ id: string; label: string } | null>(null)
+  async function confirmDeleteTreino() {
+    if (!deletingTreino) return
+    await deletarTreino.mutateAsync({ id: deletingTreino.id, empresaId: c.empresa_id, colaboradorId: c.id })
+    setDeletingTreino(null)
+  }
+
+  // Edição de dados pessoais (função/setor/ambiente/matrícula) — antes só
+  // existia edição fake da lista de NRs, que nunca gravava nada.
+  const atualizar = useAtualizarColaborador()
+  const [fNome, setFNome]             = useState(c.nome)
+  const [fMatricula, setFMatricula]   = useState(c.matricula ?? "")
+  const [fFuncaoId, setFFuncaoId]     = useState(c.funcao?.id ?? "")
+  const [fSetorId, setFSetorId]       = useState(c.setor?.id ?? "")
+  const [fAmbienteId, setFAmbienteId] = useState(c.ambiente?.id ?? "")
+
+  const startEdit = () => setEditing(true)
+  const cancelEdit = () => {
+    setFNome(c.nome)
+    setFMatricula(c.matricula ?? "")
+    setFFuncaoId(c.funcao?.id ?? "")
+    setFSetorId(c.setor?.id ?? "")
+    setFAmbienteId(c.ambiente?.id ?? "")
+    setEditing(false)
+  }
+  async function saveEdit() {
+    try {
+      await atualizar.mutateAsync({
+        id: c.id,
+        empresaId: c.empresa_id,
+        input: {
+          nome: fNome,
+          matricula: fMatricula || null,
+          funcao_id: fFuncaoId,
+          setor_id: fSetorId,
+          ambiente_id: fAmbienteId || null,
+        },
+      })
+      onClose()
+    } catch { /* toast já disparado pelo hook */ }
+  }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-head">
-          <h2>{editing ? "Editar colaborador · Treinamentos NR" : "Perfil do colaborador"}</h2>
-          <div style={{ display: "flex", gap: 8 }}>
-            {!editing && <button className="tbtn"><Download size={13} /> Exportar PDF</button>}
-            {!editing
-              ? <button className="tbtn primary" onClick={startEdit}><Edit size={13} /> Editar colaborador</button>
-              : <>
-                  <button className="tbtn" onClick={cancelEdit}>Cancelar</button>
-                  <button className="tbtn primary" onClick={saveEdit}><CheckCircle size={13} /> Salvar</button>
-                </>}
-            <button className="icon-btn" onClick={onClose}><X size={16} /></button>
-          </div>
-        </div>
-
-        <div className="modal-body">
-          {/* Hero */}
-          <div className="prof-hero">
-            <div className="avb" style={{ background: cor }}>{initials}</div>
-            <div>
-              <h3>{c.nome}</h3>
-              <div className="meta">
-                <span><Briefcase size={12} /> {c.funcao?.nome ?? '—'}</span>
-                <span><MapPin size={12} /> {c.setor?.nome ?? '—'}</span>
-                <span><Calendar size={12} /> Admissão {c.data_admissao ? new Date(c.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</span>
-              </div>
-            </div>
-            <div className="right-stat">
-              <div className="v">—</div>
-              <div className="l">Score SST · em breve</div>
+    <>
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-head">
+            <h2>{editing ? "Editar colaborador" : "Perfil do colaborador"}</h2>
+            <div style={{ display: "flex", gap: 8 }}>
+              {!editing && <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar perfil em PDF')}><Download size={13} /> Exportar PDF</button>}
+              {!editing
+                ? <button className="tbtn primary" onClick={startEdit}><Edit size={13} /> Editar colaborador</button>
+                : <>
+                    <button className="tbtn" onClick={cancelEdit}>Cancelar</button>
+                    <button className="tbtn primary" onClick={saveEdit} disabled={atualizar.isPending}>
+                      {atualizar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle size={13} />} Salvar
+                    </button>
+                  </>}
+              <button className="icon-btn" onClick={onClose}><X size={16} /></button>
             </div>
           </div>
 
-          {/* Quick stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Treinamentos</div>
-              <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 20 }}>
-                — <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>/ obrig.</span>
+          <div className="modal-body">
+            {/* Hero */}
+            <div className="prof-hero">
+              <div className="avb" style={{ background: cor }}>{initials}</div>
+              <div>
+                <h3>{c.nome}</h3>
+                <div className="meta">
+                  <span><Briefcase size={12} /> {c.funcao?.nome ?? '—'}</span>
+                  <span><MapPin size={12} /> {c.setor?.nome ?? '—'}</span>
+                  <span><Calendar size={12} /> Admissão {c.data_admissao ? new Date(c.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</span>
+                </div>
               </div>
-            </div>
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Documentos</div>
-              <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 20 }}>
-                — <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>arquivos</span>
-              </div>
-            </div>
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>CPF</div>
-              <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 14 }}>{c.cpf}</div>
-            </div>
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Matrícula</div>
-              <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 14 }}>{c.matricula ?? '—'}</div>
-            </div>
-          </div>
-
-          {/* Dados + Saúde ocupacional */}
-          <div className="prof-grid" style={{ marginTop: 16 }}>
-            <div className="prof-section">
-              <h4>Dados pessoais</h4>
-              <div className="field-grid">
-                <div><div className="f-lbl">CPF</div><div className="f-val">{c.cpf}</div></div>
-                <div><div className="f-lbl">Matrícula</div><div className="f-val">{c.matricula ?? '—'}</div></div>
-                <div><div className="f-lbl">Admissão</div><div className="f-val">{c.data_admissao ? new Date(c.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</div></div>
-                <div><div className="f-lbl">Setor</div><div className="f-val">{c.setor?.nome ?? '—'}</div></div>
-                <div><div className="f-lbl">Função</div><div className="f-val">{c.funcao?.nome ?? '—'}</div></div>
-                <div><div className="f-lbl">Ambiente</div><div className="f-val">{c.ambiente?.nome ?? '—'}</div></div>
+              <div className="right-stat">
+                <div className="v">—</div>
+                <div className="l">Score SST · em breve</div>
               </div>
             </div>
 
-            <div className="prof-section">
-              <h4>Saúde ocupacional · PCMSO</h4>
-              <div className="prof-list">
-                {documentos.map((d, i) => (
-                  <div key={i} className="prof-row">
-                    <span className="lbl">{d.l}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span className="val" style={{ color: d.status === "crit" ? "var(--red-500)" : d.status === "warn" ? "var(--orange-600)" : "var(--ink-900)" }}>
-                        {d.v}
-                      </span>
-                      <span className={`chip ${d.status}`} style={{ fontSize: 10.5 }}>
-                        {d.status === "ok" ? "OK" : d.status === "warn" ? "Aten." : "!"}
-                      </span>
-                    </span>
+            {/* Quick stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+              <div className="card" style={{ padding: 14 }}>
+                <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Treinamentos</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
+                  {obrigatorios.length > 0 ? emDia : '—'} <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>/ {obrigatorios.length} obrig.</span>
+                </div>
+              </div>
+              <div className="card" style={{ padding: 14 }}>
+                <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Documentos</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
+                  {exames.length + fichasEpi.reduce((s, f) => s + f.itens.length, 0)} <span style={{ fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>arquivos</span>
+                </div>
+              </div>
+              <div className="card" style={{ padding: 14 }}>
+                <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>CPF</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{c.cpf}</div>
+              </div>
+              <div className="card" style={{ padding: 14 }}>
+                <div style={{ fontSize: 11.5, color: "var(--ink-500)", marginBottom: 4 }}>Matrícula</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{c.matricula ?? '—'}</div>
+              </div>
+            </div>
+
+            {/* Dados + Saúde ocupacional */}
+            <div className="prof-grid" style={{ marginTop: 16 }}>
+              <div className="prof-section">
+                <h4>Dados pessoais</h4>
+                {!editing ? (
+                  <div className="field-grid">
+                    <div><div className="f-lbl">CPF</div><div className="f-val">{c.cpf}</div></div>
+                    <div><div className="f-lbl">Matrícula</div><div className="f-val">{c.matricula ?? '—'}</div></div>
+                    <div><div className="f-lbl">Admissão</div><div className="f-val">{c.data_admissao ? new Date(c.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</div></div>
+                    <div><div className="f-lbl">Setor</div><div className="f-val">{c.setor?.nome ?? '—'}</div></div>
+                    <div><div className="f-lbl">Função</div><div className="f-val">{c.funcao?.nome ?? '—'}</div></div>
+                    <div><div className="f-lbl">Ambiente</div><div className="f-val">{c.ambiente?.nome ?? '—'}</div></div>
                   </div>
+                ) : (
+                  <div className="mp-form" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div className="mp-field" style={{ gridColumn: "1 / -1" }}>
+                      <label>Nome</label>
+                      <input className="mp-input" value={fNome} onChange={e => setFNome(e.target.value)} />
+                    </div>
+                    <div className="mp-field">
+                      <label>Matrícula</label>
+                      <input className="mp-input" value={fMatricula} onChange={e => setFMatricula(e.target.value)} />
+                    </div>
+                    <div className="mp-field">
+                      <label>Função</label>
+                      <select className="mp-input" value={fFuncaoId} onChange={e => setFFuncaoId(e.target.value)} disabled={funcoesQuery.isLoading}>
+                        <option value="">Selecione…</option>
+                        {(funcoesQuery.data ?? []).map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                      </select>
+                    </div>
+                    <div className="mp-field">
+                      <label>Setor</label>
+                      <select className="mp-input" value={fSetorId} onChange={e => setFSetorId(e.target.value)} disabled={setoresQuery.isLoading}>
+                        <option value="">Selecione…</option>
+                        {(setoresQuery.data ?? []).map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}
+                      </select>
+                    </div>
+                    <div className="mp-field">
+                      <label>Ambiente</label>
+                      <select className="mp-input" value={fAmbienteId} onChange={e => setFAmbienteId(e.target.value)} disabled={ambientesQuery.isLoading}>
+                        <option value="">—</option>
+                        {(ambientesQuery.data ?? []).map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="prof-section">
+                <h4>Saúde ocupacional</h4>
+                <div className="prof-list">
+                  {examesQuery.isLoading ? (
+                    <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Carregando…</div>
+                  ) : exames.length === 0 ? (
+                    <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Nenhum ASO registrado para este colaborador.</div>
+                  ) : exames.map(d => {
+                    const chip = DOC_CHIP[d.status]
+                    return (
+                      <div key={d.id} className="prof-row">
+                        <span className="lbl">{d.titulo}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span className="val" style={{ color: chip.cls === "crit" ? "var(--red-500)" : chip.cls === "warn" ? "var(--orange-600)" : "var(--ink-900)" }}>
+                            {d.vencimento ? new Date(d.vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}
+                          </span>
+                          <span className={`chip ${chip.cls}`} style={{ fontSize: 10.5 }}>{chip.label}</span>
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Fichas de EPI */}
+            <div className="prof-section" style={{ marginTop: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <h4 style={{ margin: 0 }}>Fichas de EPI</h4>
+                <button className="tbtn sm" onClick={() => setAddingFichaEpi(true)}><Plus size={12} /> Nova ficha</button>
+              </div>
+              <div className="prof-list">
+                {fichasEpiQuery.isLoading ? (
+                  <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Carregando…</div>
+                ) : fichasEpi.length === 0 ? (
+                  <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Nenhuma ficha de EPI registrada para este colaborador.</div>
+                ) : fichasEpi.map(ficha => (
+                  <button key={ficha.id} className="prof-row" style={{ width: "100%", textAlign: "left", cursor: "pointer", background: "none", border: "none", font: "inherit" }} onClick={() => setFichaEpiDetalhe(ficha)}>
+                    <span className="lbl">
+                      {new Date(ficha.data_entrega + 'T00:00:00').toLocaleDateString('pt-BR')} · {ficha.itens.length} item{ficha.itens.length !== 1 ? 's' : ''}
+                    </span>
+                    <span className={`chip ${ficha.assinado_em ? 'ok' : 'neutral'}`} style={{ fontSize: 10.5 }}>
+                      {ficha.assinado_em ? 'Assinada' : 'Pendente'}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Treinamentos NR */}
-          <div className="prof-section" style={{ marginTop: 18 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <h4 style={{ margin: 0 }}>
-                Treinamentos NR
-                {editing && <span style={{ fontWeight: 500, color: "var(--ink-500)", fontSize: 12, textTransform: "none", letterSpacing: 0 }}> · marque quais NRs se aplicam</span>}
-              </h4>
-              {!editing && <span style={{ fontSize: 11.5, color: "var(--ink-500)" }}>{visiveis.length} NRs aplicáveis ao cargo</span>}
-            </div>
+            {/* Treinamentos NR */}
+            <div className="prof-section" style={{ marginTop: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <h4 style={{ margin: 0 }}>Treinamentos NR</h4>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 11.5, color: "var(--ink-500)" }}>{obrigatorios.length} NRs obrigatórias pra função</span>
+                  <button className="tbtn sm" onClick={() => setAddingTreino(true)} disabled={tiposQuery.isLoading}><Plus size={12} /> Registrar</button>
+                </div>
+              </div>
 
-            <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    {editing && <th style={{ width: 90 }}>Aplica?</th>}
-                    <th>NR</th>
-                    <th>Descrição</th>
-                    <th>Carga</th>
-                    <th>{editing ? "Status" : "Validade"}</th>
-                    {!editing && <th>Status</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(editing ? draft : visiveis).length === 0 && (
-                    <tr><td colSpan={editing ? 5 : 5} style={{ textAlign:'center', padding:24, color:'var(--ink-400)', fontSize:12 }}>
-                      Nenhuma NR configurada. Em breve esta seção será integrada com a Matriz de Treinamentos.
-                    </td></tr>
-                  )}
-                  {(editing ? draft : visiveis).map((t, i) => (
-                    <tr key={i} style={editing && !t.aplica ? { opacity: 0.45 } : {}}>
-                      {editing && (
-                        <td>
-                          <button
-                            className={`nr-toggle ${t.aplica ? "on" : ""}`}
-                            onClick={() => toggleAplica(i)}
-                            role="switch"
-                            aria-checked={t.aplica}
-                          >
-                            <span className="knob" />
-                          </button>
-                        </td>
-                      )}
-                      <td><strong style={{ fontFamily: "Plus Jakarta Sans" }}>{t.nr}</strong></td>
-                      <td>{t.desc}</td>
-                      <td style={{ color: "var(--ink-500)" }}>{t.carga}</td>
-                      <td>
-                        {editing && t.aplica ? (
-                          <div className="seg" style={{ gap: 2 }}>
-                            {(["ok","warn","crit"] as NrStatus[]).map(s => (
-                              <button key={s} className={t.status === s ? "on" : ""} onClick={() => pickStatus(i, s)} style={{ padding: "3px 8px", fontSize: 11 }}>
-                                {STATUS_LABEL[s]}
-                              </button>
-                            ))}
-                          </div>
-                        ) : editing && !t.aplica ? (
-                          <span style={{ fontSize: 12, color: "var(--ink-500)" }}>Não obrigatório</span>
-                        ) : (
-                          <span style={{ color: t.status === "crit" ? "var(--red-500)" : t.status === "warn" ? "var(--orange-600)" : "var(--ink-700)", fontWeight: t.status !== "ok" ? 600 : 400 }}>
-                            {t.venc}
-                          </span>
-                        )}
-                      </td>
-                      {!editing && (
-                        <td><span className={`chip ${t.status}`}>{STATUS_LABEL[t.status]}</span></td>
-                      )}
+              <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>NR</th>
+                      <th>Descrição</th>
+                      <th>Última realização</th>
+                      <th>Vencimento</th>
+                      <th>Status</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {matrizQuery.isLoading || treinosQuery.isLoading ? (
+                      <tr><td colSpan={6} style={{ textAlign:'center', padding:24, color:'var(--ink-400)', fontSize:12 }}>Carregando…</td></tr>
+                    ) : nrRows.length === 0 ? (
+                      <tr><td colSpan={6} style={{ textAlign:'center', padding:24, color:'var(--ink-400)', fontSize:12 }}>
+                        Nenhuma NR configurada na matriz para a função "{c.funcao?.nome ?? '—'}".
+                      </td></tr>
+                    ) : nrRows.map(({ tipo, ultimo }) => {
+                      const chip = ultimo ? TREINO_CHIP[ultimo.status] : TREINO_CHIP.pendente
+                      return (
+                        <tr key={tipo.id}>
+                          <td><strong style={{ fontFamily: "var(--font-display)" }}>{tipo.nr_referencia ?? tipo.nome}</strong></td>
+                          <td>{tipo.nome}</td>
+                          <td style={{ color: "var(--ink-500)" }}>{ultimo?.data_realizacao ? new Date(ultimo.data_realizacao + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+                          <td style={{ color: chip.cls === "crit" ? "var(--red-500)" : chip.cls === "warn" ? "var(--orange-600)" : "var(--ink-700)" }}>
+                            {ultimo?.data_vencimento ? new Date(ultimo.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}
+                          </td>
+                          <td><span className={`chip ${chip.cls}`}>{chip.label}</span></td>
+                          <td style={{ textAlign: "right" }}>
+                            {ultimo && (
+                              <button
+                                className="icon-btn sm"
+                                title="Excluir treinamento"
+                                style={{ color: "var(--red-500)" }}
+                                onClick={() => setDeletingTreino({ id: ultimo.id, label: `${tipo.nr_referencia ?? tipo.nome} · ${c.nome}` })}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {addingTreino && (
+        <AddTreinamentoModal
+          colab={{ id: c.id, nome: c.nome, cor, foto: initials }}
+          tipos={tipos}
+          empresaId={c.empresa_id}
+          onClose={() => setAddingTreino(false)}
+        />
+      )}
+
+      {deletingTreino && (
+        <ConfirmDialog
+          title="Excluir treinamento?"
+          description={<>Isso remove o registro de <strong>{deletingTreino.label}</strong> permanentemente.</>}
+          loading={deletarTreino.isPending}
+          onCancel={() => setDeletingTreino(null)}
+          onConfirm={confirmDeleteTreino}
+        />
+      )}
+
+      {addingFichaEpi && (
+        <FichaEpiModal
+          colab={{ id: c.id, nome: c.nome, cor, foto: initials }}
+          empresaId={c.empresa_id}
+          onClose={() => setAddingFichaEpi(false)}
+        />
+      )}
+
+      {fichaEpiDetalhe && (
+        <FichaEpiDetailModal
+          ficha={fichaEpiDetalhe}
+          empresaId={c.empresa_id}
+          onClose={() => setFichaEpiDetalhe(null)}
+        />
+      )}
+    </>
   )
 }
 
@@ -287,17 +458,11 @@ function parseAdmissaoDate(raw: string): string | null {
 }
 
 function downloadCsvTemplate() {
-  const rows = [
+  downloadCsvRows('modelo_colaboradores.csv', [
     ['nome', 'cpf', 'matricula', 'funcao', 'setor', 'ambiente', 'data_admissao'],
     ['João Silva', '123.456.789-00', 'MAT001', 'Operador', 'Produção', 'Linha A', '2024-01-15'],
     ['Maria Souza', '987.654.321-00', '', 'Técnico de Segurança', 'Segurança', '', '01/06/2023'],
-  ]
-  const csv = rows.map(r => r.join(',')).join('\r\n')
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url; a.download = 'modelo_colaboradores.csv'; a.click()
-  URL.revokeObjectURL(url)
+  ])
 }
 
 /* ============================================================
@@ -463,7 +628,11 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
     await qc.invalidateQueries({ queryKey: qk.funcoes.list(empresaId) })
     await qc.invalidateQueries({ queryKey: qk.ambientes.list(empresaId) })
     if (ok > 0) {
-      toast.success(`${ok} colaborador(es) importado(s) com sucesso.`)
+      toast.success(
+        fail > 0
+          ? `${ok} colaborador(es) importado(s) · ${fail} falharam.`
+          : `${ok} colaborador(es) importado(s) com sucesso.`
+      )
       onClose()
     } else {
       toast.error('Nenhum colaborador pôde ser importado. Verifique os erros na planilha.')
@@ -592,10 +761,10 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
                   onDragLeave={() => setDragOver(false)}
                   onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }}
                 >
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--orange-600)" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--color-accent)" }}>
                     <Download size={20} />
                   </div>
-                  <div style={{ fontFamily: "Plus Jakarta Sans", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Arraste a planilha aqui</div>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Arraste a planilha aqui</div>
                   <div style={{ fontSize: 12, color: "var(--ink-500)", marginBottom: 14 }}>CSV ou XLSX · até 500 colaboradores por importação</div>
                   <button className="tbtn primary" style={{ margin: "0 auto" }} type="button"><Plus size={13} /> Selecionar arquivo</button>
                   <input
@@ -641,11 +810,11 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
                             <td>
                               <div style={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
                                 {row.funcao_nome || '—'}
-                                {row.will_create_funcao && <span style={{ fontSize: 9.5, background: "var(--orange-50,#fff7ed)", color: "var(--orange-600)", border: "1px solid rgba(234,88,12,0.3)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
+                                {row.will_create_funcao && <span style={{ fontSize: 9.5, background: "var(--color-accent-soft)", color: "var(--color-accent)", border: "1px solid rgba(23,111,255,0.25)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
                               </div>
                               <div style={{ fontSize: 11, color: "var(--ink-500)", display: "flex", alignItems: "center", gap: 5 }}>
                                 {row.setor_nome || '—'}
-                                {row.will_create_setor && <span style={{ fontSize: 9.5, background: "var(--orange-50,#fff7ed)", color: "var(--orange-600)", border: "1px solid rgba(234,88,12,0.3)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
+                                {row.will_create_setor && <span style={{ fontSize: 9.5, background: "var(--color-accent-soft)", color: "var(--color-accent)", border: "1px solid rgba(23,111,255,0.25)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>novo</span>}
                               </div>
                             </td>
                             <td style={{ fontSize: 12 }}>{row.data_admissao || '—'}</td>
@@ -701,8 +870,13 @@ function FieldErrorSmall({ msg }: { msg: string }) {
    ColaboradoresPage
    ============================================================ */
 
-export default function ColaboradoresPage() {
-  const { empresaId } = useCurrentProfile()
+function ColaboradoresEmpresa({ empresaIdProp, empresaNome, onBack }: {
+  empresaIdProp?: string | null
+  empresaNome?: string
+  onBack?: () => void
+}) {
+  const { empresaId: empresaIdPerfil } = useCurrentProfile()
+  const empresaId = empresaIdProp ?? empresaIdPerfil
 
   const colabsQuery = useColaboradores(empresaId)
   const colabs = colabsQuery.data ?? []
@@ -713,31 +887,44 @@ export default function ColaboradoresPage() {
     return ['Todos', ...Array.from(nomes).sort()]
   }, [colabs])
 
+  const [searchParams] = useSearchParams()
+
   const [setor, setSetor]           = useState("Todos")
   const [statusFilter, setStatus]   = useState<string>("all")
   const [view, setView]             = useState<"table" | "grid">("table")
-  const [query, setQuery]           = useState("")
-  const [adding, setAdding]         = useState(false)
+  const [query, setQuery]           = useState(() => searchParams.get("q") ?? "")
+  // Abre já com o formulário de novo colaborador se veio de um atalho (ex.:
+  // "Novo colaborador" no Dashboard, via navigate('/colaboradores?add=1')).
+  const [adding, setAdding]         = useState(() => searchParams.get("add") === "1")
   const [openProfile, setOpenProfile] = useState<ColaboradorComCatalogos | null>(null)
+
+  // Busca vinda do Header (?q=) — sincroniza se o usuário buscar de novo por lá
+  // sem sair da página. Ajusta o state durante o render (não em efeito),
+  // guardado pela comparação com o último valor visto.
+  const [lastSyncedQ, setLastSyncedQ] = useState(searchParams.get("q"))
+  const currentQ = searchParams.get("q")
+  if (currentQ !== lastSyncedQ) {
+    setLastSyncedQ(currentQ)
+    if (currentQ) setQuery(currentQ)
+  }
+
+  // Deep link vindo de outra página (ex.: "Ver perfil do colaborador" em
+  // Treinamentos, via navigate('/colaboradores?open=<id>')) — só é
+  // consumido quando a lista de colaboradores já carregou, pra não perder
+  // o link por chegar antes do fetch. Ajustado durante o render, mesmo
+  // padrão do sync de busca acima.
+  const [openParamHandled, setOpenParamHandled] = useState(false)
+  const openParam = searchParams.get("open")
+  if (openParam && !openParamHandled && colabs.length > 0) {
+    setOpenParamHandled(true)
+    const alvo = colabs.find(c => c.id === openParam)
+    if (alvo) setOpenProfile(alvo)
+  }
 
   // Derivação de status baseada em treinamentos/documentos (Fase 4.3)
   // Por ora: todos ficam 'ok' até a Fase 4.3 cruzar com treinamentos
   function getStatus(_c: ColaboradorComCatalogos): "ok" | "warn" | "crit" {
     return 'ok'
-  }
-
-  function getInitials(nome: string) {
-    return nome.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
-  }
-
-  const AVATAR_COLORS = [
-    '#3B82F6','#F59E0B','#10B981','#8B5CF6','#EF4444',
-    '#06B6D4','#1F2A44','#F472B6','#22C55E','#A855F7',
-  ]
-  function avatarColor(nome: string) {
-    let h = 0
-    for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h)
-    return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
   }
 
   function fmtDate(iso: string | null | undefined) {
@@ -770,12 +957,30 @@ export default function ColaboradoresPage() {
 
       {/* Header */}
       <div className="page-header">
-        <div>
-          <h1>Colaboradores</h1>
-          <p className="sub">{colabs.length} ativos</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {onBack && (
+            <button className="icon-btn sm" title="Voltar" onClick={onBack} style={{ marginRight:4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          )}
+          <div>
+            <h1>Colaboradores{empresaNome ? ` · ${empresaNome}` : ''}</h1>
+            <p className="sub">{colabs.length} ativos</p>
+          </div>
         </div>
         <div className="toolbar">
-          <button className="tbtn"><Download size={14} /> Exportar CSV</button>
+          <button
+            className="tbtn"
+            onClick={() => exportToCsv('colaboradores.csv', [
+              { header: 'Nome',      value: (c: ColaboradorComCatalogos) => c.nome },
+              { header: 'CPF',       value: (c: ColaboradorComCatalogos) => c.cpf },
+              { header: 'Matrícula', value: (c: ColaboradorComCatalogos) => c.matricula ?? '' },
+              { header: 'Função',    value: (c: ColaboradorComCatalogos) => c.funcao?.nome ?? '' },
+              { header: 'Setor',     value: (c: ColaboradorComCatalogos) => c.setor?.nome ?? '' },
+              { header: 'Ambiente',  value: (c: ColaboradorComCatalogos) => c.ambiente?.nome ?? '' },
+              { header: 'Admissão',  value: (c: ColaboradorComCatalogos) => c.data_admissao ?? '' },
+            ], filtered)}
+          ><Download size={14} /> Exportar CSV</button>
           <button className="tbtn primary" onClick={() => setAdding(true)} disabled={!empresaId}>
             <Plus size={14} /> Adicionar colaborador
           </button>
@@ -792,7 +997,7 @@ export default function ColaboradoresPage() {
             style={{
               textAlign: "left", padding: 16, cursor: "pointer",
               borderColor: statusFilter === s.id ? "var(--navy-700)" : "var(--border)",
-              boxShadow: statusFilter === s.id ? "0 0 0 2px var(--navy-700), var(--glass-shadow)" : "var(--glass-shadow)",
+              boxShadow: statusFilter === s.id ? "0 0 0 2px var(--navy-700), var(--shadow-md)" : "var(--shadow-md)",
               transition: "all 0.15s",
             }}
           >
@@ -800,7 +1005,7 @@ export default function ColaboradoresPage() {
               <span style={{ fontSize: 12.5, color: "var(--ink-500)", fontWeight: 500 }}>{s.label}</span>
               {s.color && <span style={{ width: 10, height: 10, borderRadius: 3, background: s.color }} />}
             </div>
-            <div style={{ fontFamily: "Plus Jakarta Sans", fontSize: 26, fontWeight: 700, color: "var(--ink-900)", letterSpacing: "-0.02em" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, color: "var(--ink-900)", letterSpacing: "-0.02em" }}>
               {s.count}
             </div>
           </button>
@@ -870,7 +1075,7 @@ export default function ColaboradoresPage() {
                 <tr key={c.id} onClick={() => setOpenProfile(c)} style={{ cursor: "pointer" }}>
                   <td>
                     <div className="cell-person">
-                      <div className="ava" style={{ background: avatarColor(c.nome) }}>{getInitials(c.nome)}</div>
+                      <div className="ava" style={{ background: getAvatarColor(c.nome) }}>{getInitials(c.nome)}</div>
                       <div>
                         <div className="name">{c.nome}</div>
                         <div className="role">{c.cpf}</div>
@@ -902,7 +1107,7 @@ export default function ColaboradoresPage() {
             return (
             <button key={c.id} className="glass" onClick={() => setOpenProfile(c)} style={{ textAlign: "left", padding: 16, cursor: "pointer" }}>
               <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                <div className="ava" style={{ background: avatarColor(c.nome), width: 44, height: 44, fontSize: 14 }}>{getInitials(c.nome)}</div>
+                <div className="ava" style={{ background: getAvatarColor(c.nome), width: 44, height: 44, fontSize: 14 }}>{getInitials(c.nome)}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.nome}</div>
                   <div style={{ fontSize: 11.5, color: "var(--ink-500)" }}>{c.funcao?.nome ?? '—'}</div>
@@ -932,4 +1137,122 @@ export default function ColaboradoresPage() {
 
     </div>
   )
+}
+
+/* ============================================================
+   ColaboradoresAdmin — escolha de empresa-cliente antes de ver
+   os colaboradores (admin acompanha várias empresas; sem isso,
+   a página ficava presa à empresa do perfil do próprio admin,
+   ou vazia).
+   ============================================================ */
+
+function ColaboradoresAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
+  const empresasQuery = useEmpresas()
+  const empresas = empresasQuery.data ?? []
+  const kpisQuery = useDashboardKpis('all')
+  const kpis = kpisQuery.data
+
+  return (
+    <div className="content">
+      <div className="page-header">
+        <div>
+          <h1>Colaboradores</h1>
+          <p className="sub">Selecione uma empresa-cliente para ver os colaboradores · {empresas.length} empresas</p>
+        </div>
+      </div>
+
+      <div className="kpi-row">
+        <div className="glass kpi">
+          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic blue"><Briefcase size={15}/></span></div>
+          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
+        </div>
+        <div className="glass kpi">
+          <div className="kpi-label"><span>Colaboradores ativos</span><span className="kpi-ic green"><CheckCircle size={15}/></span></div>
+          <div className="kpi-value">{kpis ? kpis.totalColaboradores.toLocaleString('pt-BR') : '—'}</div>
+        </div>
+      </div>
+
+      <div className="glass" style={{ padding:0, overflow:'hidden' }}>
+        <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
+          <div className="ctitle">Empresas-cliente</div>
+          <div className="csub">Clique numa empresa para ver seus colaboradores</div>
+        </div>
+        <div style={{ overflow:'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Setor</th>
+                <th>Cidade / UF</th>
+                <th style={{ textAlign:'center' }}>Colaboradores</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {empresas.length === 0 && (
+                <tr><td colSpan={5} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
+              )}
+              {empresas.map((e, i) => (
+                <tr key={e.id} style={{ cursor:'pointer' }} onClick={() => onSelect({ id: e.id, nome: e.razao_social })}>
+                  <td>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
+                        {e.razao_social.slice(0,1)}
+                      </span>
+                      <div>
+                        <div style={{ fontWeight:600, fontSize:13 }}>{e.razao_social}</div>
+                        <div style={{ fontSize:11, color:'var(--ink-500)' }}>{e.cnpj}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{e.setor ?? '—'}</td>
+                  <td style={{ fontSize:12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
+                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{e.colaboradores_count}</td>
+                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ColaboradoresAdmin() {
+  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
+
+  // Deep link vindo de outra página com empresa já conhecida (ex.: "Ver
+  // perfil do colaborador" em Treinamentos, via
+  // navigate('/colaboradores?open=<id>&empresa=<empresaId>')) — pula
+  // direto pra lista da empresa em vez de cair no seletor de empresas.
+  // Ajustado durante o render, mesmo padrão usado no resto do arquivo.
+  const [searchParams] = useSearchParams()
+  const empresaParam = searchParams.get('empresa')
+  const { data: empresaDoParam } = useEmpresa(!selectedEmpresa ? empresaParam : null)
+  const [empresaParamHandled, setEmpresaParamHandled] = useState(false)
+  if (empresaParam && !empresaParamHandled && !selectedEmpresa && empresaDoParam) {
+    setEmpresaParamHandled(true)
+    setSelectedEmpresa({ id: empresaDoParam.id, nome: empresaDoParam.razao_social })
+  }
+
+  if (selectedEmpresa) {
+    return (
+      <ColaboradoresEmpresa
+        empresaIdProp={selectedEmpresa.id}
+        empresaNome={selectedEmpresa.nome}
+        onBack={() => setSelectedEmpresa(null)}
+      />
+    )
+  }
+
+  return <ColaboradoresAdminList onSelect={setSelectedEmpresa} />
+}
+
+// ---------------------------------------------------------------------------
+// Export
+// ---------------------------------------------------------------------------
+export default function ColaboradoresPage() {
+  const { profile } = useAuth()
+  return profile?.role === 'admin' ? <ColaboradoresAdmin /> : <ColaboradoresEmpresa />
 }

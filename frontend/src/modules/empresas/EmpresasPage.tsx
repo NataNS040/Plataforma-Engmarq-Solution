@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -270,12 +271,23 @@ export default function EmpresasPage() {
   const { isAdmin } = useCurrentProfile()
   const empresasQuery = useEmpresas()
   const desativar = useDesativarEmpresa()
+  const [searchParams] = useSearchParams()
 
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<EmpresaStatus | 'todos'>('todos')
   const [filterSetor, setFilterSetor] = useState<string>('todos')
   const [selected, setSelected] = useState<EmpresaComContagem | null>(null)
-  const [showNova, setShowNova] = useState(false)
+  // Abre já com o formulário de criação se veio de um atalho (ex.: "Nova
+  // empresa" no Dashboard, via navigate('/empresas?nova=1')).
+  const [showNova, setShowNova] = useState(() => searchParams.get('nova') === '1')
+
+  // Em telas mais estreitas o painel de detalhes empilha ABAIXO da tabela
+  // (ver .emp-layout no CSS) — sem isso, clicar numa empresa parecia não
+  // fazer nada, porque o painel atualizava fora da área visível.
+  const detailRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (selected) detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [selected])
 
   const empresas = empresasQuery.data ?? []
 
@@ -358,8 +370,8 @@ export default function EmpresasPage() {
         </div>
       </div>
 
-      <div className="row-2" style={{ alignItems:'start', gap:20 }}>
-        <div style={{ flex:1, minWidth:0 }}>
+      <div className="emp-layout">
+        <div style={{ minWidth:0 }}>
           <div className="glass" style={{ borderRadius:14, overflow:'hidden' }}>
             <div className="doc-tbl-head">
               <div className="doc-search">
@@ -491,7 +503,9 @@ export default function EmpresasPage() {
         </div>
 
         {selected ? (
-          <EmpresaDetailPanel empresa={selected} onClose={() => setSelected(null)} />
+          <div ref={detailRef}>
+            <EmpresaDetailPanel empresa={selected} onClose={() => setSelected(null)} />
+          </div>
         ) : (
           <div className="glass emp-detail-panel" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:40 }}>
             <Building2 size={36} style={{ color:'var(--ink-300)', marginBottom:10 }} />
