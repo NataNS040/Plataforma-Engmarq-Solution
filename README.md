@@ -1,75 +1,71 @@
-# React + TypeScript + Vite
+# Plataforma EngMarq Solution
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma de gestão SST. A aplicação React está isolada em `frontend/` e continua usando diretamente Supabase Auth, PostgreSQL e Storage.
 
-Currently, two official plugins are available:
+## Estrutura
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+frontend/   Aplicação React + TypeScript + Vite
+backend/    API Python + FastAPI (fundação, saúde e integração Supabase)
+supabase/   Migrations, seeds e Edge Functions existentes
+.github/    Workflow de publicação do frontend
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`Assets/` e `apresentacao-sistema-sst.html` são materiais de apresentação independentes da aplicação e permanecem na raiz.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Executar o frontend
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Use Node.js 22.12 ou superior e npm.
+
+```sh
+cd frontend
+npm ci
 ```
 
-test
+Se ainda não existir `frontend/.env`, copie `frontend/.env.example` para `frontend/.env` e preencha:
+
+```dotenv
+VITE_SUPABASE_URL=<url-do-projeto>
+VITE_SUPABASE_ANON_KEY=<chave-anon-do-projeto>
+```
+
+O `.env` local existente foi preservado na separação e não deve ser sobrescrito. Não coloque a chave `service_role` nas variáveis `VITE_*`: elas são incluídas no código do navegador.
+
+```sh
+npm run dev
+```
+
+Abra `http://localhost:5173/Plataforma-Engmarq-Solution/` (ou a porta indicada pelo Vite).
+
+## Verificação e produção
+
+Execute dentro de `frontend/`:
+
+```sh
+npm run typecheck
+npm run lint
+npm run build
+npm run preview
+```
+
+O build é gerado em `frontend/dist/`. O preview usa normalmente `http://localhost:4173/Plataforma-Engmarq-Solution/`.
+
+Também é possível executar da raiz, por exemplo: `npm --prefix frontend run dev` ou `npm --prefix frontend run build`.
+
+O lint mantém as regras existentes; pendências anteriores de componentes não são corrigidas pela separação de diretórios.
+
+## Deploy
+
+`.github/workflows/deploy.yml` instala e compila em `frontend/`, usa `frontend/package-lock.json` para o cache e publica `frontend/dist/` na branch `gh-pages` quando há push em `main`.
+
+Os secrets existentes `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` continuam sendo fornecidos ao build. O prefixo público `/Plataforma-Engmarq-Solution/`, o `basename` do React Router e os arquivos de suporte ao GitHub Pages foram preservados.
+
+## Supabase e backend
+
+O primeiro módulo migrado é Empresas: consulta, cadastro, edição e suspensão passam por FastAPI → service → repository → Supabase com JWT do usuário e RLS. A Edge Function `create-user` e os demais domínios continuam com as integrações anteriores. As migrations, seeds e políticas em `supabase/` não foram alteradas.
+
+O backend pode ser executado separadamente e expõe `GET /health`, `GET /api/v1/health` e `GET /api/v1/me`. Instalação, variáveis de ambiente e testes estão documentados em [backend/README.md](backend/README.md).
+
+Empresas e seus seletores dependem agora do backend e de `VITE_API_URL`. A camada HTTP também permite testar `/me` sem alterar a interface. Consulte [frontend/README.md](frontend/README.md) para executar os dois serviços e [o registro da migração](docs/migracao-incremental.md) para permissões, limites e verificação.
+
+O workflow de GitHub Pages continua publicando somente o frontend e recebe a URL pública da API pela variável de repositório `VITE_API_URL`.
