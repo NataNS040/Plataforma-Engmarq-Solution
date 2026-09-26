@@ -1,6 +1,13 @@
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import type { UserProfile, UserRole } from '@/types/database'
+import { postUsuario, type UsuarioCreateInput } from './api/usuarios'
+
+export type { UsuarioCreateInput } from './api/usuarios'
+
+export function criarUsuario(input: UsuarioCreateInput) {
+  return postUsuario(input)
+}
 
 export interface UsuarioInput {
   full_name?: string

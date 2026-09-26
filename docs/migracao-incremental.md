@@ -31,7 +31,7 @@ A API impõe escopo antes de consultar/gravar e o RLS permanece como segunda ver
 
 A consulta de identidade `/me`, AuthProvider e consultas agregadas do dashboard continuam usando seus caminhos próprios; migrar Empresas não remove todas as leituras da tabela `empresas` em outros domínios. Não houve mudança de banco, policies, migrations ou seeds.
 
-Operações privilegiadas existentes: a Edge Function `create-user` continua responsável por provisionar identidade no Supabase Auth. Migrá-la exige tratar criação de identidade + perfil e compensação em falhas; não foi misturada com esta entrega. Nenhuma chave privilegiada foi adicionada ao frontend.
+Atualização posterior: o provisionamento de identidade/perfil foi migrado para `POST /api/v1/usuarios`, com autorização e compensação no FastAPI. Veja [o fluxo atual](../backend/README.md#criação-de-usuários). Nenhuma chave privilegiada foi adicionada ao frontend.
 
 Erros: 401 identidade inválida; 403 autorização/RLS; 404 registro não encontrado ou invisível; 409 duplicidade/conflito; 422 entrada inválida; 503 integração indisponível. Detalhes internos de SQL não são retornados. Não há retry automático de gravações nem fallback para acesso direto.
 
@@ -59,7 +59,7 @@ Não foram criados nem suspensos registros reais durante os testes automatizados
 
 ## Próximos módulos (ainda não migrados)
 
-1. Provisionamento administrativo de usuários/perfis: `CriarUsuarioModal` + Edge Function `create-user`; autorização, empresa de destino e compensação de falhas.
+1. Edição/listagem de equipe e revisão das policies de perfis; o provisionamento já usa FastAPI.
 2. Demais mutações sensíveis e permissões: catálogos e colaboradores, com escopo de empresa e revisão das policies.
 3. Revalidar a existência de persistência para cálculos comerciais/propostas antes de criar endpoints; não converter telas demonstrativas em funcionalidades novas durante esta migração.
 4. Documentos e numeração: `documentosService`; definir geração atômica caso aplicável, depois propostas.
@@ -67,4 +67,4 @@ Não foram criados nem suspensos registros reais durante os testes automatizados
 6. Exames ocupacionais: `examesService`, acesso e alterações de dados sensíveis.
 7. Relatórios, dashboard e Storage: autorização de leitura, escopo e upload/download.
 
-Repetir testes, typecheck, build e verificação autenticada por módulo antes de ampliar o recorte. Esta entrega termina em Empresas.
+Repetir testes, typecheck, build e verificação autenticada por módulo antes de ampliar o recorte. Este documento descreve Empresas, com a atualização posterior de provisionamento indicada acima.

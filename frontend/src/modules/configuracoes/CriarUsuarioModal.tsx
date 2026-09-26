@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, UserPlus, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { supabase } from '@/lib/supabase'
+import { criarUsuario } from '@/services/usuariosService'
 import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import type { UserRole } from '@/types/database'
@@ -58,26 +58,19 @@ export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props)
 
     setLoading(true)
     try {
-      const session = (await supabase.auth.getSession()).data.session
-      const { data, error } = await supabase.functions.invoke('create-user', {
-        body: {
-          email:      email.trim().toLowerCase(),
-          password,
-          full_name:  fullName.trim(),
-          role,
-          empresa_id: resolvedEmpresaId,
-        },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+      await criarUsuario({
+        email: email.trim().toLowerCase(),
+        password,
+        full_name: fullName.trim(),
+        role,
+        empresa_id: resolvedEmpresaId,
       })
-
-      if (error || data?.error) {
-        toast.error(data?.error ?? error?.message ?? 'Erro ao criar usuário.')
-        return
-      }
 
       toast.success(`Acesso criado para ${email.trim()}.`)
       onSuccess?.()
       onClose()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao criar usuário.')
     } finally {
       setLoading(false)
     }

@@ -1,6 +1,10 @@
 # EngMarq — Frontend e API
 
-O React/Vite mantém Supabase Auth como fonte de identidade. O módulo Empresas usa FastAPI para listagem, consulta, cadastro, edição e suspensão. Os demais domínios continuam com suas integrações anteriores durante a migração incremental.
+O React/Vite mantém Supabase Auth como fonte de identidade. Empresas usa FastAPI para listagem, consulta, cadastro, edição e suspensão. A criação de usuários também usa FastAPI; os demais fluxos continuam com suas integrações anteriores durante a migração incremental.
+
+O modal existente chama `usuariosService.criarUsuario` → `services/api/usuarios` → `POST /api/v1/usuarios`, com o JWT da sessão em `Authorization: Bearer ...`. O backend valida identidade/permissão e chama Supabase Auth Admin, criando também `user_profiles`. O retorno é `{user_id}`; erros aparecem no toast, mantendo o modal aberto. Não existe fallback para Edge Function. Listagem e edição de equipe permanecem em seus caminhos anteriores.
+
+Configure `SUPABASE_SECRET_KEY` somente no backend: nunca em variável `VITE_`, nunca no navegador e nunca em commit. O frontend precisa apenas da sessão Supabase e de `VITE_API_URL`; a chave privilegiada é responsabilidade exclusiva do servidor. Veja [regras e compensação](../backend/README.md#criação-de-usuários).
 
 ## Executar
 
@@ -82,6 +86,7 @@ O cliente lê a sessão a cada chamada, aproveitando a renovação já gerenciad
 ```sh
 npm test
 npm run typecheck
+npm run lint
 npm run build
 ```
 

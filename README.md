@@ -62,7 +62,11 @@ Os secrets existentes `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` continuam s
 
 ## Supabase e backend
 
-O primeiro módulo migrado é Empresas: consulta, cadastro, edição e suspensão passam por FastAPI → service → repository → Supabase com JWT do usuário e RLS. A Edge Function `create-user` e os demais domínios continuam com as integrações anteriores. As migrations, seeds e políticas em `supabase/` não foram alteradas.
+Empresas usa FastAPI → service → repository → Supabase com JWT do usuário e RLS. A criação de usuários usa React → `POST /api/v1/usuarios` → FastAPI → Supabase Auth Admin, com autorização no servidor e criação do perfil existente. O login continua direto no Supabase Auth; os demais domínios mantêm suas integrações. As migrations, seeds e políticas em `supabase/` não foram alteradas.
+
+Configure `SUPABASE_SECRET_KEY` exclusivamente no backend (Secret Key moderna). Nunca use prefixo `VITE_`, envie essa chave ao navegador ou faça commit dela. `backend/.env` continua ignorado pelo Git. O nome legado `SUPABASE_SERVICE_ROLE_KEY` funciona temporariamente como fallback quando a configuração principal está ausente.
+
+Veja [contrato, compensação e limites da criação de usuários](backend/README.md#criação-de-usuários).
 
 O backend pode ser executado separadamente e expõe `GET /health`, `GET /api/v1/health` e `GET /api/v1/me`. Instalação, variáveis de ambiente e testes estão documentados em [backend/README.md](backend/README.md).
 

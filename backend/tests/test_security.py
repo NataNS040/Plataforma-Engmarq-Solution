@@ -110,3 +110,16 @@ def test_admin_client_requires_explicit_secret():
         with pytest.raises(AppError) as error:
             create_admin_client(Settings(_env_file=None), http_client)
     assert error.value.code == "supabase_admin_not_configured"
+
+
+def test_admin_client_legacy_fallback():
+    settings = Settings(_env_file=None, supabase_url="https://project.supabase.co",
+        supabase_anon_key="test-anon-key", supabase_service_role_key="legacy-test-only")
+
+    def handler(request):
+        assert request.headers["apikey"] == "legacy-test-only"
+        return httpx.Response(200, json=[])
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as http_client:
+        admin = create_admin_client(settings, http_client)
+        assert admin.table("user_profiles").select("id").execute().data == []

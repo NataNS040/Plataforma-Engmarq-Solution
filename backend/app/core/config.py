@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default_factory=list)
     supabase_url: HttpUrl | None = None
     supabase_anon_key: SecretStr | None = None
+    supabase_secret_key: SecretStr | None = None
     supabase_service_role_key: SecretStr | None = None
     supabase_timeout_seconds: float = Field(default=10, gt=0, le=60)
 
@@ -53,7 +54,7 @@ class Settings(BaseSettings):
             raise ValueError("SUPABASE_URL requires HTTPS except for local development")
         return url
 
-    @field_validator("supabase_anon_key", "supabase_service_role_key")
+    @field_validator("supabase_anon_key", "supabase_secret_key", "supabase_service_role_key")
     @classmethod
     def validate_key(cls, key: SecretStr | None) -> SecretStr | None:
         if key is not None and not key.get_secret_value().strip():
@@ -64,6 +65,6 @@ class Settings(BaseSettings):
     def validate_supabase_configuration(self) -> "Settings":
         if bool(self.supabase_url) != bool(self.supabase_anon_key):
             raise ValueError("Set SUPABASE_URL and SUPABASE_ANON_KEY together")
-        if self.supabase_service_role_key and not self.supabase_url:
+        if (self.supabase_secret_key or self.supabase_service_role_key) and not self.supabase_url:
             raise ValueError("Configure Supabase before setting its service role key")
         return self

@@ -1,6 +1,6 @@
 # EngMarq — Backend
 
-API em Python 3.11+, FastAPI e Pydantic 2. O módulo Empresas foi migrado para route → service → repository, com Supabase Auth e RLS. Os demais domínios permanecem nas integrações anteriores. Nenhuma migration foi alterada.
+API em Python 3.11+, FastAPI e Pydantic 2. Empresas e criação de usuários usam route → service → repository, com Supabase Auth. Consultas comuns respeitam RLS; o provisionamento usa Auth Admin após autorização. Os demais fluxos permanecem nas integrações anteriores. Nenhuma migration foi alterada.
 
 ## Executar localmente
 
@@ -29,6 +29,7 @@ Para instalação sem ferramentas de teste: `python -m pip install .`, usando o 
 | GET | `/api/v1/empresas/{id}` | Empresa autorizada |
 | POST | `/api/v1/empresas` | Cadastro por administrador (201) |
 | PATCH | `/api/v1/empresas/{id}` | Edição parcial; status reservado ao administrador |
+| POST | `/api/v1/usuarios` | Criação de Auth e perfil (201) |
 
 Os dois endpoints de saúde são públicos e usam a mesma implementação. São verificações de **liveness**: confirmam que a API responde, sem consultar banco, Auth ou Storage. Não indicam disponibilidade do Supabase.
 
@@ -48,7 +49,8 @@ A configuração lê exclusivamente `backend/.env`, com caminho ancorado no cód
 | `SUPABASE_URL` | Obrigatória junto com a chave anon para usar a integração | URL do projeto; HTTPS, exceto Supabase local |
 | `SUPABASE_ANON_KEY` | Obrigatória junto com a URL para usar a integração | Chave anon/publishable do projeto; usada junto ao JWT do usuário |
 | `SUPABASE_TIMEOUT_SECONDS` | Opcional; `10`, maior que zero e até 60 | Timeout de rede do cliente por requisição |
-| `SUPABASE_SERVICE_ROLE_KEY` | Opcional; sem padrão | Apenas operações administrativas explícitas no servidor |
+| `SUPABASE_SECRET_KEY` | Necessária para provisionar usuários, salvo fallback legado | Secret Key moderna, exclusivamente no backend |
+| `SUPABASE_SERVICE_ROLE_KEY` | Fallback temporário | Usada somente se a configuração principal estiver ausente |
 
 Exemplo de CORS:
 
@@ -74,7 +76,25 @@ Nenhuma chave real acompanha o repositório. As chaves usam `SecretStr` e não a
 
 Os clientes não persistem sessões nem renovam tokens automaticamente. O cliente HTTP é fechado ao final da requisição. Dependências síncronas usam o thread pool do FastAPI; operações síncronas do SDK em futuras rotas devem permanecer em código síncrono ou ser explicitamente deslocadas para uma thread.
 
-`create_admin_client` é uma fábrica separada, sem associação a endpoints, que exige a chave administrativa. Ela pode contornar RLS e só deve ser usada depois de autorização explícita no servidor. O código que chamar essa fábrica deve gerenciar o contexto `httpx.Client` e seu fechamento.
+`create_admin_client` é uma fábrica separada, nunca uma dependência padrão de rotas. O service de usuários a abre somente após autorização. Ela exige a chave administrativa e pode contornar RLS. O service gerencia o contexto `httpx.Client` e seu fechamento.
+
+## Criação de usuários
+
+Fluxo: React → FastAPI → Supabase Auth Admin → `user_profiles`. O SDK `supabase>=2.31,<3` aceita a Secret Key moderna diretamente; os testes exercitam a versão 2.31.0 com transporte HTTP simulado. Referência: [Supabase Auth Admin Python](https://supabase.com/docs/reference/python/admin-api).
+
+`POST /api/v1/usuarios` exige `Authorization: Bearer <JWT>`. `CurrentProfile` verifica o JWT no Auth e consulta perfil/empresa com anon key + JWT/RLS. Perfil e empresa do solicitante precisam estar ativos. O service preserva as regras existentes: `admin` cria os quatro papéis em qualquer empresa existente; `gestor`/`empresa` criam apenas não administradores na própria empresa; `operacional` recebe 403. Não usa metadados fornecidos pelo navegador como autorização.
+
+Payload: `email`, `password`, `full_name`, `role`, `empresa_id`. E-mail e nome são aparados; e-mail fica em minúsculas. Pydantic valida e-mail, nome não vazio, senha com no mínimo oito caracteres, UUID, os papéis existentes (`admin`, `gestor`, `operacional`, `empresa`) e rejeita campos extras. Confirmação de senha permanece no formulário. O Auth recebe `email_confirm=true`; o perfil recebe ID do Auth, e-mail, nome, papel, empresa e `active=true`. Não há senha na tabela de perfis, logs ou respostas.
+
+Sucesso: 201, `{"user_id":"UUID"}`, `Cache-Control: no-store`. Ausência/token inválido: 401; permissão: 403; entrada inválida: 422; e-mail já cadastrado: 409; rejeição adicional pelo Auth: 400; integração ausente/indisponível: 503. Erros do SDK são sanitizados.
+
+Se inserir o perfil falhar, o service exclui o Auth recém-criado; a FK existente remove eventual perfil por cascata. Se a exclusão também falhar, retorna 500 com `user_rollback_failed` e registra apenas o ID para reconciliação administrativa. Auth e banco não constituem uma transação distribuída: queda do processo ou timeout na criação do Auth pode deixar resultado indeterminado. Não há repetição automática; confira Auth/perfil antes de tentar novamente. Se necessário, remova manualmente o acesso incompleto identificado nos logs.
+
+`SUPABASE_SECRET_KEY` existe **somente no backend**, nunca usa prefixo `VITE_`, nunca deve ser commitada e nunca pode ser enviada ao navegador. Configure no ambiente do servidor ou em `backend/.env` (ignorado pelo Git). O fallback legado é temporário; novas instalações devem usar a configuração principal.
+
+Publicação: configure a chave e publique primeiro o backend, depois o frontend com `VITE_API_URL` e CORS corretos. A função antiga foi retirada do repositório após eliminar seu único consumidor. Uma implantação remota anterior não é apagada por essa remoção; desative-a após atualizar os clientes. Nenhum usuário real foi criado pelos testes.
+
+Limite preexistente: a migration 013 permite UPDATE direto de `user_profiles` a `gestor`/`empresa`, sem impedir promoção a `admin` no banco. A edição/listagem de equipe ainda usa Supabase diretamente. A nova rota restringe a criação, mas não corrige essa via de elevação de privilégio; revisar policies/permissões de coluna antes de considerar a autorização global endurecida. Os testes simulados não executam RLS em PostgreSQL real.
 
 ## Erros
 
@@ -117,6 +137,6 @@ Dentro de `backend/`:
 
 Os testes cobrem saúde, `/me`, OpenAPI, CORS, configuração, envelopes de erro, autenticação e contexto do usuário no PostgREST. Verificam token inválido, perfil inativo/ausente, empresa suspensa/pendente, falha do banco e tentativa de consultar outra identidade. Chamadas ao Supabase são simuladas com transporte HTTP em memória: os testes não precisam de secrets e não acessam nem modificam o projeto real.
 
-A prova manual pelo navegador está em [frontend/README.md](../frontend/README.md): após login normal no frontend de desenvolvimento, execute `await window.engmarqApi.me()` no console. Use o mesmo projeto Supabase nos dois serviços e inclua a origem do Vite em `CORS_ORIGINS`. Nenhuma senha passa pela API.
+A prova manual pelo navegador está em [frontend/README.md](../frontend/README.md): após login normal no frontend de desenvolvimento, execute `await window.engmarqApi.me()` no console. Use o mesmo projeto Supabase nos dois serviços e inclua a origem do Vite em `CORS_ORIGINS`. O login permanece no Supabase; apenas o provisionamento administrativo envia a senha inicial ao backend, via HTTPS em produção.
 
 Referências: [configuração FastAPI](https://fastapi.tiangolo.com/advanced/settings/), [CORS](https://fastapi.tiangolo.com/tutorial/cors/), [cliente Supabase Python](https://supabase.com/docs/reference/python/initializing) e [verificação de usuário](https://supabase.com/docs/reference/python/auth-getuser).

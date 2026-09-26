@@ -23,11 +23,12 @@ def create_user_client(settings: Settings, token: str, http_client: httpx.Client
 
 def create_admin_client(settings: Settings, http_client: httpx.Client) -> Client:
     """Explicit privileged access; never use as a default route dependency."""
-    if settings.supabase_url is None or settings.supabase_service_role_key is None:
+    key = settings.supabase_secret_key or settings.supabase_service_role_key
+    if settings.supabase_url is None or key is None:
         raise AppError(503, "supabase_admin_not_configured", "Integração administrativa não configurada.")
     return create_client(
         str(settings.supabase_url).rstrip("/"),
-        settings.supabase_service_role_key.get_secret_value(),
+        key.get_secret_value(),
         options=ClientOptions(
             auto_refresh_token=False,
             persist_session=False,

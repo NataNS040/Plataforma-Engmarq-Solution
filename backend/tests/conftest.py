@@ -9,7 +9,7 @@ from app.main import create_app
 def isolated_environment(monkeypatch):
     for name in (
         "CORS_ORIGINS", "SUPABASE_URL", "SUPABASE_ANON_KEY",
-        "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_TIMEOUT_SECONDS",
+        "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY", "SUPABASE_TIMEOUT_SECONDS",
     ):
         monkeypatch.delenv(name, raising=False)
 

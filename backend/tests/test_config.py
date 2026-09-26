@@ -9,11 +9,15 @@ def test_environment_settings_and_secrets_are_masked(monkeypatch):
     monkeypatch.setenv("SUPABASE_URL", "https://project.supabase.co")
     monkeypatch.setenv("SUPABASE_ANON_KEY", "test-anon-key")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "test-service-secret")
+    monkeypatch.setenv("SUPABASE_SECRET_KEY", "sb_secret_test-only")
     settings = Settings(_env_file=None)
     assert settings.cors_origins == ["https://frontend.example"]
     assert settings.supabase_service_role_key.get_secret_value() == "test-service-secret"
     assert "test-service-secret" not in repr(settings)
     assert "test-service-secret" not in settings.model_dump_json()
+    assert settings.supabase_secret_key.get_secret_value() == "sb_secret_test-only"
+    assert "sb_secret_test-only" not in repr(settings)
+    assert "sb_secret_test-only" not in settings.model_dump_json()
 
 
 @pytest.mark.parametrize("origin", ["*", "https://example.com/path", "https://user:password@example.com"])

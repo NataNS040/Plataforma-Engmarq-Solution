@@ -14,7 +14,7 @@ def test_only_implemented_routes_are_exposed(client):
     assert response.status_code == 200
     assert set(response.json()["paths"]) == {
         "/health", "/api/v1/health", "/api/v1/me",
-        "/api/v1/empresas", "/api/v1/empresas/{empresa_id}",
+        "/api/v1/empresas", "/api/v1/empresas/{empresa_id}", "/api/v1/usuarios",
     }
 
 
