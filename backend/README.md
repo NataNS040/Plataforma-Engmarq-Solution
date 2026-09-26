@@ -1,6 +1,6 @@
 # EngMarq — Backend
 
-API em Python 3.11+, FastAPI e Pydantic 2. Empresas e criação de usuários usam route → service → repository, com Supabase Auth. Consultas comuns respeitam RLS; o provisionamento usa Auth Admin após autorização. Os demais fluxos permanecem nas integrações anteriores. Nenhuma migration foi alterada.
+API em Python 3.11+, FastAPI e Pydantic 2. Empresas e administração de usuários usam route → service → repository, com Supabase Auth. Listagem, consulta e edição respeitam RLS; o provisionamento usa Auth Admin após autorização. Os demais domínios permanecem nas integrações anteriores. A migration 014 é nova; nenhuma migration anterior foi alterada.
 
 ## Executar localmente
 
@@ -30,6 +30,9 @@ Para instalação sem ferramentas de teste: `python -m pip install .`, usando o 
 | POST | `/api/v1/empresas` | Cadastro por administrador (201) |
 | PATCH | `/api/v1/empresas/{id}` | Edição parcial; status reservado ao administrador |
 | POST | `/api/v1/usuarios` | Criação de Auth e perfil (201) |
+| GET | `/api/v1/usuarios?empresa_id=UUID` | Equipe no escopo autorizado; filtro opcional |
+| GET | `/api/v1/usuarios/{user_id}` | Perfil no escopo autorizado |
+| PATCH | `/api/v1/usuarios/{user_id}` | Papel e/ou situação ativa; retorna perfil atualizado |
 
 Os dois endpoints de saúde são públicos e usam a mesma implementação. São verificações de **liveness**: confirmam que a API responde, sem consultar banco, Auth ou Storage. Não indicam disponibilidade do Supabase.
 
@@ -94,7 +97,17 @@ Se inserir o perfil falhar, o service exclui o Auth recém-criado; a FK existent
 
 Publicação: configure a chave e publique primeiro o backend, depois o frontend com `VITE_API_URL` e CORS corretos. A função antiga foi retirada do repositório após eliminar seu único consumidor. Uma implantação remota anterior não é apagada por essa remoção; desative-a após atualizar os clientes. Nenhum usuário real foi criado pelos testes.
 
-Limite preexistente: a migration 013 permite UPDATE direto de `user_profiles` a `gestor`/`empresa`, sem impedir promoção a `admin` no banco. A edição/listagem de equipe ainda usa Supabase diretamente. A nova rota restringe a criação, mas não corrige essa via de elevação de privilégio; revisar policies/permissões de coluna antes de considerar a autorização global endurecida. Os testes simulados não executam RLS em PostgreSQL real.
+## Administração de usuários
+
+Aplique `supabase/migrations/014_fix_user_profiles_permissions.sql` antes de publicar estas rotas. Ela substitui as policies inseguras da 013, restringe grants e adiciona verificação no banco. A existência do arquivo não corrige uma implantação remota até sua aplicação.
+
+GET/listagem e PATCH usam `CurrentProfile` e `UsuariosRlsRepository` com **anon key + JWT**; nenhuma chave administrativa é necessária. Admin administra usuários das empresas visíveis no modelo de Empresas (todas atualmente). Gestor/empresa ficam na própria empresa e nunca editam administradores nem atribuem `admin`. Operacional recebe 403. Um ID inexistente ou fora do escopo retorna 404, sem revelar outra empresa. Um filtro de empresa fora do escopo retorna 403. A listagem mantém ordenação por nome e filtro da tela atual; o limite de linhas do PostgREST continua aplicável.
+
+PATCH aceita exclusivamente `role` e `active` (`extra="forbid"`), exige pelo menos um campo e rejeita nulos, papel inválido, booleanos coercíveis e campos extras com 422. Nome, e-mail, empresa e senha não são editáveis na interface atual. Todos os perfis, inclusive admin, ficam impedidos de editar o próprio papel/status, preservando a proteção existente na tela. Gestor/empresa podem visualizar administradores da própria equipe, mas não alterá-los. O banco revalida ator/alvo na gravação, inclusive sob mudanças concorrentes; conflitos de transação retornam 409, sem repetição automática.
+
+`active=false` continua significando bloqueio pelo perfil, não banimento nem remoção no Supabase Auth. A API verifica perfil/empresa em cada chamada. O login e a consulta do próprio perfil pelo AuthProvider continuam no Supabase; o cache da interface pode demorar a refletir uma suspensão, mas não autoriza chamadas administrativas na API/banco.
+
+Respostas de perfil contêm apenas `id`, `email`, `full_name`, `role`, `empresa_id`, `active`, `created_at`. Sucesso usa `Cache-Control: no-store`. Erros internos do PostgREST são sanitizados. Veja [migration, decisões, testes SQL e limites](../docs/usuarios-seguranca.md).
 
 ## Erros
 

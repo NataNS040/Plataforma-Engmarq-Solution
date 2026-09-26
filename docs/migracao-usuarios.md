@@ -1,5 +1,7 @@
 # Migração de criação de usuários — verificação
 
+> Registro histórico da primeira etapa. A etapa posterior também migrou listagem/edição e criou a migration 014 para corrigir a vulnerabilidade descrita abaixo. Resultados e estado atual: [Administração de Usuários](usuarios-seguranca.md). Os números de testes, inventário e referências de linha abaixo correspondem à entrega original.
+
 Implementado `POST /api/v1/usuarios`, com resposta 201 `{user_id}`. A interface preserva campos, seleção de papéis/empresa, callbacks de sucesso e feedback por toast. Login continua no Supabase Auth. Listagem/edição de equipe e outros módulos não foram migrados.
 
 ## Autorização e consistência

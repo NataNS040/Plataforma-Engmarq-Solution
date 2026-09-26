@@ -1,8 +1,12 @@
 # EngMarq — Frontend e API
 
-O React/Vite mantém Supabase Auth como fonte de identidade. Empresas usa FastAPI para listagem, consulta, cadastro, edição e suspensão. A criação de usuários também usa FastAPI; os demais fluxos continuam com suas integrações anteriores durante a migração incremental.
+O React/Vite mantém Supabase Auth como fonte de identidade. Empresas e administração de Usuários usam FastAPI. Os demais domínios continuam com suas integrações anteriores durante a migração incremental.
 
-O modal existente chama `usuariosService.criarUsuario` → `services/api/usuarios` → `POST /api/v1/usuarios`, com o JWT da sessão em `Authorization: Bearer ...`. O backend valida identidade/permissão e chama Supabase Auth Admin, criando também `user_profiles`. O retorno é `{user_id}`; erros aparecem no toast, mantendo o modal aberto. Não existe fallback para Edge Function. Listagem e edição de equipe permanecem em seus caminhos anteriores.
+O modal de criação chama `usuariosService.criarUsuario` → `services/api/usuarios` → `POST /api/v1/usuarios`, com o JWT da sessão em `Authorization: Bearer ...`. O backend valida identidade/permissão e chama Supabase Auth Admin, criando também `user_profiles`. O retorno é `{user_id}`; erros aparecem no toast, mantendo o modal aberto. Não existe fallback para Edge Function.
+
+A equipe usa `GET /usuarios?empresa_id=UUID`; consulta individual usa `GET /usuarios/{id}`; papel e ativação/desativação usam `PATCH /usuarios/{id}`. Todos passam pela mesma camada HTTP autenticada, sem leitura ou UPDATE administrativo direto do navegador. Os hooks e a invalidação da lista por empresa são preservados. O modal reflete o perfil devolvido pela edição e mostra erros da API sem repetir gravações. O próprio acesso e administradores vistos por gestores/empresa ficam bloqueados para edição, com regras equivalentes no backend/banco.
+
+Aplique a migration 014 e publique o backend antes de atualizar o frontend. A leitura direta do próprio `user_profiles` permanece apenas no AuthProvider para a sessão/tela de conta indisponível; RLS permite essa leitura mesmo para perfil inativo. Veja [o relatório de segurança](../docs/usuarios-seguranca.md).
 
 Configure `SUPABASE_SECRET_KEY` somente no backend: nunca em variável `VITE_`, nunca no navegador e nunca em commit. O frontend precisa apenas da sessão Supabase e de `VITE_API_URL`; a chave privilegiada é responsabilidade exclusiva do servidor. Veja [regras e compensação](../backend/README.md#criação-de-usuários).
 

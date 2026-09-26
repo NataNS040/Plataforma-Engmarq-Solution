@@ -59,7 +59,7 @@ Não foram criados nem suspensos registros reais durante os testes automatizados
 
 ## Próximos módulos (ainda não migrados)
 
-1. Edição/listagem de equipe e revisão das policies de perfis; o provisionamento já usa FastAPI.
+1. Administração de Usuários concluída em etapa posterior: criação, listagem, consulta e edição via FastAPI, com migration 014. Veja [regras e publicação](usuarios-seguranca.md).
 2. Demais mutações sensíveis e permissões: catálogos e colaboradores, com escopo de empresa e revisão das policies.
 3. Revalidar a existência de persistência para cálculos comerciais/propostas antes de criar endpoints; não converter telas demonstrativas em funcionalidades novas durante esta migração.
 4. Documentos e numeração: `documentosService`; definir geração atômica caso aplicável, depois propostas.

@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest'
-import { criarUsuario } from '@/services/usuariosService'
+import { atualizarUsuario, criarUsuario, listarUsuariosDaEmpresa, obterUsuario } from '@/services/usuariosService'
 
 const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }))
 // No functions or database API: any fallback to an Edge Function fails.
@@ -47,4 +47,50 @@ it('does not send a password without an authenticated session', async () => {
 it('rejects an incompatible response', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({})))
   await expect(criarUsuario(input)).rejects.toMatchObject({ code: 'invalid_response' })
+})
+
+const usuario = {
+  id: result.user_id, email: input.email, full_name: input.full_name,
+  role: input.role, empresa_id: input.empresa_id, active: true,
+  created_at: '2026-01-01T00:00:00Z',
+}
+
+it('lists a company team and reads detail through FastAPI with JWT', async () => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(Response.json([usuario])).mockResolvedValueOnce(Response.json(usuario))
+  vi.stubGlobal('fetch', fetchMock)
+  expect(await listarUsuariosDaEmpresa(input.empresa_id)).toEqual([usuario])
+  expect(await obterUsuario(usuario.id)).toEqual(usuario)
+  expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+    `http://localhost:8000/api/v1/usuarios?empresa_id=${input.empresa_id}`,
+    `http://localhost:8000/api/v1/usuarios/${usuario.id}`,
+  ])
+  for (const [, options] of fetchMock.mock.calls) {
+    expect(options.headers.get('Authorization')).toBe('Bearer user-jwt')
+    expect(options.method).toBe('GET')
+  }
+})
+
+it.each([{ role: 'operacional' as const }, { active: false }, { active: true }])(
+  'edits role or toggles access through PATCH without direct Supabase access: %j', async patch => {
+    const changed = { ...usuario, ...patch }
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(changed))
+    vi.stubGlobal('fetch', fetchMock)
+    expect(await atualizarUsuario(usuario.id, patch)).toEqual(changed)
+    const [url, options] = fetchMock.mock.calls[0]
+    expect(String(url)).toBe(`http://localhost:8000/api/v1/usuarios/${usuario.id}`)
+    expect(options.method).toBe('PATCH')
+    expect(options.headers.get('Authorization')).toBe('Bearer user-jwt')
+    expect(JSON.parse(options.body)).toEqual(patch)
+  },
+)
+
+it.each([403, 404, 409, 422, 503])('propagates team API errors (%s) without database fallback', async status => {
+  const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(Response.json({
+    error: { code: 'access_denied', message: 'Operação recusada.', details: [] },
+  }, { status })))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(listarUsuariosDaEmpresa(input.empresa_id)).rejects.toMatchObject({ status })
+  await expect(obterUsuario(usuario.id)).rejects.toMatchObject({ status })
+  await expect(atualizarUsuario(usuario.id, { active: false })).rejects.toMatchObject({ status })
+  expect(fetchMock).toHaveBeenCalledTimes(3)
 })

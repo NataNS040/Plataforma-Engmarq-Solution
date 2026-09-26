@@ -22,16 +22,20 @@ interface Props {
 export function EditarUsuarioModal({ usuario, isSelf, canAssignAdmin, onClose }: Props) {
   const atualizar = useAtualizarUsuario()
   const [role, setRole] = useState<UserRole>(usuario.role)
+  const currentUsuario = atualizar.data ?? usuario
+  const cannotEdit = isSelf || (!canAssignAdmin && currentUsuario.role === 'admin')
 
   const roles = canAssignAdmin ? ROLES : ROLES.filter(r => r.value !== 'admin')
 
-  async function handleSalvarPapel() {
-    if (role === usuario.role) return
-    await atualizar.mutateAsync({ id: usuario.id, input: { role } })
+  function handleSalvarPapel() {
+    if (cannotEdit || role === currentUsuario.role) return
+    // The mutation's onError displays the API message; avoid unhandled promises.
+    atualizar.mutate({ id: usuario.id, input: { role } })
   }
 
-  async function handleToggleAtivo() {
-    await atualizar.mutateAsync({ id: usuario.id, input: { active: !usuario.active } })
+  function handleToggleAtivo() {
+    if (cannotEdit) return
+    atualizar.mutate({ id: usuario.id, input: { active: !currentUsuario.active } })
   }
 
   return (
@@ -62,31 +66,33 @@ export function EditarUsuarioModal({ usuario, isSelf, canAssignAdmin, onClose }:
           <div className="mp-field">
             <label>Papel de acesso</label>
             <div style={{ display: 'flex', gap: 8 }}>
-              <select className="mp-input" value={role} onChange={e => setRole(e.target.value as UserRole)} disabled={isSelf}>
+              <select className="mp-input" value={role} onChange={e => setRole(e.target.value as UserRole)} disabled={cannotEdit}>
+                {!canAssignAdmin && currentUsuario.role === 'admin' && <option value="admin">Administrador</option>}
                 {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
               <button
                 type="button"
                 className="tbtn primary"
-                disabled={isSelf || role === usuario.role || atualizar.isPending}
+                disabled={cannotEdit || role === currentUsuario.role || atualizar.isPending}
                 onClick={() => void handleSalvarPapel()}
               >
                 {atualizar.isPending ? <Loader2 size={13} className="btn-spinner" /> : 'Salvar'}
               </button>
             </div>
             {isSelf && <div className="mp-hint">Você não pode alterar o próprio papel de acesso.</div>}
+            {!isSelf && cannotEdit && <div className="mp-hint">Somente administradores podem editar este acesso.</div>}
           </div>
 
           <div className="mp-field">
             <label>Acesso à plataforma</label>
             <button
               type="button"
-              className={`tbtn ${usuario.active ? 'ghost' : 'primary'}`}
-              disabled={isSelf || atualizar.isPending}
+              className={`tbtn ${currentUsuario.active ? 'ghost' : 'primary'}`}
+              disabled={cannotEdit || atualizar.isPending}
               onClick={() => void handleToggleAtivo()}
-              style={usuario.active ? { color: 'var(--red-500)' } : undefined}
+              style={currentUsuario.active ? { color: 'var(--red-500)' } : undefined}
             >
-              {usuario.active
+              {currentUsuario.active
                 ? <><Ban size={13} /> Desativar acesso</>
                 : <><CheckCircle2 size={13} /> Reativar acesso</>}
             </button>

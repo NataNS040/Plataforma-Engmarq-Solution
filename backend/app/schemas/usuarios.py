@@ -1,8 +1,9 @@
+from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, StrictBool, field_validator, model_validator
 
-from app.schemas.profile import UserRole
+from app.schemas.profile import UserProfile, UserRole
 
 
 class UsuarioCreate(BaseModel):
@@ -26,3 +27,21 @@ class UsuarioCreate(BaseModel):
 
 class UsuarioResponse(BaseModel):
     user_id: UUID
+
+
+class UsuarioDetail(UserProfile):
+    email: str
+    created_at: datetime
+
+
+class UsuarioUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    role: UserRole | None = None
+    active: StrictBool | None = None
+
+    @model_validator(mode="after")
+    def validate_patch(self) -> "UsuarioUpdate":
+        if not self.model_fields_set or any(getattr(self, name) is None for name in self.model_fields_set):
+            raise ValueError("Informe papel ou situação, sem valores nulos.")
+        return self
