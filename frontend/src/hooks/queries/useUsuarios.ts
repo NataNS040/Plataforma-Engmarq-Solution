@@ -1,13 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { qk } from '@/lib/queryKeys'
 import { atualizarUsuario, listarUsuariosDaEmpresa, type UsuarioInput } from '@/services/usuariosService'
 
 export function useUsuariosDaEmpresa(empresaId: string | null | undefined) {
+  const { canManageUsers, empresaId: actorEmpresaId } = useCurrentProfile()
   return useQuery({
     queryKey: qk.usuarios.list(empresaId ?? ''),
-    queryFn: () => listarUsuariosDaEmpresa(empresaId!),
-    enabled: !!empresaId,
+    queryFn: () => listarUsuariosDaEmpresa(),
+    enabled: canManageUsers && !!empresaId && empresaId === actorEmpresaId,
   })
 }
 

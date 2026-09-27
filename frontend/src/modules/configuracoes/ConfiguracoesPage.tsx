@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import {
   Building2, Users, Shield, LayoutGrid, Star, MapPin,
-  Plus, Download, Pencil, CheckCircle2, MoreHorizontal, Ban,
+  Plus, Pencil, CheckCircle2, MoreHorizontal, Ban,
   HelpCircle, Layers, Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -244,7 +244,7 @@ function TeamTable({ usuarios, viewerId, onManage }: {
                   : <span className="chip crit"><Ban size={11}/> Inativo</span>}
               </td>
               <td style={{ textAlign:'right' }}>
-                <button className="icon-btn sm" title="Gerenciar acesso" onClick={() => onManage(u)}><MoreHorizontal size={15}/></button>
+                <button className="icon-btn sm" title="Gerenciar acesso" disabled={u.id === viewerId || u.role === 'admin'} onClick={() => onManage(u)}><MoreHorizontal size={15}/></button>
               </td>
             </tr>
           ))}
@@ -259,19 +259,15 @@ function TeamTable({ usuarios, viewerId, onManage }: {
 // ---------------------------------------------------------------------------
 const ADMIN_TABS = [
   { id:'conta',       label:'Conta',               icon:Building2 },
-  { id:'equipe',      label:'Equipe',              icon:Users },
   { id:'catalogos',   label:'Catálogos',           icon:Layers },
   { id:'papeis',      label:'Papéis e permissões', icon:Shield },
   { id:'integracoes', label:'Integrações',         icon:LayoutGrid },
   { id:'plano',       label:'Plano e faturamento', icon:Star },
 ]
 
-function ConfiguracoesAdmin({ tab, editing, setEditing, empresaId, onCriarUsuario, onGerenciarUsuario }: {
+function ConfiguracoesAdmin({ tab, editing, setEditing, empresaId }: {
   tab: string; editing: boolean; setEditing: (v: boolean) => void; empresaId: string
-  onCriarUsuario: () => void; onGerenciarUsuario: (u: UserProfile) => void
 }) {
-  const { profile } = useAuth()
-  const usuariosQuery = useUsuariosDaEmpresa(empresaId)
 
   if (tab === 'conta') {
     return (
@@ -291,31 +287,10 @@ function ConfiguracoesAdmin({ tab, editing, setEditing, empresaId, onCriarUsuari
           <div className="card mp-card mp-card-tint">
             <h3>Visão geral</h3>
             <div className="mp-status-grid">
-              <div><div className="mp-mini-l">Equipe interna</div><div className="mp-mini-v">{usuariosQuery.data?.length ?? '—'} membros</div></div>
               <div><div className="mp-mini-l">Plano</div><div className="mp-mini-v">Enterprise</div></div>
             </div>
           </div>
         </div>
-      </div>
-    )
-  }
-
-  if (tab === 'equipe') {
-    const usuarios = usuariosQuery.data ?? []
-    const ativos = usuarios.filter(u => u.active).length
-    return (
-      <div className="card mp-card" style={{ padding:0, overflow:'hidden' }}>
-        <div style={{ padding:'18px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-          <div>
-            <h3 style={{ margin:0 }}>Equipe interna Norveo</h3>
-            <p className="mp-card-sub" style={{ margin:'4px 0 0' }}>{ativos} membro(s) ativo(s) de {usuarios.length}</p>
-          </div>
-          <div className="toolbar">
-            <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar equipe')}><Download size={13}/> Exportar</button>
-            <button className="tbtn primary" onClick={onCriarUsuario}><Plus size={13}/> Criar acesso</button>
-          </div>
-        </div>
-        <TeamTable usuarios={usuarios} viewerId={profile?.id} onManage={onGerenciarUsuario}/>
       </div>
     )
   }
@@ -373,6 +348,7 @@ function MinhaEmpresa({ tab, editing, setEditing, empresaId, onCriarUsuario, onG
   onCriarUsuario: () => void; onGerenciarUsuario: (u: UserProfile) => void
 }) {
   const { profile } = useAuth()
+  const { canManageUsers } = useCurrentProfile()
   const usuariosQuery = useUsuariosDaEmpresa(empresaId)
   const { data: empresa } = useEmpresa(empresaId)
 
@@ -426,7 +402,7 @@ function MinhaEmpresa({ tab, editing, setEditing, empresaId, onCriarUsuario, onG
     )
   }
 
-  if (tab === 'equipe') {
+  if (tab === 'equipe' && canManageUsers) {
     const usuarios = usuariosQuery.data ?? []
     return (
       <div className="card mp-card" style={{ padding:0, overflow:'hidden' }}>
@@ -471,9 +447,9 @@ function MinhaEmpresa({ tab, editing, setEditing, empresaId, onCriarUsuario, onG
 // ---------------------------------------------------------------------------
 export default function ConfiguracoesPage() {
   const { profile } = useAuth()
-  const { empresaId, isAdmin: isAdminRole } = useCurrentProfile()
+  const { empresaId, canManageUsers } = useCurrentProfile()
   const isAdmin = profile?.role === 'admin'
-  const tabs = isAdmin ? ADMIN_TABS : EMP_TABS
+  const tabs = isAdmin ? ADMIN_TABS : EMP_TABS.filter(t => t.id !== 'equipe' || canManageUsers)
   const [tab, setTab] = useState(tabs[0].id)
   const [editing, setEditing] = useState(false)
   const [showCriarModal, setShowCriarModal] = useState(false)
@@ -482,6 +458,8 @@ export default function ConfiguracoesPage() {
   useEffect(() => {
     setTab(tabs[0].id)
     setEditing(false)
+    setShowCriarModal(false)
+    setGerenciando(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.role])
 
@@ -496,7 +474,7 @@ export default function ConfiguracoesPage() {
           <h1>{isAdmin ? 'Configurações' : 'Minha empresa'}</h1>
           <p className="sub">
             {isAdmin
-              ? 'Norveo · conta da organização, equipe interna e integrações'
+              ? 'Norveo · conta da organização e integrações'
               : 'Cadastro, unidades, acessos e contrato Norveo'}
           </p>
         </div>
@@ -519,7 +497,6 @@ export default function ConfiguracoesPage() {
       ) : isAdmin ? (
         <ConfiguracoesAdmin
           tab={tab} editing={editing} setEditing={setEditing} empresaId={empresaId}
-          onCriarUsuario={() => setShowCriarModal(true)} onGerenciarUsuario={setGerenciando}
         />
       ) : (
         <MinhaEmpresa
@@ -528,18 +505,16 @@ export default function ConfiguracoesPage() {
         />
       )}
 
-      {showCriarModal && empresaId && (
+      {showCriarModal && canManageUsers && empresaId && (
         <CriarUsuarioModal
-          adminEmpresaId={empresaId}
           onClose={() => setShowCriarModal(false)}
         />
       )}
 
-      {gerenciando && (
+      {gerenciando && canManageUsers && (
         <EditarUsuarioModal
           usuario={gerenciando}
           isSelf={gerenciando.id === profile?.id}
-          canAssignAdmin={isAdminRole}
           onClose={() => setGerenciando(null)}
         />
       )}

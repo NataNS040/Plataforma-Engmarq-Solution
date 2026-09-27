@@ -66,13 +66,15 @@ before(async () => {
   // Include an old column-level grant: revoking only the table is insufficient.
   await db.exec('GRANT UPDATE (empresa_id), INSERT (id) ON user_profiles TO authenticated')
   await migration('014_fix_user_profiles_permissions.sql')
+  await migration('015_user_profiles_tenant_management.sql')
 })
 
 after(async () => db.close())
 
-test('013 escalation reproduced; 014 applies idempotently and keeps RLS enabled', async () => {
+test('013 escalation reproduced; 014 followed by 015 keeps RLS and policies', async () => {
   assert.equal(baselineExploitable, true)
   await migration('014_fix_user_profiles_permissions.sql')
+  await migration('015_user_profiles_tenant_management.sql')
   assert.equal((await db.query("SELECT relrowsecurity FROM pg_class WHERE oid = 'public.user_profiles'::regclass")).rows[0].relrowsecurity, true)
   const policies = (await db.query("SELECT policyname FROM pg_policies WHERE tablename = 'user_profiles' ORDER BY policyname")).rows
   assert.deepEqual(policies.map(p => p.policyname), ['profiles_select', 'profiles_update_managers'])
@@ -119,10 +121,12 @@ for (const n of [5, 7, 9]) {
   }))
 }
 
-test('admin reads all companies and can promote, demote and suspend other users', async () => actor(1, async () => {
-  assert.equal((await db.query('SELECT id FROM user_profiles')).rows.length, 10)
-  assert.equal((await update(8)).rows[0].role, 'admin')
-  assert.equal((await update(2, "role = 'gestor', active = false")).rows[0].active, false)
+test('global admin reads only own profile and cannot manage any team', async () => actor(1, async () => {
+  assert.deepEqual((await db.query('SELECT id FROM user_profiles')).rows.map(row => row.id), [id(1)])
+  for (const target of [2, 6, 8]) {
+    assert.equal((await update(target)).rows.length, 0)
+    assert.equal((await update(target, "role = 'gestor', active = false")).rows.length, 0)
+  }
 }))
 
 test('admin cannot self-demote or self-disable, preserving an acting administrator', async () => actor(1, async () => {
@@ -169,4 +173,33 @@ test('trigger remains a barrier if a future permissive policy or column grant is
   } finally {
     await db.exec('ROLLBACK')
   }
+})
+
+
+test('global admin still creates and manages companies under RLS', async () => actor(1, async () => {
+  assert.equal((await db.query('SELECT id FROM empresas')).rows.length, 3)
+  assert.equal((await db.query("INSERT INTO empresas (id, razao_social, cnpj, status) VALUES ($1, 'New company', 'new-cnpj', 'ativa') RETURNING id", [id(104)])).rows.length, 1)
+  assert.equal((await db.query("UPDATE empresas SET status = 'suspensa' WHERE id = $1 RETURNING id", [id(102)])).rows.length, 1)
+}))
+
+for (const target of [6, 8]) {
+  test(`trigger blocks global admin on target ${target} even with an overbroad policy`, async () => {
+    await db.exec(`BEGIN;
+      CREATE POLICY test_admin_overbroad ON user_profiles FOR ALL TO authenticated USING (true) WITH CHECK (true);
+      SET LOCAL ROLE authenticated;`)
+    try {
+      await db.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [id(1)])
+      await denied(update(target, 'active = false'))
+    } finally { await db.exec('ROLLBACK') }
+  })
+}
+
+test('private functions and schema retain restricted execution', async () => {
+  const row = (await db.query(`SELECT
+    has_schema_privilege('anon','engmarq_private','USAGE') AS anon_usage,
+    has_schema_privilege('authenticated','engmarq_private','CREATE') AS client_create,
+    has_function_privilege('authenticated','engmarq_private.guard_profile_update()','EXECUTE') AS guard_execute,
+    has_function_privilege('authenticated','engmarq_private.can_manage_profile(uuid,public.user_role)','EXECUTE') AS manager_execute
+  `)).rows[0]
+  assert.deepEqual(row, {anon_usage: false, client_create: false, guard_execute: false, manager_execute: true})
 })

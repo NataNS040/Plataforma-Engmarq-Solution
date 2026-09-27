@@ -6,8 +6,7 @@ export interface UsuarioCreateInput {
   email: string
   password: string
   full_name: string
-  role: UserRole
-  empresa_id: string
+  role: Exclude<UserRole, 'admin'>
 }
 
 const responseSchema = z.object({ user_id: z.uuid() })
@@ -19,7 +18,7 @@ export function postUsuario(input: UsuarioCreateInput) {
 }
 
 export interface UsuarioInput {
-  role?: UserRole
+  role?: Exclude<UserRole, 'admin'>
   active?: boolean
 }
 
@@ -29,8 +28,8 @@ const usuarioSchema = z.object({
   empresa_id: z.uuid(), active: z.boolean(), created_at: z.string(),
 })
 
-export function getUsuarios(empresaId: string) {
-  return apiRequest(`/usuarios?${new URLSearchParams({ empresa_id: empresaId })}`, {
+export function getUsuarios() {
+  return apiRequest('/usuarios', {
     parse: data => z.array(usuarioSchema).parse(data),
   })
 }

@@ -26,11 +26,11 @@ class UsuariosRepository:
             raise RuntimeError("Auth returned no user")
         return UUID(str(result.user.id))
 
-    def create_profile(self, user_id: UUID, data: UsuarioCreate) -> None:
+    def create_profile(self, user_id: UUID, data: UsuarioCreate, empresa_id: UUID) -> None:
         self.client.table("user_profiles").insert({
             "id": str(user_id), "email": str(data.email),
             "full_name": data.full_name, "role": data.role,
-            "empresa_id": str(data.empresa_id), "active": True,
+            "empresa_id": str(empresa_id), "active": True,
         }).execute()
 
     def delete_auth(self, user_id: UUID) -> None:
@@ -62,23 +62,20 @@ class UsuariosRlsRepository:
         except httpx.HTTPError:
             raise AppError(503, "usuarios_unavailable", "Não foi possível acessar os usuários.") from None
 
-    def list(self, empresa_id: UUID | None) -> list[dict]:
+    def list(self, empresa_id: UUID) -> list[dict]:
         query = self.client.table("user_profiles").select(FIELDS)
-        if empresa_id is not None:
-            query = query.eq("empresa_id", str(empresa_id))
+        query = query.eq("empresa_id", str(empresa_id))
         return self._execute(lambda: query.order("full_name").order("id").execute())
 
-    def get(self, user_id: UUID, empresa_id: UUID | None) -> dict | None:
+    def get(self, user_id: UUID, empresa_id: UUID) -> dict | None:
         query = self.client.table("user_profiles").select(FIELDS).eq("id", str(user_id))
-        if empresa_id is not None:
-            query = query.eq("empresa_id", str(empresa_id))
+        query = query.eq("empresa_id", str(empresa_id))
         rows = self._execute(lambda: query.limit(1).execute())
         return rows[0] if rows else None
 
-    def update(self, user_id: UUID, payload: dict, empresa_id: UUID | None) -> dict | None:
+    def update(self, user_id: UUID, payload: dict, empresa_id: UUID) -> dict | None:
         query = self.client.table("user_profiles").update(payload).eq("id", str(user_id))
-        if empresa_id is not None:
-            # Recheck target scope and role at write time; RLS also checks both rows.
-            query = query.eq("empresa_id", str(empresa_id)).neq("role", "admin")
+        # Recheck target scope and role at write time; RLS also checks both rows.
+        query = query.eq("empresa_id", str(empresa_id)).neq("role", "admin")
         rows = self._execute(lambda: query.select(FIELDS).execute())
         return rows[0] if rows else None

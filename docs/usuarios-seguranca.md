@@ -1,93 +1,125 @@
-# Administração de Usuários — endurecimento
+# Usuários: administração exclusiva da própria empresa
 
-## Entrega
+## Correção da regra funcional
 
-O POST de criação foi preservado. Foram acrescentados GET de equipe, GET individual e PATCH de papel/situação em `/api/v1/usuarios`, mantendo route → service → repository. Listagem/edição da tela Equipe agora passam pelo FastAPI com o JWT da sessão, sem cliente privilegiado. A interface mantém o layout; edição do próprio acesso e de admin por gestor/empresa fica desabilitada também na tela. O modal atualiza sua situação com a resposta da API.
+Antes, o papel `admin` podia criar usuários com qualquer papel e empresa, listar equipes de todos os tenants e editar outros administradores. O modal permitia escolher uma empresa para criar acesso. A migration 014 corrigia escalada de privilégio e protegia colunas, mas mantinha essa autorização global, incompatível com a regra de negócio esclarecida.
 
-Login permanece no Supabase Auth. A Secret Key continua restrita ao provisionamento já existente (Auth + perfil e compensação). Não foram migrados outros domínios, adicionados campos editáveis ou implementados banimento/deleção de contas.
+Agora, `admin` representa a administração global da EngMarq e administra **Empresas**, sem acesso funcional a POST/GET/PATCH de Usuários (403). A consulta do próprio perfil para autenticação continua permitida; isso não é administração de equipe. Não foi criada uma nova role `superadmin`.
 
-## Regras finais
-
-| Operação | Admin | Gestor / empresa | Operacional |
-|---|---|---|---|
-| Listar / consultar | Todas as empresas do escopo atual de Empresas; filtro opcional | Somente própria empresa | 403 |
-| Alterar role | Qualquer role existente em outro usuário | Não admin da própria empresa; destino nunca admin | 403 |
-| Ativar / desativar | Outro usuário | Não admin da própria empresa | 403 |
-| Alterar próprio papel/status | Proibido | Proibido | Proibido |
-| Alterar nome, e-mail, empresa, senha ou ID | Fora do contrato | Fora do contrato | Fora do contrato |
-
-Ator precisa de perfil ativo e empresa ativa em todas as chamadas. `GET /usuarios` sem filtro restringe gestor/empresa à própria organização; o filtro explícito de outra empresa recebe 403. Alvos individuais inexistentes ou fora do escopo recebem 404. Um gestor pode ver o registro de um admin da própria equipe, mas não alterá-lo.
-
-Decisões: o escopo global de admin acompanha a leitura administrativa de Empresas e a criação/UPDATE administrativo já existentes; a nova policy de SELECT torna esse escopo utilizável para consulta de perfis. A tela continua passando seu filtro de empresa. A restrição de alteração do próprio papel/status, antes apenas visual, vale agora no servidor e no banco. A edição de um admin por gestor/empresa foi proibida para impedir desativação ou rebaixamento de administradores. Nome/e-mail não foram incluídos no PATCH porque o modal atual edita somente papel e situação.
-
-PATCH usa `extra="forbid"`, rejeita payload vazio, nulos, papel inexistente e `active` que não seja booleano. `empresa_id` não é aceito nem para admin. Nenhuma alteração de e-mail/Auth é feita. O retorno contém somente ID, e-mail, nome, papel, empresa, situação e data de criação; sem senha, metadados Auth ou tokens.
-
-## Migration 014
-
-Nova: `supabase/migrations/014_fix_user_profiles_permissions.sql`. As migrations 001–013 não foram alteradas. Executa em transação e pode ser reaplicada.
-
-| Objeto | Alteração |
+| Ator | Criar / listar / consultar / editar usuários |
 |---|---|
-| `profiles_insert_admin` | Removida; criação de perfil continua no provisionamento privilegiado |
-| `profiles_update_admin` | Removida; era a permissão ampla da 013 |
-| `profiles_select` | Recriada: próprio perfil ou escopo de administração autorizado |
-| `profiles_update_managers` | Criada: `USING` verifica linha anterior, `WITH CHECK` verifica linha resultante; proíbe autoedição e admin por não admin |
-| Grants de `user_profiles` | Revoga privilégios de tabela e grants históricos de INSERT/UPDATE por coluna; concede SELECT e UPDATE apenas de `role`, `active` a `authenticated` |
-| `engmarq_private.can_manage_profile` | Consulta perfil/empresa do `auth.uid()` sem recursão de RLS; somente leitura, `SECURITY DEFINER`, search_path vazio |
-| `engmarq_private.guard_profile_update` + trigger | Revalida ator/alvo e imutabilidade dos demais campos sob bloqueios de linha, no momento da gravação |
+| admin | Proibido, inclusive na própria empresa |
+| empresa / gestor ativos, empresa ativa | Somente usuários da própria empresa |
+| operacional, perfil inativo ou empresa não ativa | Proibido |
 
-RLS continua habilitado. `anon`/`PUBLIC` não recebem acesso; clientes autenticados não podem inserir, fazer upsert, excluir ou truncar perfis. A role técnica `service_role` mantém seu acesso explícito de provisionamento. O schema privado não deve ser incluído nos schemas expostos do PostgREST. As funções têm nomes qualificados, search_path fixo e execução restrita; nenhuma recebe um ID de ator fornecido pelo cliente.
+Foram preservadas as permissões preexistentes de `gestor` e `empresa` dentro da própria organização. Ambos podem atribuir `gestor`, `empresa` e `operacional`. Não podem criar/atribuir `admin`, editar um admin existente, alterar o próprio papel/situação nem transferir um usuário de empresa. Perfis admin já existentes na própria empresa podem ser lidos por gestores, como na 014, mas não administrados. Nenhuma role de usuário real foi alterada.
 
-As verificações do banco valem também para alguém chamando PostgREST diretamente. Operações permitidas continuam possíveis com o JWT/RLS: migrar o frontend para FastAPI não torna o PostgREST inacessível, nem a segurança depende disso. A proteção combina permissões por coluna, RLS e trigger, conforme os mecanismos de [policies](https://www.postgresql.org/docs/17/sql-createpolicy.html) e [privilégios PostgreSQL](https://www.postgresql.org/docs/17/ddl-priv.html).
+## Mapeamento e contrato
 
-## Autoedição e concorrência
+- `ConfiguracoesPage.tsx`: removidos aba, contagem e ações de equipe do admin; mantida a área de Empresas. Empresa/gestor continuam com Equipe e acessos. Operacional não recebe essa aba.
+- `CriarUsuarioModal.tsx`: sem consulta ou seletor de empresas; sem papel global.
+- `EditarUsuarioModal.tsx`: só gestores do mesmo tenant; bloqueia autoedição e admin; não oferece promoção global.
+- `usuariosService` / API: POST e GET não enviam empresa escolhida pelo cliente. Hooks só habilitam leitura para empresa/gestor ativos e mantêm chave de cache por tenant.
+- Rotas: POST, GET de lista, GET por ID e PATCH continuam nos mesmos caminhos.
+- `CurrentProfile`: valida JWT no Auth, carrega perfil por ID autenticado e exige perfil e empresa ativos; mantido.
+- Service: autoriza somente empresa/gestor. Repository de leitura/escrita exige escopo, usa anon key + JWT/RLS e revalida empresa/role no UPDATE.
 
-O último administrador não pode remover o próprio papel/status. Cada alteração autenticada mantém o ator e sua empresa bloqueados para leitura compartilhada durante a gravação, impedindo que uma permissão antiga autorize a escrita após revogação concorrente. Duas alterações cruzadas entre administradores podem gerar deadlock; a transação abortada vira 409 na API, sem repetição automática. A regra mantém um administrador atuante durante as alterações de perfis. Ela não proíbe manutenção privilegiada nem substitui as regras de suspensão de empresas, que pertencem a outro domínio.
+POST recebe somente `email`, `password`, `full_name` e `role`. Qualquer `empresa_id` no corpo, inclusive o próprio, é rejeitado com 422 por `extra="forbid"`. O service passa `actor.empresa_id` separadamente ao repository de provisionamento. Metadados do Auth ou valores do navegador não determinam o tenant.
 
-## Suspensão e consultas diretas restantes
+O filtro opcional legado `GET /usuarios?empresa_id=...` ainda é aceito pelo backend somente se coincidir com o tenant do ator. Outra empresa recebe 403; sem filtro, o tenant é sempre implícito. IDs de outro tenant retornam 404. PATCH aceita apenas `role` e `active`.
 
-`active=false` bloqueia administração de usuários na API e no banco. Não revoga JWT nem bane Auth. O AuthProvider continua lendo diretamente somente o próprio perfil para a sessão e a tela de conta indisponível, com o comportamento/cache já existente. Essa leitura é permitida mesmo quando o perfil está inativo; ela não concede administração de equipe.
+Criação mantém React → FastAPI → Supabase Auth Admin → user_profiles, com Secret Key somente no backend, precedência sobre fallback legado e compensação: falha no perfil exclui o Auth recém-criado; falha na compensação exige reconciliação pelo ID, sem registrar senha/chaves. O provisionamento técnico continua privilegiado, mas não concede permissão funcional a admin. Erros de transporte não provocam repetição automática.
 
-Inventário das chamadas de produção a `user_profiles`:
+## Primeiro acesso: pendência de negócio, sem implementação
 
-- `frontend/src/modules/auth/AuthProvider.tsx`: SELECT por ID da sessão; única consulta direta restante no frontend.
-- `backend/app/repositories/profiles.py`: SELECT do ator com JWT/RLS para `CurrentProfile`.
-- `backend/app/repositories/usuarios.py`: SELECT/listagem e UPDATE administrativo com JWT/RLS; INSERT de perfil usa somente o cliente privilegiado do POST existente.
-- `supabase/seeds/001_first_admin.sql`: provisionamento inicial explícito, fora dos fluxos do navegador.
-- Migrations/funções de autorização e testes: SQL de configuração/verificação; não são caminhos administrativos do frontend.
+O cadastro atual é `EmpresasPage/NovaEmpresaModal` → `useCriarEmpresa` → serviço/API de Empresas → `EmpresasService.create` → INSERT em `public.empresas`, com JWT/RLS do admin.
 
-Busca em todos os arquivos de código do repositório confirmou zero UPDATE de `user_profiles` no frontend. O único UPDATE na aplicação está no repository de usuários. Não há fallback ao banco no `usuariosService`.
+O formulário solicita razão social, CNPJ, setor, cidade, UF, nome do responsável e e-mail; telefone é opcional. A API também comporta status (padrão ativa) e logo. `responsavel` e `email` são dados cadastrais, sem criação de identidade nem vínculo automático com um gestor.
 
-## Testes e resultados
+Relações existentes:
 
-| Verificação | Resultado |
-|---|---|
-| Backend `python -m pytest` | 170 testes passaram; aviso preexistente Starlette/httpx |
-| Frontend `npm run test` | 47 testes passaram |
-| SQL/RLS `npm --prefix supabase/tests test` | 38 testes passaram |
-| Frontend `npm run typecheck` | Passou |
-| Frontend `npm run build` | Passou; aviso de chunks acima de 500 kB |
-| Frontend `npm run lint` | 6 erros e 18 avisos preexistentes; nenhum nos arquivos desta alteração |
-| `git diff --check` | Passou |
+- `public.empresas.id`: empresa cadastrada.
+- `auth.users.id`: identidade de login.
+- `public.user_profiles.id`: FK para Auth, com ON DELETE CASCADE.
+- `user_profiles.empresa_id`: FK obrigatória para empresas; contém também role e active.
 
-Testes backend mantêm rotas, autenticação, services e repositories reais, simulando apenas transporte HTTP Supabase. Cobrem escopo, escalada de privilégio, ator inativo/empresa suspensa, autoedição, campos extras, alterações válidas, erros de banco e ausência de uso do cliente administrativo. Os testes de criação existentes permanecem passando.
+Não existe criação automática de usuário inicial, convite ou definição de senha no cadastro de empresa. Antes, o admin podia usar separadamente o modal Criar acesso, selecionar a empresa e atribuir papel empresa — fluxo que esta correção remove. O seed `001_first_admin.sql` documenta criação manual da identidade no painel e inserção do primeiro admin da plataforma; não define onboarding de empresas clientes. A pasta de Edge Functions está vazia no checkout.
 
-Testes SQL usam [PGlite, PostgreSQL em WebAssembly](https://pglite.dev/docs/about), isolado em memória, com migrations reais 001, 002, 004, 005, 013 e 014. Stubs de Auth/Storage representam somente a infraestrutura gerenciada do Supabase. O teste reproduz a autopromoção da 013 antes de aplicar a correção; depois valida políticas, grants, imutabilidade, acesso entre empresas, autoedição, inserção/upsert/deleção indevidos e preservação de provisionamento. Não usa credenciais, usuários ou banco de produção. PGlite tem conexão única: os testes não exercitam concorrência real entre sessões/PostgREST.
+**Novas empresas continuam podendo ser cadastradas, mas não há um primeiro acesso funcional definido sob a nova regra.** Não foi implementado um substituto nem alterado o cadastro de Empresas.
 
-Para repetir os testes de banco:
+Alternativas a decidir pelo responsável do produto, antes de implementar essa parte:
+
+1. Convite único ao responsável vinculado ao cadastro da empresa, com ativação/definição de senha pelo destinatário e sem gestão posterior da equipe pelo admin global.
+2. Provisionamento técnico de onboarding separado dos endpoints funcionais, com verificação do responsável, controle de acesso e registro da operação.
+
+Também devem ser definidos papel inicial (empresa ou gestor), comprovação do responsável, reenvio/expiração do convite e recuperação quando não houver gestor ativo. Nenhuma dessas decisões foi presumida.
+
+## Migration 015 e compatibilidade com o banco homologado
+
+Nova migration: `supabase/migrations/015_user_profiles_tenant_management.sql`. A 014 e todas as migrations anteriores permanecem intactas.
+
+A 015 depende da 014 e substitui apenas as funções existentes:
+
+- `can_manage_profile(uuid, public.user_role)`: elimina a autorização global de admin, exige empresa/gestor ativo na empresa ativa e igualdade do tenant.
+- `guard_profile_update()`: recusa admin como ator, preservando bloqueios de linha do ator/empresa, imutabilidade das outras colunas, proibição de autoedição, de troca de tenant e de promoção/alteração de admin.
+
+Preserva as policies `profiles_select` e `profiles_update_managers`, RLS habilitado, trigger BEFORE UPDATE, SECURITY DEFINER com search_path vazio e grants da 014: SELECT + UPDATE somente role/active para authenticated; sem INSERT/DELETE/TRUNCATE. Reafirma restrições de execução das funções. Não muda grants de service_role, tabelas, dados ou policies de Empresas/outros módulos.
+
+A compatibilidade foi revisada contra a auditoria SQL do projeto real fornecida pelo usuário nesta sessão: assinaturas, colunas, policies, grants e trigger correspondem às dependências da 015. **A 015 ainda não foi aplicada nem homologada no banco remoto nesta tarefa.** Não há CLI autenticado/linkado ou conexão SQL disponível neste ambiente.
+
+## Verificação
+
+- Backend: 181 testes passaram, incluindo autorização dos quatro endpoints, tenant forjado, atribuição global, isolamento, JWT, rollback e manutenção do CRUD de Empresas pelo admin.
+- Frontend: 55 testes passaram, incluindo contrato sem empresa_id e renderização das telas/modais por papel.
+- Typecheck e build: passaram; build mantém aviso de chunk grande.
+- SQL/RLS: 42 testes passaram com PostgreSQL/PGlite em memória, aplicando migrations reais e shims de infraestrutura Auth/Storage. Prova que admin continua administrando Empresas, não administra equipes, não contorna o trigger mesmo com policy permissiva de teste, gestores ficam no tenant e service_role mantém provisionamento.
+- Testes SQL usam dados sintéticos apenas no banco isolado, sem credenciais nem dados de produção.
+- Nenhum teste real de criação, ativação, suspensão ou exclusão de usuário foi executado.
+- Limites: PGlite tem uma conexão; concorrência real entre sessões e provisionamento ponta a ponta no Supabase não foram exercitados nesta etapa.
+
+Comandos:
 
 ```sh
-npm --prefix supabase/tests ci
-npm --prefix supabase/tests test
+cd backend
+python -m pytest
+cd ../frontend
+npm run test
+npm run typecheck
+npm run build
+cd ../supabase/tests
+npm test
 ```
 
-Lint global pendente nos arquivos não alterados `Header.tsx`, `chartTheme.tsx`, `AuthProvider.tsx`, `ColaboradoresPage.tsx`, `ConfiguracoesPage.tsx` e `TreinamentosPage.tsx`. Os erros são os mesmos da entrega anterior: setState em effects, exportações incompatíveis com Fast Refresh e variável não usada. Nenhuma regra foi desabilitada.
+## Publicação
 
-## Publicação e pendências
+1. Aplicar somente a nova 015 no projeto correto, após confirmar a 014. Não reaplicar a 014 depois da 015, pois isso restauraria as funções anteriores.
+2. Publicar backend e frontend coordenadamente: o contrato novo rejeita empresa_id que clientes antigos enviavam.
+3. Conferir os metadados do banco e as restrições funcionais após a aplicação. Manter engmarq_private fora dos schemas expostos.
+4. Se houver uma antiga Edge Function de criação ainda implantada, desativá-la/verificar sua autorização: excluir seu código do Git não remove a implantação remota. Não foi possível inspecionar funções remotas nesta tarefa.
+5. Definir o primeiro acesso antes de cadastrar novos clientes que precisem entrar na plataforma.
 
-1. Revisar e aplicar **somente a nova migration 014** no projeto Supabase correto, com o papel proprietário de migrations. Manter `engmarq_private` fora dos schemas expostos do PostgREST.
-2. Publicar backend com as novas rotas, seguido do frontend. O frontend antigo pode continuar executando edições permitidas sob as novas restrições durante a transição, mas tentativas antes inseguras serão recusadas.
-3. Homologar com contas admin, gestor/empresa, operacional, inativa e empresa suspensa, incluindo chamadas diretas a PostgREST e conflitos entre sessões.
-4. Revisar registros administrativos existentes: a correção previne novas escaladas, mas não desfaz uma promoção indevida ocorrida antes de sua aplicação. Não rebaixar contas automaticamente sem auditoria.
+Nenhum commit, deploy, reset, mudança de .env ou alteração de dados reais foi realizado. A mudança não migra outros módulos.
 
-Migration não aplicada remotamente nesta tarefa; nenhum deploy, commit ou alteração de credenciais foi realizado. A vulnerabilidade remota permanece até aplicar a 014. RLS dos outros domínios não foi alterado; a suspensão por perfil não equivale a revogação global de acesso a integrações antigas. Mantêm-se os limites já documentados do POST: Auth e banco não têm transação distribuída, e uma falha de compensação exige reconciliação explícita. O limite de linhas do PostgREST na listagem também permanece.
+## Arquivos alterados nesta entrega
+
+- `README.md`
+- `backend/README.md`
+- `backend/app/repositories/usuarios.py`
+- `backend/app/schemas/usuarios.py`
+- `backend/app/services/usuarios_service.py`
+- `backend/tests/test_usuarios.py`
+- `backend/tests/test_usuarios_admin.py`
+- `docs/usuarios-seguranca.md`
+- `frontend/README.md`
+- `frontend/src/hooks/queries/useUsuarios.ts`
+- `frontend/src/hooks/useCurrentProfile.ts`
+- `frontend/src/modules/configuracoes/ConfiguracoesPage.tsx`
+- `frontend/src/modules/configuracoes/CriarUsuarioModal.tsx`
+- `frontend/src/modules/configuracoes/EditarUsuarioModal.tsx`
+- `frontend/src/services/api/usuarios.ts`
+- `frontend/src/services/usuariosService.ts`
+- `frontend/tests/usuarios-ui.test.tsx`
+- `frontend/tests/usuarios.test.ts`
+- `frontend/vitest.config.ts`
+- `supabase/migrations/015_user_profiles_tenant_management.sql`
+- `supabase/tests/user_profiles.test.mjs`

@@ -7,8 +7,8 @@ export function criarUsuario(input: UsuarioCreateInput) {
   return postUsuario(input)
 }
 
-export function listarUsuariosDaEmpresa(empresaId: string): Promise<UserProfile[]> {
-  return getUsuarios(empresaId)
+export function listarUsuariosDaEmpresa(): Promise<UserProfile[]> {
+  return getUsuarios()
 }
 
 export function obterUsuario(id: string): Promise<UserProfile> {

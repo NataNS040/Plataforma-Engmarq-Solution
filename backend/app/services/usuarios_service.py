@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 def create_usuario(data: UsuarioCreate, actor: MeResponse, settings: Settings) -> UsuarioResponse:
-    if actor.role not in {"admin", "gestor", "empresa"}:
+    if not actor.active or actor.role not in {"gestor", "empresa"}:
         raise AppError(403, "access_denied", "Sem permissão para criar usuários.")
-    if actor.role != "admin" and (data.role == "admin" or data.empresa_id != actor.empresa_id):
-        raise AppError(403, "access_denied", "Só é possível criar usuários não administradores na própria empresa.")
+    if data.role == "admin":
+        raise AppError(403, "access_denied", "Não é possível atribuir um papel de administração global.")
 
     with httpx.Client(timeout=settings.supabase_timeout_seconds) as http_client:
         repository = UsuariosRepository(create_admin_client(settings, http_client))
@@ -35,7 +35,7 @@ def create_usuario(data: UsuarioCreate, actor: MeResponse, settings: Settings) -
             raise AppError(503, "user_creation_unavailable", "Não foi possível confirmar a criação. Verifique o Auth antes de tentar novamente.") from None
 
         try:
-            repository.create_profile(user_id, data)
+            repository.create_profile(user_id, data, actor.empresa_id)
         except Exception:
             try:
                 repository.delete_auth(user_id)
@@ -53,13 +53,11 @@ class UsuariosService:
         self.actor = actor
 
     def _authorize(self) -> None:
-        if not self.actor.active or self.actor.role not in {"admin", "gestor", "empresa"}:
+        if not self.actor.active or self.actor.role not in {"gestor", "empresa"}:
             raise AppError(403, "access_denied", "Sem permissão para administrar usuários.")
 
-    def _scope(self, empresa_id: UUID | None = None) -> UUID | None:
+    def _scope(self, empresa_id: UUID | None = None) -> UUID:
         self._authorize()
-        if self.actor.role == "admin":
-            return empresa_id
         if empresa_id is not None and empresa_id != self.actor.empresa_id:
             raise AppError(403, "access_denied", "Só é possível administrar a própria empresa.")
         return self.actor.empresa_id
@@ -78,11 +76,11 @@ class UsuariosService:
         scope = self._scope()
         if user_id == self.actor.id:
             raise AppError(403, "self_update_denied", "Não é possível alterar o próprio papel ou acesso.")
-        if self.actor.role != "admin" and data.role == "admin":
+        if data.role == "admin":
             raise AppError(403, "access_denied", "Sem permissão para atribuir o papel de administrador.")
         target = self.get(user_id)
-        if self.actor.role != "admin" and target.role == "admin":
-            raise AppError(403, "access_denied", "Somente administradores podem editar outro administrador.")
+        if target.role == "admin":
+            raise AppError(403, "access_denied", "Este acesso é reservado à administração global.")
         row = self.repository.update(user_id, data.model_dump(exclude_unset=True), scope)
         if row is None:
             raise AppError(404, "user_not_found", "Usuário não encontrado ou sem permissão para alteração.")

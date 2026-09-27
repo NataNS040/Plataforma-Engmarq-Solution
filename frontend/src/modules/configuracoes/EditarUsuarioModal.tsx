@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { X, UserCog, Loader2, Ban, CheckCircle2 } from 'lucide-react'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useAtualizarUsuario } from '@/hooks/queries/useUsuarios'
 import type { UserProfile, UserRole } from '@/types/database'
 
 const ROLES: { value: UserRole; label: string }[] = [
-  { value: 'admin',       label: 'Administrador' },
   { value: 'gestor',      label: 'Gestor' },
   { value: 'operacional', label: 'Operacional' },
   { value: 'empresa',     label: 'Empresa-cliente' },
@@ -14,21 +14,20 @@ interface Props {
   usuario: UserProfile
   /** true quando o usuário editado é quem está logado — evita se autoexcluir do acesso */
   isSelf: boolean
-  /** admin pode mudar pra qualquer papel; gestor/empresa não sobem ninguém a admin */
-  canAssignAdmin: boolean
   onClose: () => void
 }
 
-export function EditarUsuarioModal({ usuario, isSelf, canAssignAdmin, onClose }: Props) {
+export function EditarUsuarioModal({ usuario, isSelf, onClose }: Props) {
+  const { canManageUsers, empresaId } = useCurrentProfile()
   const atualizar = useAtualizarUsuario()
   const [role, setRole] = useState<UserRole>(usuario.role)
   const currentUsuario = atualizar.data ?? usuario
-  const cannotEdit = isSelf || (!canAssignAdmin && currentUsuario.role === 'admin')
+  const cannotEdit = !canManageUsers || usuario.empresa_id !== empresaId || isSelf || currentUsuario.role === 'admin'
 
-  const roles = canAssignAdmin ? ROLES : ROLES.filter(r => r.value !== 'admin')
+  const roles = ROLES
 
   function handleSalvarPapel() {
-    if (cannotEdit || role === currentUsuario.role) return
+    if (cannotEdit || role === 'admin' || role === currentUsuario.role) return
     // The mutation's onError displays the API message; avoid unhandled promises.
     atualizar.mutate({ id: usuario.id, input: { role } })
   }
@@ -37,6 +36,8 @@ export function EditarUsuarioModal({ usuario, isSelf, canAssignAdmin, onClose }:
     if (cannotEdit) return
     atualizar.mutate({ id: usuario.id, input: { active: !currentUsuario.active } })
   }
+
+  if (!canManageUsers || usuario.empresa_id !== empresaId) return null
 
   return (
     <div
@@ -67,7 +68,7 @@ export function EditarUsuarioModal({ usuario, isSelf, canAssignAdmin, onClose }:
             <label>Papel de acesso</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <select className="mp-input" value={role} onChange={e => setRole(e.target.value as UserRole)} disabled={cannotEdit}>
-                {!canAssignAdmin && currentUsuario.role === 'admin' && <option value="admin">Administrador</option>}
+                {currentUsuario.role === 'admin' && <option value="admin">Administrador</option>}
                 {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
               <button
@@ -80,7 +81,7 @@ export function EditarUsuarioModal({ usuario, isSelf, canAssignAdmin, onClose }:
               </button>
             </div>
             {isSelf && <div className="mp-hint">Você não pode alterar o próprio papel de acesso.</div>}
-            {!isSelf && cannotEdit && <div className="mp-hint">Somente administradores podem editar este acesso.</div>}
+            {!isSelf && cannotEdit && <div className="mp-hint">Este acesso pertence à administração global.</div>}
           </div>
 
           <div className="mp-field">

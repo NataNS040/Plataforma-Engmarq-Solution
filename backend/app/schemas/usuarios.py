@@ -13,7 +13,6 @@ class UsuarioCreate(BaseModel):
     password: SecretStr = Field(min_length=8)
     full_name: str = Field(min_length=1)
     role: UserRole
-    empresa_id: UUID
 
     @field_validator("full_name", "email", mode="before")
     @classmethod

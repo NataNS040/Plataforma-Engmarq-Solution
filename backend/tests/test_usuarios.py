@@ -13,13 +13,13 @@ COMPANY = "74455974-ed31-40ba-b8af-dc335bf59801"
 OTHER = "84455974-ed31-40ba-b8af-dc335bf59801"
 CREATED = "94455974-ed31-40ba-b8af-dc335bf59801"
 PAYLOAD = {"email": "new@example.com", "password": "test-password", "full_name": "Nome",
-           "role": "gestor", "empresa_id": COMPANY}
+           "role": "gestor"}
 HEADERS = {"Authorization": "Bearer caller-jwt"}
 
 
 @pytest.fixture
 def upstream(app, monkeypatch):
-    state = {"role": "admin", "active": True, "company_status": "ativa",
+    state = {"role": "empresa", "active": True, "company_status": "ativa",
              "auth_status": 200, "create_status": 200, "profile_status": 201,
              "delete_status": 200, "admin_requests": [], "admin_opened": False}
 
@@ -94,12 +94,10 @@ def test_invalid_jwt(client, upstream):
 
 
 @pytest.mark.parametrize("changes,payload", [
-    ({"role": "operacional"}, {}), ({"active": False}, {}),
+    ({"role": "admin"}, {}), ({"role": "operacional"}, {}), ({"active": False}, {}),
     ({"company_status": "suspensa"}, {}),
     ({"role": "gestor"}, {"role": "admin"}),
     ({"role": "empresa"}, {"role": "admin"}),
-    ({"role": "gestor"}, {"empresa_id": OTHER}),
-    ({"role": "empresa"}, {"empresa_id": OTHER}),
 ])
 def test_denied_before_admin_client(client, upstream, changes, payload):
     upstream.update(changes)
@@ -125,12 +123,12 @@ def test_required_fields(client, upstream):
 
 
 @pytest.mark.parametrize("role,target_role,target_company", [
-    ("admin", "admin", OTHER), ("admin", "empresa", OTHER),
+    ("empresa", "empresa", COMPANY),
     ("gestor", "operacional", COMPANY), ("empresa", "gestor", COMPANY),
 ])
 def test_creation_preserves_contract(client, upstream, role, target_role, target_company):
     upstream["role"] = role
-    payload = PAYLOAD | {"role": target_role, "empresa_id": target_company,
+    payload = PAYLOAD | {"role": target_role,
                          "email": " NEW@Example.com ", "full_name": " Nome "}
     response = client.post("/api/v1/usuarios", headers=HEADERS, json=payload)
     assert response.status_code == 201, response.text
@@ -178,3 +176,22 @@ def test_transport_timeout_never_retries_creation(client, upstream, path, code, 
     assert response.json()["error"]["code"] == code
     assert len(upstream["admin_requests"]) == count
     assert "private-secret" not in response.text
+
+
+@pytest.mark.parametrize("role", ["empresa", "gestor"])
+@pytest.mark.parametrize("company", [COMPANY, OTHER, None])
+def test_create_rejects_any_client_supplied_tenant(client, upstream, role, company):
+    upstream["role"] = role
+    response = client.post("/api/v1/usuarios", headers=HEADERS,
+                           json=PAYLOAD | {"empresa_id": company})
+    assert response.status_code == 422
+    assert not upstream["admin_opened"]
+
+
+@pytest.mark.parametrize("target_role", ["gestor", "empresa", "operacional", "admin"])
+def test_global_admin_cannot_provision_through_functional_endpoint(client, upstream, target_role):
+    upstream["role"] = "admin"
+    response = client.post("/api/v1/usuarios", headers=HEADERS,
+                           json=PAYLOAD | {"role": target_role})
+    assert response.status_code == 403
+    assert not upstream["admin_opened"]

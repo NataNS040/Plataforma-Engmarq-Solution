@@ -6,7 +6,7 @@ const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }))
 vi.mock('@/lib/supabase', () => ({ supabase: { auth: { getSession } } }))
 const input = {
   email: 'new@example.com', password: 'test-password', full_name: 'Nome',
-  role: 'gestor' as const, empresa_id: '74455974-ed31-40ba-b8af-dc335bf59801',
+  role: 'gestor' as const,
 }
 const result = { user_id: '94455974-ed31-40ba-b8af-dc335bf59801' }
 
@@ -15,7 +15,7 @@ beforeEach(() => {
   getSession.mockReset().mockResolvedValue({ data: { session: { access_token: 'user-jwt' } }, error: null })
 })
 
-it('creates through FastAPI with the current JWT and original fields', async () => {
+it('creates through FastAPI with the current JWT and no client-selected tenant', async () => {
   const fetchMock = vi.fn().mockResolvedValue(Response.json(result, { status: 201 }))
   vi.stubGlobal('fetch', fetchMock)
   expect(await criarUsuario(input)).toEqual(result)
@@ -24,6 +24,7 @@ it('creates through FastAPI with the current JWT and original fields', async () 
   expect(options.method).toBe('POST')
   expect(options.headers.get('Authorization')).toBe('Bearer user-jwt')
   expect(JSON.parse(options.body)).toEqual(input)
+  expect(JSON.parse(options.body)).not.toHaveProperty('empresa_id')
   expect(fetchMock).toHaveBeenCalledTimes(1)
 })
 
@@ -51,17 +52,17 @@ it('rejects an incompatible response', async () => {
 
 const usuario = {
   id: result.user_id, email: input.email, full_name: input.full_name,
-  role: input.role, empresa_id: input.empresa_id, active: true,
+  role: input.role, empresa_id: '74455974-ed31-40ba-b8af-dc335bf59801', active: true,
   created_at: '2026-01-01T00:00:00Z',
 }
 
 it('lists a company team and reads detail through FastAPI with JWT', async () => {
   const fetchMock = vi.fn().mockResolvedValueOnce(Response.json([usuario])).mockResolvedValueOnce(Response.json(usuario))
   vi.stubGlobal('fetch', fetchMock)
-  expect(await listarUsuariosDaEmpresa(input.empresa_id)).toEqual([usuario])
+  expect(await listarUsuariosDaEmpresa()).toEqual([usuario])
   expect(await obterUsuario(usuario.id)).toEqual(usuario)
   expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
-    `http://localhost:8000/api/v1/usuarios?empresa_id=${input.empresa_id}`,
+    'http://localhost:8000/api/v1/usuarios',
     `http://localhost:8000/api/v1/usuarios/${usuario.id}`,
   ])
   for (const [, options] of fetchMock.mock.calls) {
@@ -89,7 +90,7 @@ it.each([403, 404, 409, 422, 503])('propagates team API errors (%s) without data
     error: { code: 'access_denied', message: 'Operação recusada.', details: [] },
   }, { status })))
   vi.stubGlobal('fetch', fetchMock)
-  await expect(listarUsuariosDaEmpresa(input.empresa_id)).rejects.toMatchObject({ status })
+  await expect(listarUsuariosDaEmpresa()).rejects.toMatchObject({ status })
   await expect(obterUsuario(usuario.id)).rejects.toMatchObject({ status })
   await expect(atualizarUsuario(usuario.id, { active: false })).rejects.toMatchObject({ status })
   expect(fetchMock).toHaveBeenCalledTimes(3)

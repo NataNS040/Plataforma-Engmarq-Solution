@@ -16,6 +16,7 @@ export function useCurrentProfile() {
     empresaId,
     role,
     isAdmin: role === 'admin',
+    canManageUsers: !!profile?.active && (role === 'gestor' || role === 'empresa'),
     isGestor: role === 'gestor',
     isOperacional: role === 'operacional',
     isEmpresa: role === 'empresa',

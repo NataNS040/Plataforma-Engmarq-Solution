@@ -71,7 +71,7 @@ def test_missing_jwt(client, upstream, method, path, payload):
 
 
 @pytest.mark.parametrize("changes", [
-    {"role": "operacional"}, {"active": False}, {"status": "suspensa"},
+    {"role": "admin"}, {"role": "operacional"}, {"active": False}, {"status": "suspensa"},
 ])
 @pytest.mark.parametrize("method,path,payload", [
     ("GET", BASE, None), ("GET", TARGET, None), ("PATCH", TARGET, {"active": False}),
@@ -105,8 +105,10 @@ def test_manager_cannot_request_other_company_list(client, upstream):
     assert upstream["requests"] == []
 
 
+@pytest.mark.parametrize("role", ["empresa", "gestor"])
 @pytest.mark.parametrize("method,payload", [("GET", None), ("PATCH", {"active": False})])
-def test_cross_tenant_id_is_hidden(client, upstream, method, payload):
+def test_cross_tenant_id_is_hidden(client, upstream, method, payload, role):
+    upstream["role"] = role
     upstream["target_company"] = OTHER
     response = client.request(method, TARGET, headers=HEADERS, json=payload)
     assert response.status_code == 404
@@ -148,7 +150,7 @@ def test_patch_contract_rejects_movement_and_extra_fields(client, upstream, payl
     assert upstream["patches"] == []
 
 
-@pytest.mark.parametrize("role", ["admin", "gestor", "empresa"])
+@pytest.mark.parametrize("role", ["gestor", "empresa"])
 @pytest.mark.parametrize("payload", [{"role": "empresa"}, {"active": False}, {"active": True}])
 def test_valid_edit_uses_only_jwt(client, upstream, role, payload):
     upstream["role"] = role
@@ -163,16 +165,12 @@ def test_valid_edit_uses_only_jwt(client, upstream, role, payload):
     assert set(response.json()) == {"id", "email", "full_name", "role", "empresa_id", "active", "created_at"}
 
 
-def test_admin_can_list_filter_get_and_promote_other_company(client, upstream):
-    upstream.update(role="admin", target_company=OTHER)
-    assert client.get(BASE, headers=HEADERS).status_code == 200
-    assert "empresa_id" not in upstream["requests"][-1].url.params
-    assert client.get(BASE, headers=HEADERS, params={"empresa_id": OTHER}).status_code == 200
-    assert upstream["requests"][-1].url.params["empresa_id"] == f"eq.{OTHER}"
-    assert client.get(TARGET, headers=HEADERS).status_code == 200
-    response = client.patch(TARGET, headers=HEADERS, json={"role": "admin"})
-    assert response.status_code == 200
-    assert response.json()["role"] == "admin"
+@pytest.mark.parametrize("company", [COMPANY, OTHER])
+def test_admin_cannot_list_even_with_explicit_company(client, upstream, company):
+    upstream.update(role="admin", target_company=company)
+    assert client.get(BASE, headers=HEADERS, params={"empresa_id": company}).status_code == 403
+    assert upstream["requests"] == []
+
 
 
 def test_rls_rechecks_when_target_changes_after_lookup(client, upstream):

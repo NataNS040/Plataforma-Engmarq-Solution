@@ -62,13 +62,13 @@ Os secrets existentes `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` continuam s
 
 ## Supabase e backend
 
-Empresas e administração de Usuários usam FastAPI → service → repository → Supabase com JWT do usuário e RLS. A criação de usuários continua usando `POST /api/v1/usuarios` → Supabase Auth Admin, com autorização no servidor e criação do perfil existente. O login continua direto no Supabase Auth; os demais domínios mantêm suas integrações. A nova migration `014_fix_user_profiles_permissions.sql` corrige as permissões de perfis sem editar migrations anteriores.
+Empresas e administração de Usuários usam FastAPI → service → repository → Supabase com JWT do usuário e RLS. Admin administra Empresas; empresa/gestor administram somente a própria equipe. A criação de usuários continua usando `POST /api/v1/usuarios` → Supabase Auth Admin, com empresa determinada pelo perfil autenticado. O login continua direto no Supabase Auth; os demais domínios mantêm suas integrações. A migration 015 restringe a autorização funcional e preserva as proteções da 014, sem editar migrations anteriores.
 
 Configure `SUPABASE_SECRET_KEY` exclusivamente no backend (Secret Key moderna). Nunca use prefixo `VITE_`, envie essa chave ao navegador ou faça commit dela. `backend/.env` continua ignorado pelo Git. O nome legado `SUPABASE_SERVICE_ROLE_KEY` funciona temporariamente como fallback quando a configuração principal está ausente.
 
 Veja [contrato, compensação e limites da criação de usuários](backend/README.md#criação-de-usuários).
 
-Antes de publicar o domínio de Usuários, aplique a migration 014. Listagem, consulta e edição usam `GET /api/v1/usuarios`, `GET /api/v1/usuarios/{user_id}` e `PATCH /api/v1/usuarios/{user_id}`; somente papel e situação são editáveis. Veja [regras, políticas, testes e publicação](docs/usuarios-seguranca.md).
+Antes de publicar a correção de Usuários, aplique a migration 015 após a 014 já homologada. Listagem, consulta e edição usam `GET /api/v1/usuarios`, `GET /api/v1/usuarios/{user_id}` e `PATCH /api/v1/usuarios/{user_id}`; somente papel e situação são editáveis. O primeiro acesso de novas empresas depende de definição de negócio. Veja [regras, políticas, testes e publicação](docs/usuarios-seguranca.md).
 
 O backend pode ser executado separadamente e expõe `GET /health`, `GET /api/v1/health` e `GET /api/v1/me`. Instalação, variáveis de ambiente e testes estão documentados em [backend/README.md](backend/README.md).
 

@@ -2,46 +2,35 @@ import { useState } from 'react'
 import { X, UserPlus, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { criarUsuario } from '@/services/usuariosService'
-import { useEmpresas } from '@/hooks/queries/useEmpresas'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import type { UserRole } from '@/types/database'
-import { APP_SHORT_NAME } from '@/config/brand'
 
 const ROLES: { value: UserRole; label: string; desc: string }[] = [
-  { value: 'admin',       label: 'Administrador',  desc: `Acesso total à plataforma ${APP_SHORT_NAME}` },
   { value: 'gestor',      label: 'Gestor',         desc: 'Operação e compliance' },
   { value: 'operacional', label: 'Operacional',    desc: 'Documentos, treinamentos e exames' },
   { value: 'empresa',     label: 'Empresa-cliente',desc: 'Acesso à empresa vinculada' },
 ]
 
 interface Props {
-  /** empresa_id do admin logado (usado para roles internas) */
-  adminEmpresaId: string
   onClose: () => void
   onSuccess?: () => void
 }
 
-export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props) {
-  const { isAdmin } = useCurrentProfile()
-  const { data: empresas = [] } = useEmpresas()
-  const roles = isAdmin ? ROLES : ROLES.filter(r => r.value !== 'admin')
+export function CriarUsuarioModal({ onClose, onSuccess }: Props) {
+  const { canManageUsers } = useCurrentProfile()
+  const roles = ROLES
 
   const [fullName, setFullName]     = useState('')
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
   const [confirmPwd, setConfirmPwd] = useState('')
   const [role, setRole]             = useState<UserRole>('gestor')
-  const [empresaId, setEmpresaId]   = useState('')
   const [showPwd, setShowPwd]       = useState(false)
   const [loading, setLoading]       = useState(false)
 
-  // Só admin convida pra uma empresa-cliente arbitrária (escolhida na tela).
-  // Gestor/empresa só convidam gente pra própria equipe.
-  const isEmpresaRole = isAdmin && role === 'empresa'
-  const resolvedEmpresaId = isEmpresaRole ? empresaId : adminEmpresaId
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!canManageUsers || role === 'admin') return
 
     if (password !== confirmPwd) {
       toast.error('As senhas não coincidem.')
@@ -51,11 +40,6 @@ export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props)
       toast.error('A senha deve ter ao menos 8 caracteres.')
       return
     }
-    if (isEmpresaRole && !empresaId) {
-      toast.error('Selecione a empresa-cliente.')
-      return
-    }
-
     setLoading(true)
     try {
       await criarUsuario({
@@ -63,7 +47,6 @@ export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props)
         password,
         full_name: fullName.trim(),
         role,
-        empresa_id: resolvedEmpresaId,
       })
 
       toast.success(`Acesso criado para ${email.trim()}.`)
@@ -75,6 +58,8 @@ export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props)
       setLoading(false)
     }
   }
+
+  if (!canManageUsers) return null
 
   return (
     <div
@@ -181,23 +166,6 @@ export function CriarUsuarioModal({ adminEmpresaId, onClose, onSuccess }: Props)
               ))}
             </select>
           </div>
-
-          {isEmpresaRole && (
-            <div className="mp-field">
-              <label>Empresa-cliente</label>
-              <select
-                className="mp-input"
-                required
-                value={empresaId}
-                onChange={e => setEmpresaId(e.target.value)}
-              >
-                <option value="">Selecione a empresa…</option>
-                {empresas.map(emp => (
-                  <option key={emp.id} value={emp.id}>{emp.razao_social}</option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* Footer */}
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:4 }}>
