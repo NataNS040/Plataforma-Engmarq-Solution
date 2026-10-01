@@ -3,7 +3,6 @@ import { buscarKpis } from '@/services/dashboardService'
 import { listarDocumentos } from '@/services/documentosService'
 import { listarAsos } from '@/services/examesService'
 import { listarFichasEpi } from '@/services/fichasEpiService'
-import { listarTreinamentos } from '@/services/treinamentosService'
 
 const { from, query, result } = vi.hoisted(() => {
   const result = { data: [] as unknown[], count: 7, error: null }
@@ -23,7 +22,11 @@ beforeEach(() => {
 it('global admin dashboard has unavailable employee count and never selects colaboradores', async () => {
   const kpis = await buscarKpis('all')
   expect(kpis.totalColaboradores).toBeNull()
+  expect(kpis.totalTreinamentos).toBeNull()
+  expect(kpis.treinamentosVencidos).toBeNull()
+  expect(from.mock.calls.flat()).not.toContain('treinamentos')
   expect(from.mock.calls.flat()).not.toContain('colaboradores')
+  expect(from.mock.calls.flat()).not.toContain('treinamentos')
   expect(kpis.totalEmpresas).toBe(7)
 })
 
@@ -44,7 +47,7 @@ it('admin company documents omit employee join and request only unassigned recor
   expect(query.is).toHaveBeenCalledWith('colaborador_id', null)
 })
 
-it.each([listarDocumentos, listarAsos, listarFichasEpi, listarTreinamentos])(
+it.each([listarDocumentos, listarAsos, listarFichasEpi])(
   'tenant consumer tolerates a null employee relation without an inner join or extra employee query', async list => {
     result.data = [{ id: 'record', colaborador: null }]
     expect(await list('own')).toEqual(result.data)

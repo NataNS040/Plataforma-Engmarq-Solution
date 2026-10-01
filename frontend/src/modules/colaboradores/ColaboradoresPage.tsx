@@ -5,12 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
   Search, Download, Plus, X, CheckCircle, AlertTriangle, Clock,
-  Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2, Trash2,
+  Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2,
 } from "lucide-react"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores, useCriarColaborador, useAtualizarColaborador, useDesativarColaborador } from "@/hooks/queries/useColaboradores"
 import { useSetores, useFuncoes, useAmbientes } from "@/hooks/queries/useCatalogos"
-import { useMatrizTreinamentos, useTreinamentosDoColaborador, useTreinamentoTipos, useDeletarTreinamento } from "@/hooks/queries/useTreinamentos"
+import { useMatrizTreinamentos, useTreinamentosDoColaborador, useTreinamentoTipos } from "@/hooks/queries/useTreinamentos"
 import { useExamesDoColaborador } from "@/hooks/queries/useExames"
 import { useFichasEpiDoColaborador } from "@/hooks/queries/useFichasEpi"
 import type { FichaEpiComItens } from "@/services/fichasEpiService"
@@ -128,14 +128,6 @@ function AuthorizedProfileModal({ colab: c, onClose }: ProfileModalProps) {
 
   const obrigatorios = nrRows.filter(n => n.obrigatorio)
   const emDia = obrigatorios.filter(n => n.ultimo?.status === "em_dia").length
-
-  const deletarTreino = useDeletarTreinamento()
-  const [deletingTreino, setDeletingTreino] = useState<{ id: string; label: string } | null>(null)
-  async function confirmDeleteTreino() {
-    if (!deletingTreino) return
-    await deletarTreino.mutateAsync({ id: deletingTreino.id, empresaId: c.empresa_id, colaboradorId: c.id })
-    setDeletingTreino(null)
-  }
 
   // Edição de dados pessoais (função/setor/ambiente/matrícula) — antes só
   // existia edição fake da lista de NRs, que nunca gravava nada.
@@ -374,17 +366,7 @@ function AuthorizedProfileModal({ colab: c, onClose }: ProfileModalProps) {
                           </td>
                           <td><span className={`chip ${chip.cls}`}>{chip.label}</span></td>
                           <td style={{ textAlign: "right" }}>
-                            {ultimo && (
-                              <button
-                                className="icon-btn sm"
-                                title="Excluir treinamento"
-                                style={{ color: "var(--red-500)" }}
-                                disabled={!canManageColaboradores}
-                                onClick={() => setDeletingTreino({ id: ultimo.id, label: `${tipo.nr_referencia ?? tipo.nome} · ${c.nome}` })}
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            )}
+
                           </td>
                         </tr>
                       )
@@ -411,15 +393,6 @@ function AuthorizedProfileModal({ colab: c, onClose }: ProfileModalProps) {
         />
       )}
 
-      {deletingTreino && canManageColaboradores && (
-        <ConfirmDialog
-          title="Excluir treinamento?"
-          description={<>Isso remove o registro de <strong>{deletingTreino.label}</strong> permanentemente.</>}
-          loading={deletarTreino.isPending}
-          onCancel={() => setDeletingTreino(null)}
-          onConfirm={confirmDeleteTreino}
-        />
-      )}
 
       {addingFichaEpi && canManageColaboradores && (
         <FichaEpiModal

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { toast } from 'sonner'
 import { qk } from '@/lib/queryKeys'
 import {
@@ -10,24 +11,27 @@ import {
   listarTreinamentosDoColaborador,
   registrarTreinamento,
   atualizarTreinamento,
-  deletarTreinamento,
   type MatrizInput,
   type TreinamentoInput,
 } from '@/services/treinamentosService'
 
 export function useTreinamentoTipos() {
+  const { profile, canReadTreinamentos: allowed } = useCurrentProfile()
   return useQuery({
-    queryKey: qk.treinamentoTipos.list(),
-    queryFn: listarTreinamentoTipos,
+    queryKey: [...qk.treinamentoTipos.list(), profile?.id, allowed],
+    queryFn: () => allowed ? listarTreinamentoTipos() : Promise.resolve([]),
+    enabled: allowed,
     staleTime: 10 * 60_000,
   })
 }
 
 export function useMatrizTreinamentos(empresaId: string | null | undefined) {
+  const { profile, empresaId: own, canReadTreinamentos } = useCurrentProfile()
+  const allowed = canReadTreinamentos && !!empresaId && empresaId === own
   return useQuery({
-    queryKey: qk.matrizTreinamentos.list(empresaId ?? ''),
-    queryFn: () => listarMatrizTreinamentos(empresaId!),
-    enabled: !!empresaId,
+    queryKey: [...qk.matrizTreinamentos.list(empresaId ?? ''), profile?.id, allowed],
+    queryFn: () => allowed ? listarMatrizTreinamentos(empresaId!) : Promise.resolve([]),
+    enabled: allowed,
   })
 }
 
@@ -57,18 +61,22 @@ export function useDeletarMatrizTreinamento() {
 }
 
 export function useTreinamentos(empresaId: string | null | undefined) {
+  const { profile, empresaId: own, canReadTreinamentos } = useCurrentProfile()
+  const allowed = canReadTreinamentos && !!empresaId && empresaId === own
   return useQuery({
-    queryKey: qk.treinamentos.list(empresaId ?? ''),
-    queryFn: () => listarTreinamentos(empresaId!),
-    enabled: !!empresaId,
+    queryKey: [...qk.treinamentos.list(empresaId ?? ''), profile?.id, allowed],
+    queryFn: () => allowed ? listarTreinamentos(empresaId!) : Promise.resolve([]),
+    enabled: allowed,
   })
 }
 
 export function useTreinamentosDoColaborador(colaboradorId: string | null | undefined) {
+  const { profile, empresaId, canReadTreinamentos } = useCurrentProfile()
+  const allowed = canReadTreinamentos && !!colaboradorId
   return useQuery({
-    queryKey: qk.treinamentos.byColaborador(colaboradorId ?? ''),
-    queryFn: () => listarTreinamentosDoColaborador(colaboradorId!),
-    enabled: !!colaboradorId,
+    queryKey: [...qk.treinamentos.byColaborador(colaboradorId ?? ''), profile?.id, empresaId, allowed],
+    queryFn: () => allowed ? listarTreinamentosDoColaborador(colaboradorId!) : Promise.resolve([]),
+    enabled: allowed,
   })
 }
 
@@ -77,6 +85,7 @@ export function useRegistrarTreinamento() {
   return useMutation({
     mutationFn: (input: TreinamentoInput) => registrarTreinamento(input),
     onSuccess: t => {
+      qc.invalidateQueries({ queryKey: qk.dashboard.all })
       qc.invalidateQueries({ queryKey: qk.treinamentos.list(t.empresa_id) })
       qc.invalidateQueries({ queryKey: qk.treinamentos.byColaborador(t.colaborador_id) })
       toast.success('Treinamento registrado.')
@@ -94,24 +103,11 @@ export function useAtualizarTreinamento() {
       empresaId: string
       colaboradorId: string
     }) => atualizarTreinamento(id, input).then(t => ({ ...t, empresaId, colaboradorId })),
-    onSuccess: result => {
-      qc.invalidateQueries({ queryKey: qk.treinamentos.list(result.empresaId) })
-      qc.invalidateQueries({ queryKey: qk.treinamentos.byColaborador(result.colaboradorId) })
+    onSuccess: () => {
+      // Editing may change the participant; invalidate both old and new readers.
+      qc.invalidateQueries({ queryKey: qk.treinamentos.all })
+      qc.invalidateQueries({ queryKey: qk.dashboard.all })
       toast.success('Treinamento atualizado.')
-    },
-    onError: (err: Error) => toast.error(err.message),
-  })
-}
-
-export function useDeletarTreinamento() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, empresaId, colaboradorId }: { id: string; empresaId: string; colaboradorId?: string | null }) =>
-      deletarTreinamento(id).then(() => ({ empresaId, colaboradorId })),
-    onSuccess: ({ empresaId, colaboradorId }) => {
-      qc.invalidateQueries({ queryKey: qk.treinamentos.list(empresaId) })
-      if (colaboradorId) qc.invalidateQueries({ queryKey: qk.treinamentos.byColaborador(colaboradorId) })
-      toast.success('Treinamento removido.')
     },
     onError: (err: Error) => toast.error(err.message),
   })

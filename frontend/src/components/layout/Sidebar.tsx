@@ -110,7 +110,7 @@ export function Sidebar() {
     isAdmin
       ? {
           "/empresas": { value: kpis.totalEmpresas },
-          "/relatorios": { value: kpis.docsVencidos + kpis.treinamentosVencidos, danger: true },
+          "/relatorios": { value: kpis.docsVencidos + (kpis.treinamentosVencidos ?? 0), danger: true },
         }
       : {
           "/colaboradores": { value: kpis.totalColaboradores ?? 0 },
@@ -179,8 +179,8 @@ export function Sidebar() {
         <h4>{profile?.role === "admin" ? "Auditoria 2026" : `Suporte ${APP_SHORT_NAME}`}</h4>
         <p>
           {profile?.role === "admin"
-            ? (kpis && kpis.docsVencidos + kpis.treinamentosVencidos > 0
-                ? `${kpis.docsVencidos + kpis.treinamentosVencidos} pendências críticas precisam de atenção.`
+            ? (kpis && kpis.docsVencidos + (kpis.treinamentosVencidos ?? 0) > 0
+                ? `${kpis.docsVencidos + (kpis.treinamentosVencidos ?? 0)} pendências críticas precisam de atenção.`
                 : "Nenhuma pendência crítica no momento.")
             : "Tire dúvidas com os profissionais de SST."}
         </p>

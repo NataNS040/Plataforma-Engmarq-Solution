@@ -267,8 +267,8 @@ function RelatoriosAdmin() {
     { label: 'Colaboradores ativos',   valor: kpis.totalColaboradores ?? 'Indisponível',     cor: 'var(--navy-500)'   },
     { label: 'Conformidade geral',     valor: `${kpis.compliancePct}%`,    cor: 'var(--green-500)'  },
     { label: 'Documentos vencidos',    valor: kpis.docsVencidos,           cor: 'var(--red-500)'    },
-    { label: 'Treinamentos vencidos',  valor: kpis.treinamentosVencidos,   cor: 'var(--red-500)'    },
-    { label: 'Treinamentos monitorados', valor: kpis.totalTreinamentos,    cor: 'var(--green-500)'  },
+    { label: 'Treinamentos vencidos',  valor: kpis.treinamentosVencidos ?? 'Indispon\u00edvel',   cor: 'var(--red-500)'    },
+    { label: 'Treinamentos monitorados', valor: kpis.totalTreinamentos ?? 'Indispon\u00edvel',    cor: 'var(--green-500)'  },
   ] : []
 
   return (
@@ -276,7 +276,7 @@ function RelatoriosAdmin() {
       <div className="page-header">
         <div>
           <h1>Relatórios</h1>
-          <p className="sub">Relatórios de conformidade SST para todas as empresas</p>
+          <p className="sub">Indicadores de treinamentos indisponíveis para admin; conformidade considera somente documentos.</p>
         </div>
         <button className="tbtn accent" onClick={() => setShowGerar(true)}>
           <BarChart3 size={15} /> Gerar relatório
@@ -312,8 +312,8 @@ function RelatoriosEmpresa() {
     { label: 'Conformidade geral',     valor: `${kpis.compliancePct}%`,    cor: 'var(--green-500)'  },
     { label: 'Docs vencendo',          valor: kpis.docsVencendo,           cor: 'var(--orange-500)' },
     { label: 'Docs vencidos',          valor: kpis.docsVencidos,           cor: 'var(--red-500)'    },
-    { label: 'Treinamentos monitorados', valor: kpis.totalTreinamentos,    cor: 'var(--green-500)'  },
-    { label: 'Treinamentos vencidos',  valor: kpis.treinamentosVencidos,   cor: 'var(--red-500)'    },
+    { label: 'Treinamentos monitorados', valor: kpis.totalTreinamentos ?? 'Indispon\u00edvel',    cor: 'var(--green-500)'  },
+    { label: 'Treinamentos vencidos',  valor: kpis.treinamentosVencidos ?? 'Indispon\u00edvel',   cor: 'var(--red-500)'    },
   ] : []
 
   return (

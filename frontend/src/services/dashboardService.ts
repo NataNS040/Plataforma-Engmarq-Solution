@@ -8,11 +8,11 @@ export interface DashboardKpis {
   totalColaboradores: number | null // null: indicador indisponível para admin
   totalEmpresas: number       // só para admin
   totalDocumentos: number
-  totalTreinamentos: number
+  totalTreinamentos: number | null
   docsVencidos: number
   docsVencendo: number
-  treinamentosVencidos: number
-  treinamentosVencendo: number
+  treinamentosVencidos: number | null
+  treinamentosVencendo: number | null
   compliancePct: number       // % de docs+treinamentos em dia
 }
 
@@ -41,8 +41,8 @@ export async function buscarKpis(empresaId: string | 'all', includeColaboradores
       ? supabase.from('documentos').select('id, status')
       : supabase.from('documentos').select('id, status').eq('empresa_id', empresaId),
 
-    isAll
-      ? supabase.from('treinamentos').select('id, status')
+    isAll || !includeColaboradores
+      ? Promise.resolve({ data: null, error: null })
       : supabase.from('treinamentos').select('id, status').eq('empresa_id', empresaId),
 
     isAll
@@ -74,18 +74,19 @@ export async function buscarKpis(empresaId: string | 'all', includeColaboradores
     totalColaboradores: !isAll && includeColaboradores ? colabs.count ?? 0 : null,
     totalEmpresas:      empresas.count ?? 0,
     totalDocumentos:    docsData.length,
-    totalTreinamentos:  treinsData.length,
+    totalTreinamentos:  isAll || !includeColaboradores ? null : treinsData.length,
     docsVencidos,
     docsVencendo,
-    treinamentosVencidos: treinsVencidos,
-    treinamentosVencendo: treinsVencendo,
+    treinamentosVencidos: isAll || !includeColaboradores ? null : treinsVencidos,
+    treinamentosVencendo: isAll || !includeColaboradores ? null : treinsVencendo,
     compliancePct,
   }
 }
 
 export async function buscarAlertasCriticos(
   empresaId: string | 'all',
-  limit = 5
+  limit = 5,
+  includeTreinamentos = empresaId !== 'all'
 ): Promise<AlertaCritico[]> {
   const isAll = empresaId === 'all'
 
@@ -105,13 +106,8 @@ export async function buscarAlertasCriticos(
           .order('dias_restantes', { ascending: true, nullsFirst: false })
           .limit(limit),
 
-    isAll
-      ? supabase
-          .from('vw_dashboard_treinamentos')
-          .select('empresa_id, colaborador_nome, treinamento_nome, status_calculado, dias_restantes, data_vencimento')
-          .in('status_calculado', ['vencido', 'vencendo'])
-          .order('dias_restantes', { ascending: true, nullsFirst: false })
-          .limit(limit)
+    isAll || !includeTreinamentos
+      ? Promise.resolve({ data: null, error: null })
       : supabase
           .from('vw_dashboard_treinamentos')
           .select('empresa_id, colaborador_nome, treinamento_nome, status_calculado, dias_restantes, data_vencimento')

@@ -1,16 +1,13 @@
+import { toast } from 'sonner'
 import { useState, useMemo, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus, UploadCloud, FileText, Trash2 } from "lucide-react"
-import { uploadCertificado } from "@/services/treinamentosService"
-import { useAuth } from "@/modules/auth/AuthProvider"
+import { GraduationCap, CheckCircle, Clock, AlertTriangle, X, Download, ChevronRight, Plus, UploadCloud, FileText } from "lucide-react"
+import { uploadCertificado, baixarCertificado } from "@/services/treinamentosService"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores } from "@/hooks/queries/useColaboradores"
-import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento, useDeletarTreinamento } from "@/hooks/queries/useTreinamentos"
-import { useEmpresas } from "@/hooks/queries/useEmpresas"
-import { useDashboardKpis } from "@/hooks/queries/useDashboard"
-import { STATUS_COLORS, getAvatarColor, getChartColor } from "@/lib/theme"
+import { useTreinamentos, useTreinamentoTipos, useRegistrarTreinamento } from "@/hooks/queries/useTreinamentos"
+import { STATUS_COLORS, getAvatarColor } from "@/lib/theme"
 import { comingSoon } from "@/lib/comingSoon"
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { exportToCsv } from "@/lib/csvExport"
 
 /* ============================================================
@@ -61,27 +58,32 @@ interface CellRef {
   certificadoUrl?: string | null
 }
 
-function CellDetail({ cell, nrCatalog, empresaId, onClose, onDeleted }: {
+function CellDetail({ cell, nrCatalog, empresaId, onClose }: {
   cell: CellRef
   nrCatalog: NrInfo[]
   empresaId?: string | null
   onClose: () => void
-  onDeleted: () => void
 }) {
   const info = nrCatalog.find(n => n.nr === cell.nr) ?? nrCatalog[0]
   const st   = cell.status
   const col  = CELL_COLORS[st ?? 'na'].bg
   const labels: Record<CellStatus, string> = { ok: "Em dia", warn: "Vencendo", crit: "Vencido", na: "Não aplicável" }
-  const deletar = useDeletarTreinamento()
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const colabId = (cell.colab as ColabRow & { id?: string }).id
   const navigate = useNavigate()
 
-  async function handleDelete() {
-    if (!cell.treinamentoId) return
-    await deletar.mutateAsync({ id: cell.treinamentoId, empresaId: empresaId ?? '', colaboradorId: colabId })
-    setConfirmingDelete(false)
-    onDeleted()
+  async function downloadCertificate() {
+    if (!cell.certificadoUrl) return
+    // Open during the user gesture so browsers do not block the async download.
+    const target = window.open('about:blank', '_blank')
+    if (target) target.opener = null
+    try {
+      const url = await baixarCertificado(cell.certificadoUrl)
+      if (target) target.location.replace(url)
+      else window.location.assign(url)
+    } catch (error) {
+      target?.close()
+      toast.error(error instanceof Error ? error.message : 'Não foi possível baixar o certificado.')
+    }
   }
 
   return (
@@ -143,7 +145,7 @@ function CellDetail({ cell, nrCatalog, empresaId, onClose, onDeleted }: {
         </button>
         {st !== "na" && (
           cell.certificadoUrl ? (
-            <button className="tbtn ghost" style={{ justifyContent: "center" }} onClick={() => window.open(cell.certificadoUrl!, '_blank')}>
+            <button className="tbtn ghost" style={{ justifyContent: "center" }} onClick={() => void downloadCertificate()}>
               <Download size={13} /> Baixar certificado
             </button>
           ) : (
@@ -152,26 +154,10 @@ function CellDetail({ cell, nrCatalog, empresaId, onClose, onDeleted }: {
             </button>
           )
         )}
-        {st !== "na" && cell.treinamentoId && (
-          <button
-            className="tbtn ghost"
-            style={{ justifyContent: "center", color: "var(--red-500)" }}
-            onClick={() => setConfirmingDelete(true)}
-          >
-            <Trash2 size={13} /> Excluir treinamento
-          </button>
-        )}
+
       </div>
 
-      {confirmingDelete && (
-        <ConfirmDialog
-          title="Excluir treinamento?"
-          description={<>Isso remove o registro de <strong>{info.nr} · {cell.colab.nome}</strong> permanentemente.</>}
-          loading={deletar.isPending}
-          onCancel={() => setConfirmingDelete(false)}
-          onConfirm={handleDelete}
-        />
-      )}
+
     </div>
   )
 }
@@ -251,6 +237,7 @@ export interface AddTreinamentoModalProps {
 }
 
 export function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTreinamentoModalProps) {
+  const { empresaId: own, canManageTreinamentos } = useCurrentProfile()
   const registrar = useRegistrarTreinamento()
   const [tipoId, setTipoId] = useState(tipos[0]?.id ?? "")
   const [dataRealizacao, setDataRealizacao] = useState("")
@@ -276,7 +263,7 @@ export function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTre
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!tipoId || !dataRealizacao) return
+    if (!canManageTreinamentos || empresaId !== own || !tipoId || !dataRealizacao) return
     setIsSubmitting(true)
     try {
       let certUrl: string | null = null
@@ -293,10 +280,14 @@ export function AddTreinamentoModal({ colab, tipos, empresaId, onClose }: AddTre
         certificado_url:     certUrl,
       })
       onClose()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível registrar o treinamento.')
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  if (!canManageTreinamentos || empresaId !== own) return null
 
   return (
     <div
@@ -465,7 +456,7 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   empresaNome?: string
   onBack?: () => void
 }) {
-  const { empresaId: empresaIdPerfil } = useCurrentProfile()
+  const { empresaId: empresaIdPerfil, canManageTreinamentos } = useCurrentProfile()
   const empresaId = empresaIdProp ?? empresaIdPerfil
 
   const colabsQuery = useColaboradores(empresaId)
@@ -589,6 +580,12 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
     ], flat)
   }
 
+  if ([colabsQuery, treinamentosQuery, tiposQuery].some(query => query.isError)) {
+    return <div className="content" role="alert">Não foi possível carregar os treinamentos. <button className="tbtn" onClick={() => { void colabsQuery.refetch(); void treinamentosQuery.refetch(); void tiposQuery.refetch() }}>Tentar novamente</button></div>
+  }
+  if ([colabsQuery, treinamentosQuery, tiposQuery].some(query => query.isLoading)) {
+    return <div className="content">Carregando treinamentos…</div>
+  }
   return (
     <div className="content">
 
@@ -688,14 +685,14 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                               <div className="role" style={{ fontSize: 10.5 }}>{c.setor}</div>
                             </div>
                           </div>
-                          <button
+                          {canManageTreinamentos && <button
                             className="tbtn ghost"
                             style={{ padding: "2px 8px", fontSize: 11, height: 24, gap: 4, marginLeft: 6, flexShrink: 0 }}
                             title="Registrar treinamento"
                             onClick={e => { e.stopPropagation(); setAddingForColab({ id: (c as ColabRow & { id?: string }).id!, nome: c.nome, cor: c.cor, foto: c.foto }) }}
                           >
                             <Plus size={11} /> Registrar
-                          </button>
+                          </button>}
                         </div>
                       </td>
                       {NR_CATALOG.map((nrInfo, ci) => {
@@ -773,7 +770,6 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
               nrCatalog={NR_CATALOG}
               empresaId={empresaId}
               onClose={() => setSelectedCell(null)}
-              onDeleted={() => setSelectedCell(null)}
             />
           ) : (
             <NRRanking stats={nrStats} activeNr={activeNr} onPick={setActiveNr} />
@@ -781,7 +777,7 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
         </div>
       </div>
 
-      {addingForColab && empresaId && (
+      {addingForColab && empresaId && canManageTreinamentos && (
         <AddTreinamentoModal
           colab={addingForColab}
           tipos={nrTipos}
@@ -794,103 +790,7 @@ function TreinamentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   )
 }
 
-/* ============================================================
-   TreinamentosAdmin — escolha de empresa-cliente antes de ver a
-   matriz (mesmo motivo do ColaboradoresAdmin: admin acompanha
-   várias empresas, não só a do próprio perfil).
-   ============================================================ */
-
-function TreinamentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
-  const empresasQuery = useEmpresas()
-  const empresas = empresasQuery.data ?? []
-  const kpisQuery = useDashboardKpis('all')
-  const kpis = kpisQuery.data
-
-  return (
-    <div className="content">
-      <div className="page-header">
-        <div>
-          <h1>Matriz de Treinamentos NR</h1>
-          <p className="sub">{empresas.length} empresas · A matriz individual é restrita à equipe da empresa</p>
-        </div>
-      </div>
-
-      <div className="kpi-row">
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic blue"><GraduationCap size={15}/></span></div>
-          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Treinamentos vencidos</span><span className="kpi-ic red"><AlertTriangle size={15}/></span></div>
-          <div className="kpi-value" style={{ color: (kpis?.treinamentosVencidos ?? 0) > 0 ? "var(--red-500)" : undefined }}>{kpis?.treinamentosVencidos ?? '—'}</div>
-        </div>
-      </div>
-
-      <div className="glass" style={{ padding:0, overflow:'hidden' }}>
-        <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
-          <div className="ctitle">Empresas-cliente</div>
-          <div className="csub">Indicadores de colaboradores indisponíveis para admin</div>
-        </div>
-        <div style={{ overflow:'auto' }}>
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>Empresa</th>
-                <th>Setor</th>
-                <th>Cidade / UF</th>
-                <th style={{ textAlign:'center' }}>Colaboradores</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {empresas.length === 0 && (
-                <tr><td colSpan={5} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
-              )}
-              {empresas.map((e, i) => (
-                <tr key={e.id} style={{ cursor:'pointer' }} onClick={() => onSelect({ id: e.id, nome: e.razao_social })}>
-                  <td>
-                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
-                        {e.razao_social.slice(0,1)}
-                      </span>
-                      <div>
-                        <div style={{ fontWeight:600, fontSize:13 }}>{e.razao_social}</div>
-                        <div style={{ fontSize:11, color:'var(--ink-500)' }}>{e.cnpj}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{e.setor ?? '—'}</td>
-                  <td style={{ fontSize:12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
-                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>Indisponível</td>
-                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TreinamentosAdmin() {
-  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
-
-  if (selectedEmpresa) {
-    return (
-      <div className="content"><button className="tbtn" onClick={() => setSelectedEmpresa(null)}>Voltar</button>
-        <p>Registros individuais de {selectedEmpresa.nome} são restritos à equipe da empresa.</p>
-      </div>
-    )
-  }
-
-  return <TreinamentosAdminList onSelect={setSelectedEmpresa} />
-}
-
-// ---------------------------------------------------------------------------
-// Export
-// ---------------------------------------------------------------------------
 export default function TreinamentosPage() {
-  const { profile } = useAuth()
-  return profile?.role === 'admin' ? <TreinamentosAdmin /> : <TreinamentosEmpresa />
+  const { canReadTreinamentos } = useCurrentProfile()
+  return canReadTreinamentos ? <TreinamentosEmpresa /> : <div className="content">Sem acesso aos treinamentos internos.</div>
 }

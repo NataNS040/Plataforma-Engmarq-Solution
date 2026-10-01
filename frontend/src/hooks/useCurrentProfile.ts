@@ -19,6 +19,8 @@ export function useCurrentProfile() {
     canManageUsers: !!profile?.active && (role === 'gestor' || role === 'empresa'),
     canReadColaboradores: !!profile?.active && (role === 'gestor' || role === 'empresa' || role === 'operacional'),
     canManageColaboradores: !!profile?.active && (role === 'gestor' || role === 'empresa'),
+    canReadTreinamentos: !!profile?.active && (role === 'gestor' || role === 'empresa' || role === 'operacional'),
+    canManageTreinamentos: !!profile?.active && (role === 'gestor' || role === 'empresa'),
     canReadCatalogos: !!profile?.active && (role === 'gestor' || role === 'empresa' || role === 'operacional'),
     canManageCatalogos: !!profile?.active && (role === 'gestor' || role === 'empresa'),
     isGestor: role === 'gestor',

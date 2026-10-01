@@ -49,7 +49,7 @@ function DashboardAdmin() {
     { l: 'Docs em dia',         v: kpis.totalDocumentos - kpis.docsVencidos - kpis.docsVencendo,   c: 'var(--color-success)' },
     { l: 'Docs vencendo',       v: kpis.docsVencendo,                                               c: 'var(--color-warning)' },
     { l: 'Docs vencidos',       v: kpis.docsVencidos,                                               c: 'var(--color-danger)' },
-    { l: 'Trein. monitorados',  v: kpis.totalTreinamentos,                                          c: 'var(--blue-500)' },
+    { l: 'Trein. monitorados',  v: (kpis.totalTreinamentos ?? 0),                                          c: 'var(--blue-500)' },
   ].filter(d => d.v > 0) : []
 
   return (
@@ -59,7 +59,7 @@ function DashboardAdmin() {
       <div className="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p className="sub">Visão consolidada de conformidade SST · {kpis?.totalEmpresas ?? '—'} empresas · Indicadores de colaboradores indisponíveis para admin</p>
+          <p className="sub">Visão consolidada · {kpis?.totalEmpresas ?? '—'} empresas · Indicadores de colaboradores e treinamentos indisponíveis para admin. Conformidade e pendências consideram somente documentos.</p>
         </div>
         <div className="toolbar">
           <button className="tbtn"><Calendar size={14} /> {currentDateLabel()}</button>
@@ -121,7 +121,7 @@ function DashboardAdmin() {
             <span className="kpi-ic red"><AlertTriangle size={15} /></span>
           </div>
           <div className="kpi-value" style={{ color: (kpis?.docsVencidos ?? 0) + (kpis?.treinamentosVencidos ?? 0) > 0 ? "var(--red-500)" : undefined }}>
-            {kpis ? kpis.docsVencidos + kpis.treinamentosVencidos : '—'}
+            {kpis ? kpis.docsVencidos + (kpis.treinamentosVencidos ?? 0) : '—'}
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
             <span className="kpi-foot">docs + trein. vencidos</span>
@@ -198,7 +198,7 @@ function DashboardAdmin() {
               </ResponsiveContainer>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>
-                  {kpis ? kpis.docsVencidos + kpis.docsVencendo + kpis.treinamentosVencidos + kpis.treinamentosVencendo : '—'}
+                  {kpis ? kpis.docsVencidos + kpis.docsVencendo + (kpis.treinamentosVencidos ?? 0) + (kpis.treinamentosVencendo ?? 0) : '—'}
                 </span>
                 <span style={{ fontSize: 10, color: "var(--ink-400)", marginTop: 3 }}>pendências</span>
               </div>
@@ -396,7 +396,7 @@ function DashboardEmpresa() {
             <span>Docs + Trein. vencendo</span>
             <span className="kpi-ic green"><Heart size={15} /></span>
           </div>
-          <div className="kpi-value">{kpis ? kpis.docsVencendo + kpis.treinamentosVencendo : '—'}</div>
+          <div className="kpi-value">{kpis ? kpis.docsVencendo + (kpis.treinamentosVencendo ?? 0) : '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
             <span className="kpi-foot">próximos 30d</span>
           </div>
@@ -408,7 +408,7 @@ function DashboardEmpresa() {
             <span className="kpi-ic red"><FileText size={15} /></span>
           </div>
           <div className="kpi-value" style={{ color: (kpis?.docsVencidos ?? 0) + (kpis?.treinamentosVencidos ?? 0) > 0 ? "var(--red-500)" : undefined }}>
-            {kpis ? kpis.docsVencidos + kpis.treinamentosVencidos : '—'}
+            {kpis ? kpis.docsVencidos + (kpis.treinamentosVencidos ?? 0) : '—'}
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
             <span className="kpi-foot">vencidos</span>

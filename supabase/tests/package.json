@@ -2,6 +2,6 @@
   "name": "engmarq-rls-tests",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test user_profiles.test.mjs colaboradores.test.mjs catalogos.test.mjs" },
+  "scripts": { "test": "node --test user_profiles.test.mjs colaboradores.test.mjs catalogos.test.mjs treinamentos.test.mjs" },
   "devDependencies": { "@electric-sql/pglite": "^0.3.14" }
 }
