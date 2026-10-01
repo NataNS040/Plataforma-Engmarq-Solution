@@ -1,4 +1,5 @@
-﻿import { useState, useMemo, useRef } from 'react'
+import { abrirDocumento } from '@/services/documentosStorage'
+import { useState, useMemo, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -35,6 +36,8 @@ interface StatusResult { key: DocStatus; label: string; rel: string }
 interface EmpresaDoc {
   id: string; cat: string; nome: string; versao: string
   emissao: string; validade: string; resp: string; size: string
+  empresa_id: string
+  arquivo_path: string | null
   arquivo_url: string | null
 }
 interface ColabReg {
@@ -401,8 +404,8 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
   async function onSubmit(v: NovoDocForm) {
     setIsUploading(true)
     try {
-      let arquivoUrl: string | null = null
-      if (file) arquivoUrl = await uploadDocumentoArquivo(empresaId, file)
+      let arquivoPath: string | null = null
+      if (file) arquivoPath = await uploadDocumentoArquivo(empresaId, file)
       await criar.mutateAsync({
         empresa_id:  empresaId,
         tipo_id:     v.tipo_id,
@@ -411,7 +414,7 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
         emissao:     v.emissao || null,
         vencimento:  v.vencimento || null,
         observacoes: v.observacoes || null,
-        arquivo_url: arquivoUrl,
+        arquivo_path: arquivoPath,
       })
       onClose()
     } catch { /* toast já disparado */ }
@@ -542,8 +545,8 @@ function EditarDocumentoModal({ doc, empresaId, onClose }: {
   async function onSubmit(v: NovoDocForm) {
     setIsUploading(true)
     try {
-      let arquivoUrl = doc.arquivo_url
-      if (file) arquivoUrl = await uploadDocumentoArquivo(empresaId, file)
+      let arquivoPath = doc.arquivo_path ?? null
+      if (file) arquivoPath = await uploadDocumentoArquivo(empresaId, file)
       await atualizar.mutateAsync({
         id: doc.id,
         empresaId,
@@ -555,7 +558,7 @@ function EditarDocumentoModal({ doc, empresaId, onClose }: {
           emissao:     v.emissao || null,
           vencimento:  v.vencimento || null,
           observacoes: v.observacoes || null,
-          arquivo_url: arquivoUrl,
+          arquivo_path: arquivoPath,
         },
       })
       onClose()
@@ -610,12 +613,12 @@ function EditarDocumentoModal({ doc, empresaId, onClose }: {
                 </DocField>
               </div>
               <StatusPreview validade={watchedVencimento} />
-              {doc.arquivo_url && !file && (
+              {(doc.arquivo_path || doc.arquivo_url) && !file && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
                   <FileText size={16} style={{ color: 'var(--ink-400)', flexShrink: 0 }} />
                   <span style={{ fontSize: 13, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Arquivo anexado</span>
-                  <button type="button" className="tbtn ghost sm" onClick={() => window.open(doc.arquivo_url!, '_blank')}><Eye size={12} /> Visualizar</button>
-                  <button type="button" className="tbtn ghost sm" onClick={() => { const a = document.createElement('a'); a.href = doc.arquivo_url!; a.download = doc.titulo; a.target = '_blank'; a.click() }}><Download size={12} /> Baixar</button>
+                  <button type="button" className="tbtn ghost sm" onClick={() => void abrirDocumento(doc, doc.empresa_id)}><Eye size={12} /> Visualizar</button>
+                  <button type="button" className="tbtn ghost sm" onClick={() => void abrirDocumento(doc, doc.empresa_id, doc.titulo)}><Download size={12} /> Baixar</button>
                 </div>
               )}
               <div
@@ -637,7 +640,7 @@ function EditarDocumentoModal({ doc, empresaId, onClose }: {
                 ) : (
                   <>
                     <div className="dropzone-ic"><UploadCloud size={20} /></div>
-                    <div className="dropzone-title">{doc.arquivo_url ? 'Substituir arquivo' : 'Arraste ou clique para adicionar arquivo'}</div>
+                    <div className="dropzone-title">{(doc.arquivo_path || doc.arquivo_url) ? 'Substituir arquivo' : 'Arraste ou clique para adicionar arquivo'}</div>
                     <div className="dropzone-sub">PDF, Word ou Excel · máx. 10 MB</div>
                   </>
                 )}
@@ -740,6 +743,8 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
         validade: d.vencimento ?? '',
         resp: d.observacoes ?? '—',
         size: '—',
+        empresa_id: d.empresa_id,
+        arquivo_path: d.arquivo_path ?? null,
         arquivo_url: d.arquivo_url,
         kind: 'empresa',
         st,
@@ -981,7 +986,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                         {r.kind === 'empresa' ? (
                           <>
                             <button className="icon-btn sm" title="Visualizar" onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}><Eye size={15} /></button>
-                            <button className="icon-btn sm" title="Baixar" disabled={!r.arquivo_url} onClick={() => { if (r.arquivo_url) { const a = document.createElement('a'); a.href = r.arquivo_url; a.download = r.nome; a.target = '_blank'; a.click() } }}><Download size={15} /></button>
+                            <button className="icon-btn sm" title="Baixar" disabled={!(r.arquivo_path || r.arquivo_url)} onClick={() => void abrirDocumento(r, r.empresa_id, r.nome)}><Download size={15} /></button>
                             <button className={`tbtn ghost sm${r.st.key !== 'ok' ? ' accent' : ''}`} onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}>
                               {r.st.key !== 'ok' ? 'Renovar' : 'Nova versão'}
                             </button>

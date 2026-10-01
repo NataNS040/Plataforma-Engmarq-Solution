@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 import * as service from '@/services/treinamentosService'
 
-const { getSession, upload, createSignedUrl } = vi.hoisted(() => ({ getSession: vi.fn(), upload: vi.fn(), createSignedUrl: vi.fn() }))
-// No database .from(): business operations must go through FastAPI.
-vi.mock('@/lib/supabase', () => ({ supabase: { auth: { getSession }, storage: { from: () => ({ upload, createSignedUrl }) } } }))
+const { getSession, upload, createSignedUrl, profile } = vi.hoisted(() => ({ getSession: vi.fn(), upload: vi.fn(), createSignedUrl: vi.fn(), profile: vi.fn() }))
+// Only the caller profile is read directly; business operations use FastAPI.
+vi.mock('@/lib/supabase', () => ({ supabase: { from: () => ({ select: () => ({ eq: () => ({ single: profile }) }) }), auth: { getSession }, storage: { from: () => ({ upload, createSignedUrl }) } } }))
 const id = '94455974-ed31-40ba-b8af-dc335bf59801'
 const company = '74455974-ed31-40ba-b8af-dc335bf59801'
 const tipo = { id, nome: 'NR', descricao: null, nr_referencia: 'NR-10', validade_meses: 12 }
@@ -14,7 +14,8 @@ const matrix = { id, empresa_id: company, funcao_id: id, treinamento_tipo_id: id
   funcao: { id, nome: 'Funcao' }, treinamento_tipo: tipo }
 beforeEach(() => {
   vi.stubEnv('VITE_API_URL', 'http://localhost:8000/api/v1')
-  getSession.mockReset().mockResolvedValue({ data: { session: { access_token: 'caller-jwt' } }, error: null })
+  profile.mockResolvedValue({ data: { empresa_id: company, role: 'gestor', active: true }, error: null })
+  getSession.mockReset().mockResolvedValue({ data: { session: { access_token: 'caller-jwt', user: { id } } }, error: null })
 })
 it('lists, detail, participant and requirements use API without tenant selector', async () => {
   const fetchMock = vi.fn().mockResolvedValueOnce(Response.json([row])).mockResolvedValueOnce(Response.json(row))
@@ -70,7 +71,7 @@ it('certificate upload retains scoped path and download uses a short-lived signe
   const file = new File(['synthetic'], 'certificate.pdf', { type: 'application/pdf' })
   const path = await service.uploadCertificado(file, company)
   expect(path).toMatch(new RegExp(`^${company}/certificados/[a-f0-9-]+\\.pdf$`))
-  expect(upload).toHaveBeenCalledWith(path, file)
+  expect(upload).toHaveBeenCalledWith(path, file, { cacheControl: '3600', upsert: false, contentType: 'application/pdf' })
   expect(await service.baixarCertificado(path)).toBe('https://example.test/signed')
   expect(createSignedUrl).toHaveBeenCalledWith(path, 60)
 })

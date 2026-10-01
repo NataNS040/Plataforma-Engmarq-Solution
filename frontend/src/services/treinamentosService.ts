@@ -1,5 +1,4 @@
-import { supabase } from '@/lib/supabase'
-import { handleSupabaseError } from '@/lib/errors'
+import { uploadArquivoPrivado, assinarDocumento } from './documentosStorage'
 import type { TreinamentoModalidade } from '@/types/database'
 import { apiRequest } from './api/client'
 import { getTipos, getMatriz, getTreinamentos, getTreinamento, safeId, treinamentoSchema, matrizSchema } from './api/treinamentos'
@@ -48,16 +47,13 @@ export function atualizarTreinamento(id: string, input: Partial<Omit<Treinamento
   return apiRequest(`/treinamentos/${safeId(id)}`, { method: 'PATCH', json: input, parse: data => treinamentoSchema.parse(data) })
 }
 
-// Storage remains direct with caller JWT; migration 018 restricts this namespace.
+// Shared private bucket; the certificate namespace remains immutable under RLS.
 export async function uploadCertificado(file: File, empresaId: string): Promise<string> {
-  const ext = file.name.split('.').pop() ?? 'pdf'
-  const path = `${safeId(empresaId)}/certificados/${crypto.randomUUID()}.${ext}`
-  const { error } = await supabase.storage.from('documentos').upload(path, file)
-  if (error) throw handleSupabaseError(error as never)
-  return path
+  return uploadArquivoPrivado(empresaId, file, true)
 }
 export async function baixarCertificado(path: string): Promise<string> {
-  const { data, error } = await supabase.storage.from('documentos').createSignedUrl(path, 60)
-  if (error) throw handleSupabaseError(error as never)
-  return data.signedUrl
+  if (path.split('/').length !== 3 || path.split('/')[1] !== 'certificados') {
+    throw new Error('Referência de certificado inválida.')
+  }
+  return assinarDocumento({ arquivo_path: path }, path.split('/')[0])
 }

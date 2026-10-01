@@ -93,6 +93,7 @@ export interface Documento {
   numero: string | null
   emissao: string | null
   vencimento: string | null
+  arquivo_path: string | null
   arquivo_url: string | null
   status: DocStatus
   observacoes: string | null

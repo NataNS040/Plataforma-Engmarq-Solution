@@ -1,3 +1,4 @@
+import { uploadArquivoPrivado } from './documentosStorage'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import type { Documento, DocumentoTipo, ExameCatalogo, SubtipoExame } from '@/types/database'
@@ -17,24 +18,14 @@ export interface AsoInput {
   numero?: string | null
   observacoes?: string | null
   exames_realizados?: string[] | null
-  arquivo_url?: string | null
+  arquivo_path?: string | null
   // tipo_id é resolvido automaticamente pelo serviço via upsert
   tipo_id?: string
 }
 
 /** Upload do PDF do ASO — reaproveita o bucket 'documentos' (mesmo padrão de documentosService). */
 export async function uploadAsoArquivo(empresaId: string, file: File): Promise<string> {
-  const ext = file.name.split('.').pop() ?? 'pdf'
-  const path = `${empresaId}/${crypto.randomUUID()}.${ext}`
-
-  const { error } = await supabase.storage
-    .from('documentos')
-    .upload(path, file, { cacheControl: '3600', upsert: false })
-
-  if (error) throw handleSupabaseError(error, 'Não foi possível fazer o upload do PDF do ASO.')
-
-  const { data } = supabase.storage.from('documentos').getPublicUrl(path)
-  return data.publicUrl
+  return uploadArquivoPrivado(empresaId, file)
 }
 
 const ASO_SELECT = `
@@ -93,7 +84,7 @@ export async function criarAso(input: AsoInput): Promise<Documento> {
       numero:            input.numero ?? null,
       observacoes:       input.observacoes ?? null,
       exames_realizados: input.exames_realizados ?? [],
-      arquivo_url:       input.arquivo_url ?? null,
+      arquivo_path:       input.arquivo_path ?? null,
     })
     .select('*')
     .single()

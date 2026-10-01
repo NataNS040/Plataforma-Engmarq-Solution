@@ -1,3 +1,4 @@
+import { abrirDocumento } from '@/services/documentosStorage'
 import { useState, useMemo, useRef } from 'react'
 import {
   CheckCircle2, Clock, AlertTriangle, Calendar, Download, Plus,
@@ -129,8 +130,8 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
     if (!colab) return
     setIsUploading(true)
     try {
-      let arquivoUrl: string | null = null
-      if (file) arquivoUrl = await uploadAsoArquivo(empresaId, file)
+      let arquivoPath: string | null = null
+      if (file) arquivoPath = await uploadAsoArquivo(empresaId, file)
       await criar.mutateAsync({
         empresa_id:        empresaId,
         colaborador_id:    colabId,
@@ -140,7 +141,7 @@ function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: s
         vencimento:        validade || null,
         observacoes:       resultado,
         exames_realizados: examsSel.length > 0 ? examsSel : null,
-        arquivo_url:       arquivoUrl,
+        arquivo_path:      arquivoPath,
       })
       onClose()
     } catch { /* toast já disparado */ }
@@ -386,6 +387,8 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
     validade:  a.vencimento ?? '',
     resultado: a.observacoes ?? 'Apto',
     exames:    a.exames_realizados ?? [],
+    empresa_id: a.empresa_id,
+    arquivo_path: a.arquivo_path ?? null,
     arquivo_url: a.arquivo_url ?? null,
   })), [asosBanco])
 
@@ -559,8 +562,8 @@ function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
                     <td><span className={`chip ${r.st.key}`}>{r.st.label}</span></td>
                     <td>
                       <div className="aso-actions">
-                        <button className="icon-btn sm" title={r.arquivo_url ? 'Visualizar PDF' : 'Sem PDF anexado'} disabled={!r.arquivo_url} onClick={() => r.arquivo_url && window.open(r.arquivo_url, '_blank')}><Eye size={15}/></button>
-                        <button className="icon-btn sm" title={r.arquivo_url ? 'Baixar PDF' : 'Sem PDF anexado'} disabled={!r.arquivo_url} onClick={() => { if (!r.arquivo_url) return; const a = document.createElement('a'); a.href = r.arquivo_url; a.download = `ASO - ${r.colab}.pdf`; a.target = '_blank'; a.click() }}><Download size={15}/></button>
+                        <button className="icon-btn sm" title={(r.arquivo_path || r.arquivo_url) ? 'Visualizar PDF' : 'Sem PDF anexado'} disabled={!(r.arquivo_path || r.arquivo_url)} onClick={() => void abrirDocumento(r, r.empresa_id)}><Eye size={15}/></button>
+                        <button className="icon-btn sm" title={(r.arquivo_path || r.arquivo_url) ? 'Baixar PDF' : 'Sem PDF anexado'} disabled={!(r.arquivo_path || r.arquivo_url)} onClick={() => void abrirDocumento(r, r.empresa_id, `ASO - ${r.colab}.pdf`)}><Download size={15}/></button>
                         {r.st.key !== 'ok'
                           ? <button className="tbtn ghost sm accent" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>
                           : <button className="tbtn ghost sm" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>}
