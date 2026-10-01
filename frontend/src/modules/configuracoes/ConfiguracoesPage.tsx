@@ -259,7 +259,6 @@ function TeamTable({ usuarios, viewerId, onManage }: {
 // ---------------------------------------------------------------------------
 const ADMIN_TABS = [
   { id:'conta',       label:'Conta',               icon:Building2 },
-  { id:'catalogos',   label:'Catálogos',           icon:Layers },
   { id:'papeis',      label:'Papéis e permissões', icon:Shield },
   { id:'integracoes', label:'Integrações',         icon:LayoutGrid },
   { id:'plano',       label:'Plano e faturamento', icon:Star },

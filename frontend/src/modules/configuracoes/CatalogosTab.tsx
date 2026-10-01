@@ -1,14 +1,15 @@
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
-  Briefcase, MapPin, Layers, Plus, Trash2, Loader2, AlertTriangle,
+  Briefcase, MapPin, Layers, Plus, Trash2, Loader2, AlertTriangle, Pencil,
 } from 'lucide-react'
 import {
-  useSetores, useCriarSetor, useDesativarSetor,
-  useFuncoes, useCriarFuncao, useDesativarFuncao,
-  useAmbientes, useCriarAmbiente, useDesativarAmbiente,
+  useSetores, useCriarSetor, useAtualizarSetor, useDesativarSetor,
+  useFuncoes, useCriarFuncao, useAtualizarFuncao, useDesativarFuncao,
+  useAmbientes, useCriarAmbiente, useAtualizarAmbiente, useDesativarAmbiente,
 } from '@/hooks/queries/useCatalogos'
 
 type CatKind = 'setores' | 'funcoes' | 'ambientes'
@@ -27,6 +28,8 @@ type FormValues = z.infer<typeof schema>
 
 export function CatalogosTab({ empresaId }: { empresaId: string | null }) {
   const [kind, setKind] = useState<CatKind>('setores')
+  const { empresaId: own, canReadCatalogos } = useCurrentProfile()
+  if (!canReadCatalogos || empresaId !== own) return null
 
   if (!empresaId) {
     return (
@@ -73,6 +76,9 @@ export function CatalogosTab({ empresaId }: { empresaId: string | null }) {
 function SetoresPanel({ empresaId }: { empresaId: string }) {
   const query = useSetores(empresaId)
   const criar = useCriarSetor()
+  const atualizar = useAtualizarSetor()
+  const { canManageCatalogos } = useCurrentProfile()
+  const [editingId, setEditingId] = useState<string | null>(null)
   const desativar = useDesativarSetor()
 
   const items = useMemo(
@@ -86,8 +92,12 @@ function SetoresPanel({ empresaId }: { empresaId: string }) {
   })
 
   async function onSubmit(v: FormValues) {
+    if (!canManageCatalogos) return
     try {
-      await criar.mutateAsync({ empresa_id: empresaId, nome: v.nome, descricao: v.descricao || null })
+      const input = { nome: v.nome, descricao: v.descricao || null }
+      if (editingId) await atualizar.mutateAsync({ id: editingId, input })
+      else await criar.mutateAsync({ empresa_id: empresaId, ...input })
+      setEditingId(null)
       form.reset()
     } catch { /* toast */ }
   }
@@ -96,10 +106,13 @@ function SetoresPanel({ empresaId }: { empresaId: string }) {
     <CatalogoLayout
       query={query}
       items={items.map(s => ({ id: s.id, nome: s.nome, descricao: s.descricao }))}
-      onDesativar={id => desativar.mutate(id)}
+      onDesativar={id => { if (canManageCatalogos) desativar.mutate(id) }}
+      onEditar={item => { setEditingId(item.id); form.reset({ nome: item.nome, descricao: item.descricao ?? '' }) }}
+      editing={!!editingId}
+      onCancel={() => { setEditingId(null); form.reset({ nome: '', descricao: '' }) }}
       form={form}
       onSubmit={onSubmit}
-      submitting={criar.isPending}
+      submitting={criar.isPending || atualizar.isPending || desativar.isPending}
       placeholder="Ex.: Produção, Manutenção, Administrativo…"
     />
   )
@@ -111,6 +124,9 @@ function SetoresPanel({ empresaId }: { empresaId: string }) {
 function FuncoesPanel({ empresaId }: { empresaId: string }) {
   const query = useFuncoes(empresaId)
   const criar = useCriarFuncao()
+  const atualizar = useAtualizarFuncao()
+  const { canManageCatalogos } = useCurrentProfile()
+  const [editingId, setEditingId] = useState<string | null>(null)
   const desativar = useDesativarFuncao()
 
   const items = useMemo(
@@ -124,8 +140,12 @@ function FuncoesPanel({ empresaId }: { empresaId: string }) {
   })
 
   async function onSubmit(v: FormValues) {
+    if (!canManageCatalogos) return
     try {
-      await criar.mutateAsync({ empresa_id: empresaId, nome: v.nome, descricao: v.descricao || null })
+      const input = { nome: v.nome, descricao: v.descricao || null }
+      if (editingId) await atualizar.mutateAsync({ id: editingId, input })
+      else await criar.mutateAsync({ empresa_id: empresaId, ...input })
+      setEditingId(null)
       form.reset()
     } catch { /* toast */ }
   }
@@ -134,10 +154,13 @@ function FuncoesPanel({ empresaId }: { empresaId: string }) {
     <CatalogoLayout
       query={query}
       items={items.map(f => ({ id: f.id, nome: f.nome, descricao: f.descricao }))}
-      onDesativar={id => desativar.mutate(id)}
+      onDesativar={id => { if (canManageCatalogos) desativar.mutate(id) }}
+      onEditar={item => { setEditingId(item.id); form.reset({ nome: item.nome, descricao: item.descricao ?? '' }) }}
+      editing={!!editingId}
+      onCancel={() => { setEditingId(null); form.reset({ nome: '', descricao: '' }) }}
       form={form}
       onSubmit={onSubmit}
-      submitting={criar.isPending}
+      submitting={criar.isPending || atualizar.isPending || desativar.isPending}
       placeholder="Ex.: Soldador, Eletricista, Motorista…"
     />
   )
@@ -149,6 +172,9 @@ function FuncoesPanel({ empresaId }: { empresaId: string }) {
 function AmbientesPanel({ empresaId }: { empresaId: string }) {
   const query = useAmbientes(empresaId)
   const criar = useCriarAmbiente()
+  const atualizar = useAtualizarAmbiente()
+  const { canManageCatalogos } = useCurrentProfile()
+  const [editingId, setEditingId] = useState<string | null>(null)
   const desativar = useDesativarAmbiente()
 
   const items = useMemo(
@@ -162,8 +188,12 @@ function AmbientesPanel({ empresaId }: { empresaId: string }) {
   })
 
   async function onSubmit(v: FormValues) {
+    if (!canManageCatalogos) return
     try {
-      await criar.mutateAsync({ empresa_id: empresaId, nome: v.nome, descricao: v.descricao || null })
+      const input = { nome: v.nome, descricao: v.descricao || null }
+      if (editingId) await atualizar.mutateAsync({ id: editingId, input })
+      else await criar.mutateAsync({ empresa_id: empresaId, ...input })
+      setEditingId(null)
       form.reset()
     } catch { /* toast */ }
   }
@@ -172,10 +202,13 @@ function AmbientesPanel({ empresaId }: { empresaId: string }) {
     <CatalogoLayout
       query={query}
       items={items.map(a => ({ id: a.id, nome: a.nome, descricao: a.descricao }))}
-      onDesativar={id => desativar.mutate(id)}
+      onDesativar={id => { if (canManageCatalogos) desativar.mutate(id) }}
+      onEditar={item => { setEditingId(item.id); form.reset({ nome: item.nome, descricao: item.descricao ?? '' }) }}
+      editing={!!editingId}
+      onCancel={() => { setEditingId(null); form.reset({ nome: '', descricao: '' }) }}
       form={form}
       onSubmit={onSubmit}
-      submitting={criar.isPending}
+      submitting={criar.isPending || atualizar.isPending || desativar.isPending}
       placeholder="Ex.: Galpão A, Escritório central, Obra 01…"
     />
   )
@@ -188,18 +221,22 @@ interface CatalogoLayoutProps {
   query: { isLoading: boolean; isError: boolean; refetch: () => void }
   items: { id: string; nome: string; descricao: string | null }[]
   onDesativar: (id: string) => void
+  onEditar: (item: { id: string; nome: string; descricao: string | null }) => void
+  editing: boolean
+  onCancel: () => void
   form: ReturnType<typeof useForm<FormValues>>
   onSubmit: (v: FormValues) => Promise<void>
   submitting: boolean
   placeholder: string
 }
 
-function CatalogoLayout({ query, items, onDesativar, form, onSubmit, submitting, placeholder }: CatalogoLayoutProps) {
+function CatalogoLayout({ query, items, onDesativar, onEditar, editing, onCancel, form, onSubmit, submitting, placeholder }: CatalogoLayoutProps) {
+  const { canManageCatalogos } = useCurrentProfile()
   const { register, handleSubmit, formState: { errors } } = form
 
   return (
     <div>
-      <form
+      {canManageCatalogos && <form
         onSubmit={handleSubmit(onSubmit)}
         style={{ display:'grid', gridTemplateColumns:'2fr 3fr auto', gap:10, marginBottom:16 }}
         noValidate
@@ -215,9 +252,10 @@ function CatalogoLayout({ query, items, onDesativar, form, onSubmit, submitting,
         <input className="mp-input" placeholder="Descrição (opcional)" {...register('descricao')} />
         <button type="submit" className="tbtn accent" disabled={submitting}>
           {submitting ? <Loader2 size={13} className="btn-spinner" /> : <Plus size={13} />}
-          Adicionar
+          {editing ? 'Salvar' : 'Adicionar'}
         </button>
-      </form>
+        {editing && <button type="button" className="tbtn" onClick={onCancel}>Cancelar</button>}
+      </form>}
 
       {query.isLoading ? (
         <div style={{ padding:24, textAlign:'center', color:'var(--ink-400)', fontSize:13 }}>
@@ -249,7 +287,10 @@ function CatalogoLayout({ query, items, onDesativar, form, onSubmit, submitting,
                 <td style={{ fontWeight:600 }}>{it.nome}</td>
                 <td style={{ color:'var(--ink-500)', fontSize:12.5 }}>{it.descricao || '—'}</td>
                 <td style={{ textAlign:'right' }}>
+                  {canManageCatalogos && <>
+                  <button className="icon-btn sm" title="Editar" disabled={submitting} onClick={() => onEditar(it)}><Pencil size={13} /></button>
                   <button
+                    disabled={submitting}
                     className="icon-btn sm danger"
                     title="Desativar"
                     onClick={() => {
@@ -258,6 +299,7 @@ function CatalogoLayout({ query, items, onDesativar, form, onSubmit, submitting,
                   >
                     <Trash2 size={13} />
                   </button>
+                  </>}
                 </td>
               </tr>
             ))}

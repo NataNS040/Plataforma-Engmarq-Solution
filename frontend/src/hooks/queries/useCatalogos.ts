@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
+import type { CatalogoUpdateInput, FuncaoUpdateInput } from '@/services/catalogosService'
 import { qk } from '@/lib/queryKeys'
 import {
   listarSetores, criarSetor, atualizarSetor, desativarSetor, type SetorInput,
@@ -11,10 +13,12 @@ import {
 // Setores
 // ---------------------------------------------------------------------------
 export function useSetores(empresaId: string | null | undefined) {
+  const { profile, empresaId: own, canReadCatalogos } = useCurrentProfile()
+  const allowed = canReadCatalogos && !!empresaId && empresaId === own
   return useQuery({
-    queryKey: qk.setores.list(empresaId ?? ''),
-    queryFn: () => listarSetores(empresaId!),
-    enabled: !!empresaId,
+    queryKey: [...qk.setores.list(empresaId ?? ''), profile?.id, allowed],
+    queryFn: () => allowed ? listarSetores(empresaId!) : Promise.resolve([]),
+    enabled: allowed,
   })
 }
 
@@ -23,6 +27,8 @@ export function useCriarSetor() {
   return useMutation({
     mutationFn: (input: SetorInput) => criarSetor(input),
     onSuccess: setor => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.setores.list(setor.empresa_id) })
       toast.success(`Setor "${setor.nome}" criado.`)
     },
@@ -33,9 +39,11 @@ export function useCriarSetor() {
 export function useAtualizarSetor() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Partial<SetorInput> & { active?: boolean } }) =>
+    mutationFn: ({ id, input }: { id: string; input: CatalogoUpdateInput }) =>
       atualizarSetor(id, input),
     onSuccess: setor => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.setores.list(setor.empresa_id) })
       toast.success('Setor atualizado.')
     },
@@ -48,6 +56,8 @@ export function useDesativarSetor() {
   return useMutation({
     mutationFn: (id: string) => desativarSetor(id),
     onSuccess: setor => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.setores.list(setor.empresa_id) })
       toast.success('Setor desativado.')
     },
@@ -59,10 +69,12 @@ export function useDesativarSetor() {
 // Funções
 // ---------------------------------------------------------------------------
 export function useFuncoes(empresaId: string | null | undefined) {
+  const { profile, empresaId: own, canReadCatalogos } = useCurrentProfile()
+  const allowed = canReadCatalogos && !!empresaId && empresaId === own
   return useQuery({
-    queryKey: qk.funcoes.list(empresaId ?? ''),
-    queryFn: () => listarFuncoes(empresaId!),
-    enabled: !!empresaId,
+    queryKey: [...qk.funcoes.list(empresaId ?? ''), profile?.id, allowed],
+    queryFn: () => allowed ? listarFuncoes(empresaId!) : Promise.resolve([]),
+    enabled: allowed,
   })
 }
 
@@ -71,6 +83,8 @@ export function useCriarFuncao() {
   return useMutation({
     mutationFn: (input: FuncaoInput) => criarFuncao(input),
     onSuccess: funcao => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.funcoes.list(funcao.empresa_id) })
       toast.success(`Função "${funcao.nome}" criada.`)
     },
@@ -81,9 +95,11 @@ export function useCriarFuncao() {
 export function useAtualizarFuncao() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Partial<FuncaoInput> & { active?: boolean } }) =>
+    mutationFn: ({ id, input }: { id: string; input: FuncaoUpdateInput }) =>
       atualizarFuncao(id, input),
     onSuccess: funcao => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.funcoes.list(funcao.empresa_id) })
       toast.success('Função atualizada.')
     },
@@ -96,6 +112,8 @@ export function useDesativarFuncao() {
   return useMutation({
     mutationFn: (id: string) => desativarFuncao(id),
     onSuccess: funcao => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.funcoes.list(funcao.empresa_id) })
       toast.success('Função desativada.')
     },
@@ -107,10 +125,12 @@ export function useDesativarFuncao() {
 // Ambientes
 // ---------------------------------------------------------------------------
 export function useAmbientes(empresaId: string | null | undefined) {
+  const { profile, empresaId: own, canReadCatalogos } = useCurrentProfile()
+  const allowed = canReadCatalogos && !!empresaId && empresaId === own
   return useQuery({
-    queryKey: qk.ambientes.list(empresaId ?? ''),
-    queryFn: () => listarAmbientes(empresaId!),
-    enabled: !!empresaId,
+    queryKey: [...qk.ambientes.list(empresaId ?? ''), profile?.id, allowed],
+    queryFn: () => allowed ? listarAmbientes(empresaId!) : Promise.resolve([]),
+    enabled: allowed,
   })
 }
 
@@ -119,6 +139,8 @@ export function useCriarAmbiente() {
   return useMutation({
     mutationFn: (input: AmbienteInput) => criarAmbiente(input),
     onSuccess: ambiente => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.ambientes.list(ambiente.empresa_id) })
       toast.success(`Ambiente "${ambiente.nome}" criado.`)
     },
@@ -129,9 +151,11 @@ export function useCriarAmbiente() {
 export function useAtualizarAmbiente() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Partial<AmbienteInput> & { active?: boolean } }) =>
+    mutationFn: ({ id, input }: { id: string; input: CatalogoUpdateInput }) =>
       atualizarAmbiente(id, input),
     onSuccess: ambiente => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.ambientes.list(ambiente.empresa_id) })
       toast.success('Ambiente atualizado.')
     },
@@ -144,6 +168,8 @@ export function useDesativarAmbiente() {
   return useMutation({
     mutationFn: (id: string) => desativarAmbiente(id),
     onSuccess: ambiente => {
+      qc.invalidateQueries({ queryKey: qk.colaboradores.all })
+      qc.invalidateQueries({ queryKey: qk.matrizTreinamentos.all })
       qc.invalidateQueries({ queryKey: qk.ambientes.list(ambiente.empresa_id) })
       toast.success('Ambiente desativado.')
     },
