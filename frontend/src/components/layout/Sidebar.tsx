@@ -32,7 +32,6 @@ const ADMIN_NAV: NavGroup[] = [
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { to: "/empresas", label: "Empresas", icon: Building2 },
-      { to: "/colaboradores", label: "Colaboradores", icon: Users },
     ],
   },
   {
@@ -114,7 +113,7 @@ export function Sidebar() {
           "/relatorios": { value: kpis.docsVencidos + kpis.treinamentosVencidos, danger: true },
         }
       : {
-          "/colaboradores": { value: kpis.totalColaboradores },
+          "/colaboradores": { value: kpis.totalColaboradores ?? 0 },
         }
   ) : {}
 

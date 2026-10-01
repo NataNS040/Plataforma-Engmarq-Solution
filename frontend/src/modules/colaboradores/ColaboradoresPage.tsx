@@ -7,12 +7,9 @@ import {
   Search, Download, Plus, X, CheckCircle, AlertTriangle, Clock,
   Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2, Trash2,
 } from "lucide-react"
-import { useAuth } from "@/modules/auth/AuthProvider"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
-import { useColaboradores, useCriarColaborador, useAtualizarColaborador } from "@/hooks/queries/useColaboradores"
+import { useColaboradores, useCriarColaborador, useAtualizarColaborador, useDesativarColaborador } from "@/hooks/queries/useColaboradores"
 import { useSetores, useFuncoes, useAmbientes } from "@/hooks/queries/useCatalogos"
-import { useEmpresas, useEmpresa } from "@/hooks/queries/useEmpresas"
-import { useDashboardKpis } from "@/hooks/queries/useDashboard"
 import { useMatrizTreinamentos, useTreinamentosDoColaborador, useTreinamentoTipos, useDeletarTreinamento } from "@/hooks/queries/useTreinamentos"
 import { useExamesDoColaborador } from "@/hooks/queries/useExames"
 import { useFichasEpiDoColaborador } from "@/hooks/queries/useFichasEpi"
@@ -21,13 +18,13 @@ import { AddTreinamentoModal } from "@/modules/treinamentos/TreinamentosPage"
 import { FichaEpiModal } from "@/modules/documentos/FichaEpiModal"
 import { FichaEpiDetailModal } from "@/modules/documentos/FichaEpiDetailModal"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
-import { criarColaborador } from "@/services/colaboradoresService"
+import { importarColaboradores } from "@/services/colaboradoresService"
 import type { ColaboradorComCatalogos } from "@/services/colaboradoresService"
 import { criarSetor, criarFuncao, criarAmbiente } from "@/services/catalogosService"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { qk } from "@/lib/queryKeys"
-import { getAvatarColor, getChartColor, getInitials } from "@/lib/theme"
+import { getAvatarColor, getInitials } from "@/lib/theme"
 import { comingSoon } from "@/lib/comingSoon"
 import { downloadCsvRows, exportToCsv } from "@/lib/csvExport"
 import type { DocStatus, TreinamentoStatus } from "@/types/database"
@@ -54,9 +51,27 @@ interface ProfileModalProps {
   onClose: () => void
 }
 
-function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
+export function ProfileModal(props: ProfileModalProps) {
+  const { empresaId, canReadColaboradores } = useCurrentProfile()
+  if (!canReadColaboradores || props.colab.empresa_id !== empresaId) return null
+  return <AuthorizedProfileModal {...props} />
+}
+
+function AuthorizedProfileModal({ colab: c, onClose }: ProfileModalProps) {
+  const { canManageColaboradores } = useCurrentProfile()
   const [editing, setEditing] = useState(false)
   const [addingTreino, setAddingTreino] = useState(false)
+  const desativar = useDesativarColaborador()
+  const [inativando, setInativando] = useState(false)
+  const [dataDemissao, setDataDemissao] = useState('')
+  async function confirmInativar() {
+    if (!canManageColaboradores) return
+    if (!dataDemissao) { toast.error('Informe a data de demissão.'); return }
+    try {
+      await desativar.mutateAsync({ id: c.id, data_demissao: dataDemissao })
+      onClose()
+    } catch { /* toast handled by the mutation */ }
+  }
 
   const initials = getInitials(c.nome)
   const cor = getAvatarColor(c.nome)
@@ -131,7 +146,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
   const [fSetorId, setFSetorId]       = useState(c.setor?.id ?? "")
   const [fAmbienteId, setFAmbienteId] = useState(c.ambiente?.id ?? "")
 
-  const startEdit = () => setEditing(true)
+  const startEdit = () => { if (canManageColaboradores) setEditing(true) }
   const cancelEdit = () => {
     setFNome(c.nome)
     setFMatricula(c.matricula ?? "")
@@ -141,6 +156,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
     setEditing(false)
   }
   async function saveEdit() {
+    if (!canManageColaboradores) return
     try {
       await atualizar.mutateAsync({
         id: c.id,
@@ -165,14 +181,15 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
             <h2>{editing ? "Editar colaborador" : "Perfil do colaborador"}</h2>
             <div style={{ display: "flex", gap: 8 }}>
               {!editing && <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Exportar perfil em PDF')}><Download size={13} /> Exportar PDF</button>}
-              {!editing
+              {canManageColaboradores && c.active && !editing && <button className="tbtn" onClick={() => setInativando(true)}>Inativar</button>}
+              {canManageColaboradores && (!editing
                 ? <button className="tbtn primary" onClick={startEdit}><Edit size={13} /> Editar colaborador</button>
                 : <>
                     <button className="tbtn" onClick={cancelEdit}>Cancelar</button>
                     <button className="tbtn primary" onClick={saveEdit} disabled={atualizar.isPending}>
                       {atualizar.isPending ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle size={13} />} Salvar
                     </button>
-                  </>}
+                  </>)}
               <button className="icon-btn" onClick={onClose}><X size={16} /></button>
             </div>
           </div>
@@ -296,7 +313,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
             <div className="prof-section" style={{ marginTop: 18 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <h4 style={{ margin: 0 }}>Fichas de EPI</h4>
-                <button className="tbtn sm" onClick={() => setAddingFichaEpi(true)}><Plus size={12} /> Nova ficha</button>
+                {canManageColaboradores && <button className="tbtn sm" onClick={() => setAddingFichaEpi(true)}><Plus size={12} /> Nova ficha</button>}
               </div>
               <div className="prof-list">
                 {fichasEpiQuery.isLoading ? (
@@ -322,7 +339,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
                 <h4 style={{ margin: 0 }}>Treinamentos NR</h4>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 11.5, color: "var(--ink-500)" }}>{obrigatorios.length} NRs obrigatórias pra função</span>
-                  <button className="tbtn sm" onClick={() => setAddingTreino(true)} disabled={tiposQuery.isLoading}><Plus size={12} /> Registrar</button>
+                  {canManageColaboradores && <button className="tbtn sm" onClick={() => setAddingTreino(true)} disabled={tiposQuery.isLoading}><Plus size={12} /> Registrar</button>}
                 </div>
               </div>
 
@@ -362,6 +379,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
                                 className="icon-btn sm"
                                 title="Excluir treinamento"
                                 style={{ color: "var(--red-500)" }}
+                                disabled={!canManageColaboradores}
                                 onClick={() => setDeletingTreino({ id: ultimo.id, label: `${tipo.nr_referencia ?? tipo.nome} · ${c.nome}` })}
                               >
                                 <Trash2 size={13} />
@@ -379,7 +397,12 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
         </div>
       </div>
 
-      {addingTreino && (
+      {inativando && canManageColaboradores && (
+        <ConfirmDialog title="Inativar colaborador?" confirmLabel="Inativar" loading={desativar.isPending}
+          description={<>O histórico será preservado.<br /><label>Data de demissão <input type="date" className="mp-input" value={dataDemissao} onChange={e => setDataDemissao(e.target.value)} /></label></>}
+          onCancel={() => setInativando(false)} onConfirm={() => void confirmInativar()} />
+      )}
+      {addingTreino && canManageColaboradores && (
         <AddTreinamentoModal
           colab={{ id: c.id, nome: c.nome, cor, foto: initials }}
           tipos={tipos}
@@ -388,7 +411,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
         />
       )}
 
-      {deletingTreino && (
+      {deletingTreino && canManageColaboradores && (
         <ConfirmDialog
           title="Excluir treinamento?"
           description={<>Isso remove o registro de <strong>{deletingTreino.label}</strong> permanentemente.</>}
@@ -398,7 +421,7 @@ function ProfileModal({ colab: c, onClose }: ProfileModalProps) {
         />
       )}
 
-      {addingFichaEpi && (
+      {addingFichaEpi && canManageColaboradores && (
         <FichaEpiModal
           colab={{ id: c.id, nome: c.nome, cor, foto: initials }}
           empresaId={c.empresa_id}
@@ -479,7 +502,14 @@ const addColabSchema = z.object({
 })
 type AddColabForm = z.infer<typeof addColabSchema>
 
-function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
+export function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
+  const { canManageColaboradores, empresaId: actorEmpresaId } = useCurrentProfile()
+  if (!canManageColaboradores || empresaId !== actorEmpresaId) return null
+  return <AuthorizedAddColabModal onClose={onClose} empresaId={empresaId} />
+}
+
+function AuthorizedAddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
+  const { canManageColaboradores, empresaId: actorEmpresaId } = useCurrentProfile()
   const [tab, setTab] = useState<"individual" | "massa">("individual")
 
   const criar     = useCriarColaborador()
@@ -501,6 +531,7 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
   })
 
   async function onSubmit(values: AddColabForm) {
+    if (!canManageColaboradores || empresaId !== actorEmpresaId) return
     try {
       await criar.mutateAsync({
         empresa_id:    empresaId,
@@ -572,6 +603,7 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
   }
 
   async function handleImport() {
+    if (!canManageColaboradores || empresaId !== actorEmpresaId) return
     const valid = parsedRows.filter(r => r.errors.length === 0)
     if (!valid.length) return
     setImporting(true)
@@ -603,13 +635,11 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
       return created.id
     }
 
-    let ok = 0, fail = 0
-    for (const row of valid) {
-      try {
+    const { ok, fail } = await importarColaboradores(valid, async row => {
         const funcao_id   = await resolveFuncao(row.funcao_nome)
         const setor_id    = await resolveSetor(row.setor_nome)
         const ambiente_id = row.ambiente_nome ? await resolveAmbiente(row.ambiente_nome) : null
-        await criarColaborador({
+        return {
           empresa_id:    empresaId,
           nome:          row.nome,
           cpf:           row.cpf,
@@ -618,10 +648,8 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
           setor_id,
           ambiente_id,
           data_admissao: row.data_admissao,
-        })
-        ok++
-      } catch { fail++ }
-    }
+        }
+    })
     setImporting(false)
     await qc.invalidateQueries({ queryKey: qk.colaboradores.list(empresaId) })
     await qc.invalidateQueries({ queryKey: qk.setores.list(empresaId) })
@@ -642,6 +670,8 @@ function AddColabModal({ onClose, empresaId }: { onClose: () => void; empresaId:
   const validRows  = parsedRows.filter(r => r.errors.length === 0).length
   const errorRows  = parsedRows.length - validRows
   const hasParsed  = parsedRows.length > 0
+
+  if (!canManageColaboradores || empresaId !== actorEmpresaId) return null
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -870,13 +900,8 @@ function FieldErrorSmall({ msg }: { msg: string }) {
    ColaboradoresPage
    ============================================================ */
 
-function ColaboradoresEmpresa({ empresaIdProp, empresaNome, onBack }: {
-  empresaIdProp?: string | null
-  empresaNome?: string
-  onBack?: () => void
-}) {
-  const { empresaId: empresaIdPerfil } = useCurrentProfile()
-  const empresaId = empresaIdProp ?? empresaIdPerfil
+function ColaboradoresEmpresa() {
+  const { empresaId, canManageColaboradores } = useCurrentProfile()
 
   const colabsQuery = useColaboradores(empresaId)
   const colabs = colabsQuery.data ?? []
@@ -958,13 +983,8 @@ function ColaboradoresEmpresa({ empresaIdProp, empresaNome, onBack }: {
       {/* Header */}
       <div className="page-header">
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          {onBack && (
-            <button className="icon-btn sm" title="Voltar" onClick={onBack} style={{ marginRight:4 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-          )}
           <div>
-            <h1>Colaboradores{empresaNome ? ` · ${empresaNome}` : ''}</h1>
+            <h1>Colaboradores</h1>
             <p className="sub">{colabs.length} ativos</p>
           </div>
         </div>
@@ -981,9 +1001,9 @@ function ColaboradoresEmpresa({ empresaIdProp, empresaNome, onBack }: {
               { header: 'Admissão',  value: (c: ColaboradorComCatalogos) => c.data_admissao ?? '' },
             ], filtered)}
           ><Download size={14} /> Exportar CSV</button>
-          <button className="tbtn primary" onClick={() => setAdding(true)} disabled={!empresaId}>
+          {canManageColaboradores && <button className="tbtn primary" onClick={() => setAdding(true)} disabled={!empresaId}>
             <Plus size={14} /> Adicionar colaborador
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -1132,127 +1152,15 @@ function ColaboradoresEmpresa({ empresaIdProp, empresaNome, onBack }: {
       </div>
 
       {/* Modais */}
-      {adding && empresaId && <AddColabModal onClose={() => setAdding(false)} empresaId={empresaId} />}
+      {adding && canManageColaboradores && empresaId && <AddColabModal onClose={() => setAdding(false)} empresaId={empresaId} />}
       {openProfile && <ProfileModal colab={openProfile} onClose={() => setOpenProfile(null)} />}
 
     </div>
   )
 }
 
-/* ============================================================
-   ColaboradoresAdmin — escolha de empresa-cliente antes de ver
-   os colaboradores (admin acompanha várias empresas; sem isso,
-   a página ficava presa à empresa do perfil do próprio admin,
-   ou vazia).
-   ============================================================ */
-
-function ColaboradoresAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
-  const empresasQuery = useEmpresas()
-  const empresas = empresasQuery.data ?? []
-  const kpisQuery = useDashboardKpis('all')
-  const kpis = kpisQuery.data
-
-  return (
-    <div className="content">
-      <div className="page-header">
-        <div>
-          <h1>Colaboradores</h1>
-          <p className="sub">Selecione uma empresa-cliente para ver os colaboradores · {empresas.length} empresas</p>
-        </div>
-      </div>
-
-      <div className="kpi-row">
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic blue"><Briefcase size={15}/></span></div>
-          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Colaboradores ativos</span><span className="kpi-ic green"><CheckCircle size={15}/></span></div>
-          <div className="kpi-value">{kpis ? kpis.totalColaboradores.toLocaleString('pt-BR') : '—'}</div>
-        </div>
-      </div>
-
-      <div className="glass" style={{ padding:0, overflow:'hidden' }}>
-        <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
-          <div className="ctitle">Empresas-cliente</div>
-          <div className="csub">Clique numa empresa para ver seus colaboradores</div>
-        </div>
-        <div style={{ overflow:'auto' }}>
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>Empresa</th>
-                <th>Setor</th>
-                <th>Cidade / UF</th>
-                <th style={{ textAlign:'center' }}>Colaboradores</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {empresas.length === 0 && (
-                <tr><td colSpan={5} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
-              )}
-              {empresas.map((e, i) => (
-                <tr key={e.id} style={{ cursor:'pointer' }} onClick={() => onSelect({ id: e.id, nome: e.razao_social })}>
-                  <td>
-                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
-                        {e.razao_social.slice(0,1)}
-                      </span>
-                      <div>
-                        <div style={{ fontWeight:600, fontSize:13 }}>{e.razao_social}</div>
-                        <div style={{ fontSize:11, color:'var(--ink-500)' }}>{e.cnpj}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{e.setor ?? '—'}</td>
-                  <td style={{ fontSize:12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
-                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{e.colaboradores_count}</td>
-                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ColaboradoresAdmin() {
-  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
-
-  // Deep link vindo de outra página com empresa já conhecida (ex.: "Ver
-  // perfil do colaborador" em Treinamentos, via
-  // navigate('/colaboradores?open=<id>&empresa=<empresaId>')) — pula
-  // direto pra lista da empresa em vez de cair no seletor de empresas.
-  // Ajustado durante o render, mesmo padrão usado no resto do arquivo.
-  const [searchParams] = useSearchParams()
-  const empresaParam = searchParams.get('empresa')
-  const { data: empresaDoParam } = useEmpresa(!selectedEmpresa ? empresaParam : null)
-  const [empresaParamHandled, setEmpresaParamHandled] = useState(false)
-  if (empresaParam && !empresaParamHandled && !selectedEmpresa && empresaDoParam) {
-    setEmpresaParamHandled(true)
-    setSelectedEmpresa({ id: empresaDoParam.id, nome: empresaDoParam.razao_social })
-  }
-
-  if (selectedEmpresa) {
-    return (
-      <ColaboradoresEmpresa
-        empresaIdProp={selectedEmpresa.id}
-        empresaNome={selectedEmpresa.nome}
-        onBack={() => setSelectedEmpresa(null)}
-      />
-    )
-  }
-
-  return <ColaboradoresAdminList onSelect={setSelectedEmpresa} />
-}
-
-// ---------------------------------------------------------------------------
-// Export
-// ---------------------------------------------------------------------------
 export default function ColaboradoresPage() {
-  const { profile } = useAuth()
-  return profile?.role === 'admin' ? <ColaboradoresAdmin /> : <ColaboradoresEmpresa />
+  const { canReadColaboradores } = useCurrentProfile()
+  if (!canReadColaboradores) return <div className="content">Sem acesso ao módulo de colaboradores.</div>
+  return <ColaboradoresEmpresa />
 }

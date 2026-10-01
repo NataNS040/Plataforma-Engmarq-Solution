@@ -101,6 +101,7 @@ export function Header() {
   const companyName = profile?.role === "admin" ? APP_SHORT_NAME : "Empresa"
 
   function submitSearch() {
+    if (profile?.role === 'admin') return
     const term = searchTerm.trim()
     if (!term) return
     navigate(`/colaboradores?q=${encodeURIComponent(term)}`)
@@ -109,7 +110,7 @@ export function Header() {
   return (
     <header className="topbar">
       {/* Search — leva para Colaboradores com o termo pré-filtrado */}
-      <div className="topbar-search">
+      {profile?.role !== 'admin' && <div className="topbar-search">
         <Search size={14} />
         <input
           placeholder={searchPlaceholder}
@@ -118,7 +119,7 @@ export function Header() {
           onKeyDown={e => { if (e.key === "Enter") submitSearch() }}
         />
         <kbd>⌘K</kbd>
-      </div>
+      </div>}
 
       <div className="topbar-spacer" />
 

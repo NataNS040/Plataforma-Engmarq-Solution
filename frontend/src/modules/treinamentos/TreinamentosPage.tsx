@@ -811,7 +811,7 @@ function TreinamentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome:
       <div className="page-header">
         <div>
           <h1>Matriz de Treinamentos NR</h1>
-          <p className="sub">Selecione uma empresa-cliente para ver a matriz · {empresas.length} empresas</p>
+          <p className="sub">{empresas.length} empresas · A matriz individual é restrita à equipe da empresa</p>
         </div>
       </div>
 
@@ -829,7 +829,7 @@ function TreinamentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome:
       <div className="glass" style={{ padding:0, overflow:'hidden' }}>
         <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
           <div className="ctitle">Empresas-cliente</div>
-          <div className="csub">Clique numa empresa para ver a matriz de treinamentos</div>
+          <div className="csub">Indicadores de colaboradores indisponíveis para admin</div>
         </div>
         <div style={{ overflow:'auto' }}>
           <table className="tbl">
@@ -861,7 +861,7 @@ function TreinamentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome:
                   </td>
                   <td>{e.setor ?? '—'}</td>
                   <td style={{ fontSize:12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
-                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{e.colaboradores_count}</td>
+                  <td style={{ textAlign:'center', fontFamily:'var(--font-display)', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>Indisponível</td>
                   <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
                 </tr>
               ))}
@@ -878,11 +878,9 @@ function TreinamentosAdmin() {
 
   if (selectedEmpresa) {
     return (
-      <TreinamentosEmpresa
-        empresaIdProp={selectedEmpresa.id}
-        empresaNome={selectedEmpresa.nome}
-        onBack={() => setSelectedEmpresa(null)}
-      />
+      <div className="content"><button className="tbtn" onClick={() => setSelectedEmpresa(null)}>Voltar</button>
+        <p>Registros individuais de {selectedEmpresa.nome} são restritos à equipe da empresa.</p>
+      </div>
     )
   }
 

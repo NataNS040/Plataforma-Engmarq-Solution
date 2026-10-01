@@ -206,7 +206,7 @@ function EmpresaDetailPanel({ empresa: e, onClose }: { empresa: EmpresaComContag
         <div className="emp-stat-item">
           <Users size={13} style={{ color:'var(--navy-500)' }} />
           <div>
-            <div className="emp-stat-n">{e.colaboradores_count}</div>
+            <div className="emp-stat-n">Indisponível</div>
             <div className="emp-stat-l">Colaboradores</div>
           </div>
         </div>
@@ -308,7 +308,6 @@ export default function EmpresasPage() {
     return matchSearch && matchStatus && matchSetor
   }), [empresas, search, filterStatus, filterSetor])
 
-  const totalColabs = empresas.reduce((s, e) => s + e.colaboradores_count, 0)
   const totalAtivas = empresas.filter(e => e.status === 'ativa').length
 
   if (!isAdmin) {
@@ -355,7 +354,7 @@ export default function EmpresasPage() {
         </div>
         <div className="kpi-card">
           <div className="kpi-label">Total de colaboradores</div>
-          <div className="kpi-value">{totalColabs.toLocaleString('pt-BR')}</div>
+          <div className="kpi-value">Indisponível</div>
           <div className="kpi-meta"><Users size={12} /> monitorados</div>
         </div>
         <div className="kpi-card">
@@ -470,7 +469,7 @@ export default function EmpresasPage() {
                             </div>
                           : <span style={{ color:'var(--ink-400)' }}>—</span>}
                       </td>
-                      <td style={{ textAlign:'center', fontWeight:600 }}>{emp.colaboradores_count}</td>
+                      <td style={{ textAlign:'center', fontWeight:600 }}>Indisponível</td>
                       <td>
                         <span className={`chip ${emp.status === 'ativa' ? 'ok' : emp.status === 'pendente' ? 'warn' : 'crit'}`}>
                           {emp.status === 'ativa' && <CheckCircle2 size={10} />}

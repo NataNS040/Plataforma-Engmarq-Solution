@@ -59,7 +59,7 @@ function DashboardAdmin() {
       <div className="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p className="sub">Visão consolidada de conformidade SST · {kpis?.totalEmpresas ?? '—'} empresas · {kpis?.totalColaboradores?.toLocaleString('pt-BR') ?? '—'} colaboradores</p>
+          <p className="sub">Visão consolidada de conformidade SST · {kpis?.totalEmpresas ?? '—'} empresas · Indicadores de colaboradores indisponíveis para admin</p>
         </div>
         <div className="toolbar">
           <button className="tbtn"><Calendar size={14} /> {currentDateLabel()}</button>
@@ -72,7 +72,7 @@ function DashboardAdmin() {
               { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
               { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
               { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
-              { header: 'Colaboradores',  value: (e: EmpresaComContagem) => e.colaboradores_count },
+
               { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
             ], empresas)}
           ><Download size={14} /> Exportar</button>
@@ -98,7 +98,7 @@ function DashboardAdmin() {
             <span>Colaboradores monitorados</span>
             <span className="kpi-ic violet"><Users size={15} /></span>
           </div>
-          <div className="kpi-value">{kpis ? kpis.totalColaboradores.toLocaleString('pt-BR') : '—'}</div>
+          <div className="kpi-value">{kpis ? kpis.totalColaboradores?.toLocaleString('pt-BR') ?? 'Indisponível' : '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
             <span className="kpi-foot">ativos</span>
           </div>
@@ -339,7 +339,7 @@ function DashboardEmpresa() {
       <div className="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p className="sub">{kpis ? `${kpis.totalColaboradores.toLocaleString('pt-BR')} colaboradores ativos` : ''}</p>
+          <p className="sub">{kpis ? `${kpis.totalColaboradores?.toLocaleString('pt-BR') ?? 'Indisponível'} colaboradores ativos` : ''}</p>
         </div>
         <div className="toolbar">
           <span style={{
@@ -374,7 +374,7 @@ function DashboardEmpresa() {
             <span>Colaboradores ativos</span>
             <span className="kpi-ic blue"><Users size={15} /></span>
           </div>
-          <div className="kpi-value">{kpis ? kpis.totalColaboradores.toLocaleString('pt-BR') : '—'}</div>
+          <div className="kpi-value">{kpis ? kpis.totalColaboradores?.toLocaleString('pt-BR') ?? 'Indisponível' : '—'}</div>
           <div style={{ display: "flex", alignItems: "center" }}>
             <span className="kpi-foot">ativos</span>
           </div>

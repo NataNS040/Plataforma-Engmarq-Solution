@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { qk } from '@/lib/queryKeys'
+import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import {
   listarDocumentoTipos,
   listarDocumentos,
@@ -20,9 +21,10 @@ export function useDocumentoTipos() {
 }
 
 export function useDocumentos(empresaId: string | null | undefined) {
+  const { isAdmin } = useCurrentProfile()
   return useQuery({
-    queryKey: qk.documentos.list(empresaId ?? ''),
-    queryFn: () => listarDocumentos(empresaId!),
+    queryKey: [...qk.documentos.list(empresaId ?? ''), isAdmin],
+    queryFn: () => listarDocumentos(empresaId!, isAdmin),
     enabled: !!empresaId,
   })
 }

@@ -28,7 +28,7 @@ export default function App() {
             }
           >
             <Route index element={<DashboardPage />} />
-            <Route path="colaboradores" element={<ColaboradoresPage />} />
+            <Route path="colaboradores" element={<ProtectedRoute allowedRoles={['empresa', 'gestor', 'operacional']}><ColaboradoresPage /></ProtectedRoute>} />
             <Route path="documentos" element={<DocumentosPage />} />
             <Route path="treinamentos" element={<TreinamentosPage />} />
             <Route path="exames" element={<ExamesPage />} />

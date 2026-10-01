@@ -95,8 +95,8 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
   const empresaNome = empresas.find(e => e.id === empresaId)?.razao_social ?? ''
 
   const kpisQuery = useDashboardKpis(empresaId || undefined)
-  const treinosQuery = useTreinamentos(empresaId || undefined)
-  const examesQuery = useExames(empresaId || undefined)
+  const treinosQuery = useTreinamentos(isAdmin ? undefined : empresaId || undefined)
+  const examesQuery = useExames(isAdmin ? undefined : empresaId || undefined)
   const documentosQuery = useDocumentos(empresaId || undefined)
   // Dado ainda carregando pra empresa escolhida — gerar agora exportaria
   // planilhas vazias em vez de esperar a resposta real do banco.
@@ -108,6 +108,7 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
     e.preventDefault()
     if (formato === 'pdf') { comingSoon('Relatório em PDF'); return }
     if (cat === 'acidentes') { comingSoon('Relatório de acidentes'); return }
+    if (isAdmin && (cat === 'treinamentos' || cat === 'exames')) { toast.error('Registros individuais restritos à equipe da empresa.'); return }
     if (!empresaId) { toast.error('Selecione uma empresa para gerar o relatório.'); return }
     if (dadosCarregando) { toast.info('Ainda carregando os dados da empresa — aguarde um instante.'); return }
 
@@ -132,7 +133,7 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumo), 'Resumo')
       }
 
-      if (cat === 'geral' || cat === 'treinamentos') {
+      if (!isAdmin && (cat === 'geral' || cat === 'treinamentos')) {
         const rows = (treinosQuery.data ?? [])
           .filter(t => t.data_realizacao >= cutoff)
           .map(t => ({
@@ -147,7 +148,7 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetRowsOrPlaceholder(rows, 'Treinamentos')), 'Treinamentos')
       }
 
-      if (cat === 'geral' || cat === 'exames') {
+      if (!isAdmin && (cat === 'geral' || cat === 'exames')) {
         const rows = (examesQuery.data ?? [])
           .filter(a => !a.emissao || a.emissao >= cutoff)
           .map(a => ({
@@ -214,7 +215,7 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
               <label className="mp-label">Categoria</label>
               <div className="mp-select-wrap" style={{ width:'100%' }}>
                 <select className="mp-input" value={cat} onChange={e => setCat(e.target.value as RelCategoria)}>
-                  {(Object.entries(CAT_LABELS) as [RelCategoria, string][]).map(([k, v]) => (
+                  {(Object.entries(CAT_LABELS) as [RelCategoria, string][]).filter(([k]) => !isAdmin || (k !== 'treinamentos' && k !== 'exames')).map(([k, v]) => (
                     <option key={k} value={k}>{v}{k === 'acidentes' ? ' (em breve)' : ''}</option>
                   ))}
                 </select>
@@ -263,7 +264,7 @@ function RelatoriosAdmin() {
 
   const metricas: MetricaItem[] = kpis ? [
     { label: 'Empresas monitoradas',   valor: kpis.totalEmpresas,          cor: 'var(--blue-500)'   },
-    { label: 'Colaboradores ativos',   valor: kpis.totalColaboradores,     cor: 'var(--navy-500)'   },
+    { label: 'Colaboradores ativos',   valor: kpis.totalColaboradores ?? 'Indisponível',     cor: 'var(--navy-500)'   },
     { label: 'Conformidade geral',     valor: `${kpis.compliancePct}%`,    cor: 'var(--green-500)'  },
     { label: 'Documentos vencidos',    valor: kpis.docsVencidos,           cor: 'var(--red-500)'    },
     { label: 'Treinamentos vencidos',  valor: kpis.treinamentosVencidos,   cor: 'var(--red-500)'    },
@@ -307,7 +308,7 @@ function RelatoriosEmpresa() {
   const kpis = kpisQuery.data
 
   const metricas: MetricaItem[] = kpis ? [
-    { label: 'Colaboradores',          valor: kpis.totalColaboradores,     cor: 'var(--blue-500)'   },
+    { label: 'Colaboradores',          valor: kpis.totalColaboradores ?? 'Indisponível',     cor: 'var(--blue-500)'   },
     { label: 'Conformidade geral',     valor: `${kpis.compliancePct}%`,    cor: 'var(--green-500)'  },
     { label: 'Docs vencendo',          valor: kpis.docsVencendo,           cor: 'var(--orange-500)' },
     { label: 'Docs vencidos',          valor: kpis.docsVencidos,           cor: 'var(--red-500)'    },

@@ -287,7 +287,7 @@ function DocumentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: s
               { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
               { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
               { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
-              { header: 'Colaboradores',  value: (e: EmpresaComContagem) => e.colaboradores_count },
+
               { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
             ], empresas)}
           ><Download size={14} /> Exportar consolidado</button>
@@ -665,10 +665,10 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
   empresaNome?: string
   onBack?: () => void
 }) {
-  const { empresaId: empresaIdPerfil } = useCurrentProfile()
+  const { empresaId: empresaIdPerfil, isAdmin, canManageColaboradores } = useCurrentProfile()
   const empresaId = empresaIdProp ?? empresaIdPerfil
   const docQuery = useDocumentos(empresaId)
-  const fichasEpiQuery = useFichasEpi(empresaId)
+  const fichasEpiQuery = useFichasEpi(isAdmin ? null : empresaId)
   const deletar  = useDeletarDocumento()
 
   const [cat, setCat] = useState('all')
@@ -787,7 +787,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
     const ok = allRows.filter(r => r.st.key === 'ok').length
     const warn = allRows.filter(r => r.st.key === 'warn').length
     const crit = allRows.filter(r => r.st.key === 'crit').length
-    return { total, ok, warn, crit, pct: Math.round((ok / total) * 100) }
+    return { total, ok, warn, crit, pct: total > 0 ? Math.round((ok / total) * 100) : 100 }
   }, [allRows])
 
   const rows = useMemo(() => {
@@ -833,8 +833,8 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
               { header: 'Status',       value: (r: DocRow) => r.st.label },
             ], rows)}
           ><Download size={14} /> Exportar lista</button>
-          <button className="tbtn" onClick={() => setDateOpen(true)}><Calendar size={14} /> Registrar certificado</button>
-          <button className="tbtn" onClick={() => setFichaEpiOpen(true)}><HardHat size={14} /> Nova ficha de EPI</button>
+          {canManageColaboradores && <button className="tbtn" onClick={() => setDateOpen(true)}><Calendar size={14} /> Registrar certificado</button>}
+          {canManageColaboradores && <button className="tbtn" onClick={() => setFichaEpiOpen(true)}><HardHat size={14} /> Nova ficha de EPI</button>}
           <button className="tbtn primary" onClick={() => setNovoOpen(true)}><Plus size={14} /> Novo documento</button>
         </div>
       </div>
@@ -892,7 +892,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                 <span>{g.group}</span>
                 <span className="doc-cat-note">{g.note}</span>
               </div>
-              {g.items.map(it => (
+              {g.items.filter(it => !isAdmin || EMPRESA_CATS.includes(it.id)).map(it => (
                 <button key={it.id} className={`doc-cat ${cat === it.id ? 'active' : ''}`} onClick={() => setCat(it.id)}>
                   <span className="doc-cat-left"><it.icon size={16} /> {it.label}</span>
                   <span className="doc-cat-count">{counts[it.id] || 0}</span>
@@ -1013,8 +1013,8 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
 
       {novoOpen && empresaId && <NovoDocumentoModal onClose={() => setNovoOpen(false)} empresaId={empresaId} />}
       {viewDoc && empresaId && <EditarDocumentoModal doc={viewDoc} empresaId={empresaId} onClose={() => setViewDoc(null)} />}
-      {dateOpen && empresaId && <DateEntryModal onClose={() => setDateOpen(false)} empresaId={empresaId} />}
-      {fichaEpiOpen && empresaId && <FichaEpiModal empresaId={empresaId} onClose={() => setFichaEpiOpen(false)} />}
+      {dateOpen && canManageColaboradores && empresaId && <DateEntryModal onClose={() => setDateOpen(false)} empresaId={empresaId} />}
+      {fichaEpiOpen && canManageColaboradores && empresaId && <FichaEpiModal empresaId={empresaId} onClose={() => setFichaEpiOpen(false)} />}
       {fichaEpiDetalhe && empresaId && (
         <FichaEpiDetailModal ficha={fichaEpiDetalhe} empresaId={empresaId} onClose={() => setFichaEpiDetalhe(null)} />
       )}

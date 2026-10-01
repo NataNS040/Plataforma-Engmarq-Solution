@@ -604,11 +604,9 @@ function ExamesAdmin() {
 
   if (selectedEmpresa) {
     return (
-      <ExamesEmpresa
-        empresaIdProp={selectedEmpresa.id}
-        empresaNome={selectedEmpresa.nome}
-        onBack={() => setSelectedEmpresa(null)}
-      />
+      <div className="content"><button className="tbtn" onClick={() => setSelectedEmpresa(null)}>Voltar</button>
+        <p>Registros individuais de {selectedEmpresa.nome} são restritos à equipe da empresa.</p>
+      </div>
     )
   }
 
@@ -637,7 +635,7 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
               { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
               { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
               { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
-              { header: 'Colaboradores',  value: (e: EmpresaComContagem) => e.colaboradores_count },
+
               { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
             ], empresas)}
           ><Download size={14}/> Exportar consolidado</button>
@@ -651,7 +649,7 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
         </div>
         <div className="glass kpi">
           <div className="kpi-label"><span>Colaboradores ativos</span><span className="kpi-ic green"><CheckCircle2 size={16}/></span></div>
-          <div className="kpi-value">{kpis ? kpis.totalColaboradores.toLocaleString('pt-BR') : '—'}</div>
+          <div className="kpi-value">{kpis ? kpis.totalColaboradores?.toLocaleString('pt-BR') ?? 'Indisponível' : '—'}</div>
         </div>
         <div className="glass kpi">
           <div className="kpi-label"><span>ASOs vencendo</span><span className="kpi-ic orange"><Clock size={16}/></span></div>
@@ -668,7 +666,7 @@ function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: strin
       <div className="glass" style={{ padding:0, overflow:'hidden' }}>
         <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
           <div className="ctitle">Empresas — saúde ocupacional</div>
-          <div className="csub">ASOs e PCMSO por empresa-cliente</div>
+          <div className="csub">ASOs individuais restritos à equipe da empresa</div>
         </div>
         <div style={{ overflow:'auto' }}>
           <table className="tbl">

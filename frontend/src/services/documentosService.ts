@@ -36,12 +36,14 @@ export interface DocumentoInput {
 
 const DOCUMENTO_SELECT = `*, tipo:documento_tipos(*), colaborador:colaboradores(id, nome)`
 
-export async function listarDocumentos(empresaId: string): Promise<DocumentoComTipo[]> {
-  const { data, error } = await supabase
+export async function listarDocumentos(empresaId: string, companyOnly = false): Promise<DocumentoComTipo[]> {
+  let query = supabase
     .from('documentos')
-    .select(DOCUMENTO_SELECT)
+    .select(companyOnly ? '*, tipo:documento_tipos(*)' : DOCUMENTO_SELECT)
     .eq('empresa_id', empresaId)
     .order('vencimento', { ascending: true, nullsFirst: false })
+  if (companyOnly) query = query.is('colaborador_id', null)
+  const { data, error } = await query
 
   if (error) throw handleSupabaseError(error, 'Não foi possível carregar os documentos.')
   return (data ?? []) as unknown as DocumentoComTipo[]

@@ -5,7 +5,7 @@ import { handleSupabaseError } from '@/lib/errors'
 // Types
 // ---------------------------------------------------------------------------
 export interface DashboardKpis {
-  totalColaboradores: number
+  totalColaboradores: number | null // null: indicador indisponível para admin
   totalEmpresas: number       // só para admin
   totalDocumentos: number
   totalTreinamentos: number
@@ -29,13 +29,13 @@ export interface AlertaCritico {
 // ---------------------------------------------------------------------------
 // Aggregations
 // ---------------------------------------------------------------------------
-export async function buscarKpis(empresaId: string | 'all'): Promise<DashboardKpis> {
+export async function buscarKpis(empresaId: string | 'all', includeColaboradores = empresaId !== 'all'): Promise<DashboardKpis> {
   const isAll = empresaId === 'all'
 
   const [colabs, docs, treins, empresas] = await Promise.all([
-    isAll
-      ? supabase.from('colaboradores').select('id', { count: 'exact', head: true }).eq('active', true)
-      : supabase.from('colaboradores').select('id', { count: 'exact', head: true }).eq('empresa_id', empresaId).eq('active', true),
+    !isAll && includeColaboradores
+      ? supabase.from('colaboradores').select('id', { count: 'exact', head: true }).eq('empresa_id', empresaId).eq('active', true)
+      : Promise.resolve({ count: null, error: null }),
 
     isAll
       ? supabase.from('documentos').select('id, status')
@@ -71,7 +71,7 @@ export async function buscarKpis(empresaId: string | 'all'): Promise<DashboardKp
   const compliancePct = totalItems > 0 ? Math.round((totalOk / totalItems) * 100) : 100
 
   return {
-    totalColaboradores: colabs.count ?? 0,
+    totalColaboradores: !isAll && includeColaboradores ? colabs.count ?? 0 : null,
     totalEmpresas:      empresas.count ?? 0,
     totalDocumentos:    docsData.length,
     totalTreinamentos:  treinsData.length,
