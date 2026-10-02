@@ -1,0 +1,1023 @@
+{
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "ambientes",
+      "policyname": "ambientes_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ambientes",
+      "policyname": "ambientes_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ambientes",
+      "policyname": "ambientes_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "colaboradores",
+      "policyname": "colaboradores_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "engmarq_private.can_access_colaboradores(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "colaboradores",
+      "policyname": "colaboradores_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_colaboradores(empresa_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "colaboradores",
+      "policyname": "colaboradores_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "engmarq_private.can_access_colaboradores(empresa_id, true)",
+      "with_check": "engmarq_private.can_access_colaboradores(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "documentos",
+      "policyname": "documentos_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "engmarq_private.can_access_documento_row(empresa_id, true)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "documentos",
+      "policyname": "documentos_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "engmarq_private.can_access_documento_row(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "documentos",
+      "policyname": "documentos_row_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "engmarq_private.can_access_documento_row(empresa_id)",
+      "with_check": "engmarq_private.can_access_documento_row(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "documentos",
+      "policyname": "documentos_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_documento_row(empresa_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "documentos",
+      "policyname": "documentos_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "engmarq_private.can_access_documento_row(empresa_id, true)",
+      "with_check": "engmarq_private.can_access_documento_row(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "empresas",
+      "policyname": "empresas_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "engmarq_private.can_access_empresa(id, true, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "empresas",
+      "policyname": "empresas_row_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "engmarq_private.can_access_empresa(id)",
+      "with_check": "engmarq_private.can_access_empresa(id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "empresas",
+      "policyname": "empresas_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_empresa(id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "empresas",
+      "policyname": "empresas_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "engmarq_private.can_access_empresa(id, true)",
+      "with_check": "engmarq_private.can_access_empresa(id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "funcoes",
+      "policyname": "funcoes_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "funcoes",
+      "policyname": "funcoes_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "funcoes",
+      "policyname": "funcoes_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "matriz_treinamentos",
+      "policyname": "matriz_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "matriz_treinamentos",
+      "policyname": "matriz_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "matriz_treinamentos",
+      "policyname": "matriz_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "matriz_treinamentos",
+      "policyname": "matriz_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "setores",
+      "policyname": "setores_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "setores",
+      "policyname": "setores_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "setores",
+      "policyname": "setores_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "treinamento_tipos",
+      "policyname": "treinamento_tipos_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_catalogos(get_user_empresa_id())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "treinamentos",
+      "policyname": "treinamentos_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "treinamentos",
+      "policyname": "treinamentos_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "treinamentos",
+      "policyname": "treinamentos_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "with_check": "engmarq_private.can_access_catalogos(empresa_id, true)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "user_profiles",
+      "policyname": "profiles_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((id = auth.uid()) OR engmarq_private.can_manage_profile(empresa_id))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "user_profiles",
+      "policyname": "profiles_update_managers",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((id <> auth.uid()) AND engmarq_private.can_manage_profile(empresa_id, role))",
+      "with_check": "((id <> auth.uid()) AND engmarq_private.can_manage_profile(empresa_id, role))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "certificados_delete_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "certificados_insert_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text) OR engmarq_private.can_access_certificado(name, true))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "certificados_select_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text) OR engmarq_private.can_access_certificado(name))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "certificados_update_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "with_check": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "documentos_storage_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "documentos_storage_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name, true))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "documentos_storage_select",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "documentos_storage_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "with_check": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "documentos_tenant_delete_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{public}",
+      "cmd": "DELETE",
+      "qual": "((bucket_id <> 'documentos'::text) OR (engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text)))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "documentos_tenant_insert_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{public}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id <> 'documentos'::text) OR engmarq_private.can_access_documento(name, true))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "documentos_tenant_select_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "((bucket_id <> 'documentos'::text) OR engmarq_private.can_access_documento(name))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "documentos_tenant_update_guard",
+      "permissive": "RESTRICTIVE",
+      "roles": "{public}",
+      "cmd": "UPDATE",
+      "qual": "((bucket_id <> 'documentos'::text) OR (engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text)))",
+      "with_check": "((bucket_id <> 'documentos'::text) OR (engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text)))"
+    }
+  ],
+  "functions": [
+    {
+      "signature": "engmarq_private.can_access_catalogos(uuid,boolean)",
+      "result_type": "boolean",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "bbcffb334e82a68dd20f4152ecbbd8c0",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.can_access_catalogos(target_empresa uuid, for_write boolean DEFAULT false)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  SELECT EXISTS (\n    SELECT 1 FROM public.user_profiles p JOIN public.empresas e ON e.id = p.empresa_id\n    WHERE p.id = auth.uid() AND p.active AND e.status = 'ativa'\n      AND p.empresa_id = target_empresa\n      AND (p.role IN ('empresa', 'gestor') OR (NOT for_write AND p.role = 'operacional'))\n  );\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.can_access_certificado(text,boolean)",
+      "result_type": "boolean",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "2ee21fd9560700308d84eac4422e444f",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.can_access_certificado(object_name text, for_write boolean DEFAULT false)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  SELECT EXISTS (SELECT 1 FROM public.user_profiles p JOIN public.empresas e ON e.id=p.empresa_id\n    WHERE p.id=auth.uid() AND p.active AND e.status='ativa'\n      AND split_part(object_name,'/',1)=p.empresa_id::text\n      AND object_name ~ ('^' || p.empresa_id::text || '/certificados/[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$')\n      AND (p.role IN ('empresa','gestor') OR (NOT for_write AND p.role='operacional')));\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.can_access_colaboradores(uuid,boolean)",
+      "result_type": "boolean",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "bbcffb334e82a68dd20f4152ecbbd8c0",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.can_access_colaboradores(target_empresa uuid, for_write boolean DEFAULT false)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  SELECT EXISTS (\n    SELECT 1 FROM public.user_profiles p JOIN public.empresas e ON e.id = p.empresa_id\n    WHERE p.id = auth.uid() AND p.active AND e.status = 'ativa'\n      AND p.empresa_id = target_empresa\n      AND (p.role IN ('empresa', 'gestor') OR (NOT for_write AND p.role = 'operacional'))\n  );\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.can_access_documento(text,boolean)",
+      "result_type": "boolean",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "6d5ca74fe93623469f3318b51685be1a",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.can_access_documento(object_name text, for_write boolean DEFAULT false)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n\r\n  SELECT\r\n\r\n    current_setting('role', true) = 'authenticated'\r\n\r\n    AND EXISTS (\r\n\r\n      SELECT 1\r\n\r\n      FROM public.user_profiles p\r\n\r\n      JOIN public.empresas e\r\n        ON e.id = p.empresa_id\r\n\r\n      WHERE p.id = auth.uid()\r\n\r\n        AND p.active\r\n\r\n        AND e.status = 'ativa'\r\n\r\n        AND object_name ~ (\r\n          '^'\r\n          || p.empresa_id::text\r\n          || '/(certificados/)?[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$'\r\n        )\r\n\r\n        AND (\r\n          p.role IN ('empresa', 'gestor')\r\n\r\n          OR (\r\n            NOT for_write\r\n            AND p.role = 'operacional'\r\n          )\r\n        )\r\n    );\r\n\r\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.can_access_documento_row(uuid,boolean)",
+      "result_type": "boolean",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "da9931f372128801950764253468435f",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.can_access_documento_row(target_empresa uuid, for_write boolean DEFAULT false)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n  SELECT current_setting('role',true)='authenticated'\r\n    AND engmarq_private.can_access_catalogos(target_empresa,for_write)\r\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.can_access_empresa(uuid,boolean,boolean)",
+      "result_type": "boolean",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "630923493a95aaf8f6c33a6cf8d2cfd9",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.can_access_empresa(target_empresa uuid, for_write boolean DEFAULT false, for_insert boolean DEFAULT false)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n  SELECT current_setting('role',true)='authenticated' AND EXISTS (\r\n    SELECT 1 FROM public.user_profiles p WHERE p.id=auth.uid() AND p.active AND (\r\n      p.role='admin' OR (NOT for_insert AND p.empresa_id=target_empresa\r\n        AND (p.role IN ('empresa','gestor') OR (NOT for_write AND p.role='operacional'))\r\n        AND (NOT for_write OR EXISTS (SELECT 1 FROM public.empresas e WHERE e.id=target_empresa AND e.status='ativa')))\r\n    )\r\n  )\r\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.can_manage_profile(uuid,user_role)",
+      "result_type": "boolean",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "4536fbb1e37b2407a080dafd59284ac0",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.can_manage_profile(target_empresa uuid, target_role user_role DEFAULT NULL::user_role)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n  SELECT EXISTS (\r\n    SELECT 1 FROM public.user_profiles p\r\n    JOIN public.empresas e ON e.id = p.empresa_id\r\n    WHERE p.id = auth.uid() AND p.active AND e.status = 'ativa'\r\n      AND p.role IN ('gestor', 'empresa')\r\n      AND p.empresa_id = target_empresa\r\n      AND (target_role IS NULL OR target_role <> 'admin')\r\n  );\r\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.documento_legacy_path(text,uuid,text)",
+      "result_type": "text",
+      "prosecdef": false,
+      "provolatile": "i",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "9a407fe29995c76622243d6689288b3e",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.documento_legacy_path(reference text, company uuid, origin text)\n RETURNS text\n LANGUAGE plpgsql\n IMMUTABLE\n SET search_path TO ''\nAS $function$\nDECLARE prefix text; object_path text;\nBEGIN\n  IF origin IS NULL OR origin !~ '^https://[A-Za-z0-9.-]+(:[0-9]+)?$' THEN\n    RAISE EXCEPTION 'Explicit trusted Storage origin required';\n  END IF;\n  prefix := origin || '/storage/v1/object/public/documentos/';\n  IF reference IS NULL OR left(reference,length(prefix)) <> prefix THEN\n    RAISE EXCEPTION 'Unrecognized legacy document reference';\n  END IF;\n  object_path := substr(reference,length(prefix)+1);\n  IF company IS NULL OR object_path !~ ('^' || company::text || '/(certificados/)?[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$') THEN\n    RAISE EXCEPTION 'Invalid legacy document tenant/path';\n  END IF;\n  RETURN object_path;\nEND;\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.guard_catalogo_write()",
+      "result_type": "trigger",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "8a436da33724bd544fb94ddb7a4f860f",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.guard_catalogo_write()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n  actor record;\n  editable text[] := ARRAY['nome','descricao','active'];\nBEGIN\n  IF current_setting('role', true) IS DISTINCT FROM 'authenticated' THEN\n    RETURN NEW;\n  END IF;\n  SELECT p.empresa_id, p.role, p.active, e.status AS company_status INTO actor\n    FROM public.user_profiles p JOIN public.empresas e ON e.id = p.empresa_id\n    WHERE p.id = auth.uid() FOR SHARE OF p, e;\n  IF NOT FOUND OR NOT actor.active OR actor.company_status <> 'ativa'\n     OR actor.role NOT IN ('empresa','gestor') OR NEW.empresa_id IS DISTINCT FROM actor.empresa_id THEN\n    RAISE EXCEPTION 'Catalog write denied' USING ERRCODE = '42501';\n  END IF;\n  IF TG_TABLE_NAME = 'funcoes' THEN editable := editable || ARRAY['riscos']; END IF;\n  IF TG_OP = 'UPDATE' THEN\n    IF OLD.empresa_id IS DISTINCT FROM actor.empresa_id\n       OR (to_jsonb(NEW) - editable) IS DISTINCT FROM (to_jsonb(OLD) - editable) THEN\n      RAISE EXCEPTION 'Immutable catalog fields' USING ERRCODE = '42501';\n    END IF;\n  ELSIF NEW.active IS DISTINCT FROM true THEN\n    RAISE EXCEPTION 'New catalog must be active' USING ERRCODE = '23514';\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.guard_colaborador_write()",
+      "result_type": "trigger",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "a862c10375d409c1e99baffdacfbb365",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.guard_colaborador_write()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n  actor record;\nBEGIN\n  -- Infrastructure remains technical; no functional route uses these roles.\n  IF current_setting('role', true) IS DISTINCT FROM 'authenticated' THEN\n    RETURN NEW;\n  END IF;\n  SELECT p.empresa_id, p.role, p.active, e.status AS company_status INTO actor\n    FROM public.user_profiles p JOIN public.empresas e ON e.id = p.empresa_id\n    WHERE p.id = auth.uid() FOR SHARE OF p, e;\n  IF NOT FOUND OR NOT actor.active OR actor.company_status <> 'ativa'\n     OR actor.role NOT IN ('empresa', 'gestor') OR NEW.empresa_id <> actor.empresa_id THEN\n    RAISE EXCEPTION 'Colaborador write denied' USING ERRCODE = '42501';\n  END IF;\n  IF TG_OP = 'INSERT' THEN\n    IF NEW.active IS DISTINCT FROM true OR NEW.data_demissao IS NOT NULL THEN\n      RAISE EXCEPTION 'New colaborador must be active' USING ERRCODE = '23514';\n    END IF;\n  ELSE\n    IF OLD.empresa_id <> actor.empresa_id\n       OR (to_jsonb(NEW) - ARRAY['nome','matricula','funcao_id','setor_id','ambiente_id','active','data_demissao'])\n          IS DISTINCT FROM\n          (to_jsonb(OLD) - ARRAY['nome','matricula','funcao_id','setor_id','ambiente_id','active','data_demissao']) THEN\n      RAISE EXCEPTION 'Immutable colaborador fields' USING ERRCODE = '42501';\n    END IF;\n    IF (NOT OLD.active AND NEW.active)\n       OR ((NEW.active, NEW.data_demissao) IS DISTINCT FROM (OLD.active, OLD.data_demissao)\n           AND (NEW.active OR NEW.data_demissao IS NULL)) THEN\n      RAISE EXCEPTION 'Deactivation requires active=false and dismissal date; reactivation is not supported'\n        USING ERRCODE = '23514';\n    END IF;\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.guard_documento_metadata()",
+      "result_type": "trigger",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "3ae962f81d252f13e91f22314a58c4a6",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.guard_documento_metadata()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE actor record;\r\nBEGIN\r\n  IF current_setting('role',true) IS DISTINCT FROM 'authenticated' THEN\r\n    IF TG_OP='DELETE' THEN RETURN OLD; END IF;\r\n    RETURN NEW;\r\n  END IF;\r\n  SELECT p.empresa_id,p.role,p.active,e.status INTO actor\r\n    FROM public.user_profiles p JOIN public.empresas e ON e.id=p.empresa_id\r\n    WHERE p.id=auth.uid() FOR SHARE OF p,e;\r\n  IF NOT FOUND OR NOT actor.active OR actor.status<>'ativa' OR actor.role NOT IN ('empresa','gestor') THEN\r\n    RAISE EXCEPTION 'Document metadata write denied' USING ERRCODE='42501';\r\n  END IF;\r\n  IF TG_OP='DELETE' THEN\r\n    IF OLD.empresa_id<>actor.empresa_id THEN RAISE EXCEPTION 'Foreign document' USING ERRCODE='42501'; END IF;\r\n    RETURN OLD;\r\n  END IF;\r\n  IF NEW.empresa_id<>actor.empresa_id OR (TG_OP='UPDATE' AND (\r\n    OLD.empresa_id<>actor.empresa_id OR NEW.id IS DISTINCT FROM OLD.id\r\n    OR NEW.created_at IS DISTINCT FROM OLD.created_at OR NEW.empresa_id IS DISTINCT FROM OLD.empresa_id)) THEN\r\n    RAISE EXCEPTION 'Immutable document identity or foreign tenant' USING ERRCODE='42501';\r\n  END IF;\r\n  RETURN NEW;\r\nEND $function$\n"
+    },
+    {
+      "signature": "engmarq_private.guard_documento_reference()",
+      "result_type": "trigger",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "f5d02cdb06330847d16d51eea1ffb154",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.guard_documento_reference()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n\r\nBEGIN\r\n\r\n  IF current_setting('role', true) = 'authenticated' THEN\r\n\r\n\r\n    -- URLs legadas tornam-se somente leitura.\r\n\r\n    IF (\r\n      TG_OP = 'INSERT'\r\n      AND NEW.arquivo_url IS NOT NULL\r\n    )\r\n\r\n    OR (\r\n      TG_OP = 'UPDATE'\r\n      AND NEW.arquivo_url IS DISTINCT FROM OLD.arquivo_url\r\n    )\r\n\r\n    THEN\r\n\r\n      RAISE EXCEPTION\r\n        'Legacy document URLs are read-only'\r\n        USING ERRCODE = '42501';\r\n\r\n    END IF;\r\n\r\n\r\n    -- Tenant do documento é imutável.\r\n\r\n    IF TG_OP = 'UPDATE'\r\n       AND NEW.empresa_id IS DISTINCT FROM OLD.empresa_id\r\n\r\n    THEN\r\n\r\n      RAISE EXCEPTION\r\n        'Document tenant is immutable'\r\n        USING ERRCODE = '42501';\r\n\r\n    END IF;\r\n\r\n\r\n    -- Validar alterações em arquivo_path.\r\n\r\n    IF (\r\n      TG_OP = 'INSERT'\r\n      AND NEW.arquivo_path IS NOT NULL\r\n    )\r\n\r\n    OR (\r\n      TG_OP = 'UPDATE'\r\n      AND NEW.arquivo_path IS DISTINCT FROM OLD.arquivo_path\r\n    )\r\n\r\n    THEN\r\n\r\n\r\n      -- Referência anterior precisa ser autorizada.\r\n\r\n      IF TG_OP = 'UPDATE'\r\n         AND OLD.arquivo_path IS NOT NULL\r\n         AND NOT engmarq_private.can_access_documento(\r\n           OLD.arquivo_path,\r\n           true\r\n         )\r\n\r\n      THEN\r\n\r\n        RAISE EXCEPTION\r\n          'Document reference write denied'\r\n          USING ERRCODE = '42501';\r\n\r\n      END IF;\r\n\r\n\r\n      -- Nova referência precisa pertencer ao tenant\r\n      -- e apontar para objeto existente.\r\n\r\n      IF NEW.arquivo_path IS NOT NULL\r\n\r\n         AND (\r\n\r\n           NOT engmarq_private.can_access_documento(\r\n             NEW.arquivo_path,\r\n             true\r\n           )\r\n\r\n           OR NOT EXISTS (\r\n             SELECT 1\r\n\r\n             FROM storage.objects\r\n\r\n             WHERE bucket_id = 'documentos'\r\n\r\n               AND name = NEW.arquivo_path\r\n           )\r\n         )\r\n\r\n      THEN\r\n\r\n        RAISE EXCEPTION\r\n          'Invalid document object reference'\r\n          USING ERRCODE = '42501';\r\n\r\n      END IF;\r\n\r\n    END IF;\r\n\r\n  END IF;\r\n\r\n\r\n  RETURN NEW;\r\n\r\nEND;\r\n\r\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.guard_empresa_write()",
+      "result_type": "trigger",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "0e1be7bac099e66b9694115f35188a9d",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.guard_empresa_write()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE actor record;\r\n  editable text[] := ARRAY['razao_social','cnpj','setor','cidade','uf','responsavel','email','telefone','logo_url'];\r\nBEGIN\r\n  IF current_setting('role',true) IS DISTINCT FROM 'authenticated' THEN RETURN NEW; END IF;\r\n  SELECT p.role,p.active,p.empresa_id INTO actor FROM public.user_profiles p WHERE p.id=auth.uid() FOR SHARE;\r\n  IF NOT FOUND OR NOT actor.active THEN RAISE EXCEPTION 'Company write denied' USING ERRCODE='42501'; END IF;\r\n  IF TG_OP='UPDATE' THEN\r\n    IF NEW.id IS DISTINCT FROM OLD.id OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN\r\n      RAISE EXCEPTION 'Immutable company fields' USING ERRCODE='42501';\r\n    END IF;\r\n    IF actor.role<>'admin' AND (actor.role NOT IN ('empresa','gestor') OR OLD.id<>actor.empresa_id\r\n      OR OLD.status<>'ativa' OR (to_jsonb(NEW)-editable) IS DISTINCT FROM (to_jsonb(OLD)-editable)) THEN\r\n      RAISE EXCEPTION 'Administrative company fields denied' USING ERRCODE='42501';\r\n    END IF;\r\n  ELSIF actor.role<>'admin' THEN\r\n    RAISE EXCEPTION 'Only platform admin may create companies' USING ERRCODE='42501';\r\n  END IF;\r\n  RETURN NEW;\r\nEND $function$\n"
+    },
+    {
+      "signature": "engmarq_private.guard_profile_update()",
+      "result_type": "trigger",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "5332dfa20dc5ad8f8b8a33f31102478c",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.guard_profile_update()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE\r\n  actor record;\r\nBEGIN\r\n  -- Trusted service_role provisioning and migration-owner maintenance remain\r\n  -- explicit privileged operations. Browser requests use authenticated.\r\n  IF current_setting('role', true) IS DISTINCT FROM 'authenticated' THEN\r\n    RETURN NEW;\r\n  END IF;\r\n\r\n  SELECT p.id, p.role, p.empresa_id, p.active, e.status AS company_status\r\n    INTO actor\r\n    FROM public.user_profiles p JOIN public.empresas e ON e.id = p.empresa_id\r\n    WHERE p.id = auth.uid()\r\n    FOR SHARE OF p, e;\r\n\r\n  IF NOT FOUND OR NOT actor.active OR actor.company_status <> 'ativa'\r\n     OR actor.role NOT IN ('gestor', 'empresa')\r\n     OR OLD.id = actor.id\r\n     OR (to_jsonb(NEW) - ARRAY['role', 'active']) IS DISTINCT FROM\r\n        (to_jsonb(OLD) - ARRAY['role', 'active']) THEN\r\n    RAISE EXCEPTION 'Profile update denied' USING ERRCODE = '42501';\r\n  END IF;\r\n\r\n  IF (\r\n    OLD.empresa_id <> actor.empresa_id OR NEW.empresa_id <> actor.empresa_id\r\n    OR OLD.role = 'admin' OR NEW.role = 'admin'\r\n  ) THEN\r\n    RAISE EXCEPTION 'Profile update denied' USING ERRCODE = '42501';\r\n  END IF;\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "engmarq_private.guard_treinamento_write()",
+      "result_type": "trigger",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "a06a89d86e16860c5ba89ebc7883c1e2",
+      "definition": "CREATE OR REPLACE FUNCTION engmarq_private.guard_treinamento_write()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n  actor record;\n  editable text[];\nBEGIN\n  IF current_setting('role', true) IS DISTINCT FROM 'authenticated' THEN\n    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;\n    RETURN NEW;\n  END IF;\n  SELECT p.empresa_id,p.role,p.active,e.status INTO actor\n    FROM public.user_profiles p JOIN public.empresas e ON e.id=p.empresa_id\n    WHERE p.id=auth.uid() FOR SHARE OF p,e;\n  IF NOT FOUND OR NOT actor.active OR actor.status <> 'ativa' OR actor.role NOT IN ('empresa','gestor') THEN\n    RAISE EXCEPTION 'Training write denied' USING ERRCODE='42501';\n  END IF;\n  IF TG_OP='DELETE' THEN\n    IF TG_TABLE_NAME <> 'matriz_treinamentos' OR OLD.empresa_id IS DISTINCT FROM actor.empresa_id THEN\n      RAISE EXCEPTION 'History deletion denied' USING ERRCODE='42501';\n    END IF;\n    RETURN OLD;\n  END IF;\n  IF NEW.empresa_id IS DISTINCT FROM actor.empresa_id THEN\n    RAISE EXCEPTION 'Tenant mismatch' USING ERRCODE='42501';\n  END IF;\n  editable := CASE WHEN TG_TABLE_NAME='treinamentos' THEN\n    ARRAY['colaborador_id','treinamento_tipo_id','data_realizacao','data_vencimento','carga_horaria','instrutor','modalidade','certificado_url','status']\n    ELSE ARRAY['obrigatorio'] END;\n  IF TG_OP='UPDATE' AND (to_jsonb(NEW)-editable) IS DISTINCT FROM (to_jsonb(OLD)-editable) THEN\n    RAISE EXCEPTION 'Immutable training fields' USING ERRCODE='42501';\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "signature": "get_user_empresa_id()",
+      "result_type": "uuid",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "66d821dfc1345440414082c2ac9c24d6",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_user_empresa_id()\n RETURNS uuid\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n  SELECT p.empresa_id FROM public.user_profiles p WHERE p.id=auth.uid()\r\n$function$\n"
+    },
+    {
+      "signature": "get_user_role()",
+      "result_type": "user_role",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": "{\"search_path=\\\"\\\"\"}",
+      "source_hash": "aa0803c9b3d199342fc942828d77a793",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_user_role()\n RETURNS user_role\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n  SELECT p.role FROM public.user_profiles p WHERE p.id=auth.uid()\r\n$function$\n"
+    }
+  ],
+  "triggers": [
+    {
+      "relation": "ambientes",
+      "tgname": "guard_catalogo_write",
+      "tgtype": 23,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_catalogo_write()"
+    },
+    {
+      "relation": "colaboradores",
+      "tgname": "guard_colaborador_write",
+      "tgtype": 23,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_colaborador_write()"
+    },
+    {
+      "relation": "documentos",
+      "tgname": "guard_documento_metadata",
+      "tgtype": 31,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_documento_metadata()"
+    },
+    {
+      "relation": "documentos",
+      "tgname": "guard_documento_reference",
+      "tgtype": 23,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_documento_reference()"
+    },
+    {
+      "relation": "documentos",
+      "tgname": "trg_documento_status",
+      "tgtype": 23,
+      "tgenabled": "O",
+      "function_name": "update_documento_status()"
+    },
+    {
+      "relation": "empresas",
+      "tgname": "guard_empresa_write",
+      "tgtype": 23,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_empresa_write()"
+    },
+    {
+      "relation": "funcoes",
+      "tgname": "guard_catalogo_write",
+      "tgtype": 23,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_catalogo_write()"
+    },
+    {
+      "relation": "matriz_treinamentos",
+      "tgname": "guard_treinamento_write",
+      "tgtype": 31,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_treinamento_write()"
+    },
+    {
+      "relation": "setores",
+      "tgname": "guard_catalogo_write",
+      "tgtype": 23,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_catalogo_write()"
+    },
+    {
+      "relation": "treinamentos",
+      "tgname": "guard_treinamento_write",
+      "tgtype": 31,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_treinamento_write()"
+    },
+    {
+      "relation": "treinamentos",
+      "tgname": "trg_treinamento_status",
+      "tgtype": 23,
+      "tgenabled": "O",
+      "function_name": "update_treinamento_status()"
+    },
+    {
+      "relation": "user_profiles",
+      "tgname": "guard_profile_update",
+      "tgtype": 19,
+      "tgenabled": "O",
+      "function_name": "engmarq_private.guard_profile_update()"
+    }
+  ],
+  "constraints": [
+    {
+      "relation": "ambientes",
+      "conname": "ambientes_empresa_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "ambientes",
+      "conname": "ambientes_empresa_id_id_key",
+      "definition": "UNIQUE (empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "ambientes",
+      "conname": "ambientes_empresa_id_nome_key",
+      "definition": "UNIQUE (empresa_id, nome)",
+      "convalidated": true
+    },
+    {
+      "relation": "colaboradores",
+      "conname": "colaboradores_ambiente_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id, ambiente_id) REFERENCES ambientes(empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "colaboradores",
+      "conname": "colaboradores_empresa_id_cpf_key",
+      "definition": "UNIQUE (empresa_id, cpf)",
+      "convalidated": true
+    },
+    {
+      "relation": "colaboradores",
+      "conname": "colaboradores_empresa_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "colaboradores",
+      "conname": "colaboradores_empresa_id_id_key",
+      "definition": "UNIQUE (empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "colaboradores",
+      "conname": "colaboradores_funcao_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id, funcao_id) REFERENCES funcoes(empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "colaboradores",
+      "conname": "colaboradores_setor_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id, setor_id) REFERENCES setores(empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "documentos",
+      "conname": "documentos_arquivo_path_check",
+      "definition": "CHECK (((arquivo_path IS NULL) OR (arquivo_path ~ (('^'::text || (empresa_id)::text) || '/(certificados/)?[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$'::text))))",
+      "convalidated": true
+    },
+    {
+      "relation": "documentos",
+      "conname": "documentos_colaborador_tenant_fkey",
+      "definition": "FOREIGN KEY (empresa_id, colaborador_id) REFERENCES colaboradores(empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "documentos",
+      "conname": "documentos_empresa_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "documentos",
+      "conname": "documentos_subtipo_exame_check",
+      "definition": "CHECK (((subtipo_exame = ANY (ARRAY['admissional'::text, 'periodico'::text, 'mudanca_risco'::text, 'retorno_trabalho'::text, 'demissional'::text])) OR (subtipo_exame IS NULL)))",
+      "convalidated": true
+    },
+    {
+      "relation": "documentos",
+      "conname": "documentos_tipo_id_fkey",
+      "definition": "FOREIGN KEY (tipo_id) REFERENCES documento_tipos(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "empresas",
+      "conname": "empresas_cnpj_key",
+      "definition": "UNIQUE (cnpj)",
+      "convalidated": true
+    },
+    {
+      "relation": "empresas",
+      "conname": "empresas_status_check",
+      "definition": "CHECK ((status = ANY (ARRAY['ativa'::text, 'pendente'::text, 'suspensa'::text])))",
+      "convalidated": true
+    },
+    {
+      "relation": "funcoes",
+      "conname": "funcoes_empresa_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "funcoes",
+      "conname": "funcoes_empresa_id_id_key",
+      "definition": "UNIQUE (empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "funcoes",
+      "conname": "funcoes_empresa_id_nome_key",
+      "definition": "UNIQUE (empresa_id, nome)",
+      "convalidated": true
+    },
+    {
+      "relation": "matriz_treinamentos",
+      "conname": "matriz_treinamentos_empresa_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "matriz_treinamentos",
+      "conname": "matriz_treinamentos_empresa_id_funcao_id_treinamento_tipo_i_key",
+      "definition": "UNIQUE (empresa_id, funcao_id, treinamento_tipo_id)",
+      "convalidated": true
+    },
+    {
+      "relation": "matriz_treinamentos",
+      "conname": "matriz_treinamentos_funcao_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id, funcao_id) REFERENCES funcoes(empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "matriz_treinamentos",
+      "conname": "matriz_treinamentos_treinamento_tipo_id_fkey",
+      "definition": "FOREIGN KEY (treinamento_tipo_id) REFERENCES treinamento_tipos(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "setores",
+      "conname": "setores_empresa_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "setores",
+      "conname": "setores_empresa_id_id_key",
+      "definition": "UNIQUE (empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "setores",
+      "conname": "setores_empresa_id_nome_key",
+      "definition": "UNIQUE (empresa_id, nome)",
+      "convalidated": true
+    },
+    {
+      "relation": "treinamento_tipos",
+      "conname": "treinamento_tipos_nome_key",
+      "definition": "UNIQUE (nome)",
+      "convalidated": true
+    },
+    {
+      "relation": "treinamentos",
+      "conname": "treinamentos_certificado_path_check",
+      "definition": "CHECK (((certificado_url IS NULL) OR (certificado_url ~ (('^'::text || (empresa_id)::text) || '/certificados/[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$'::text))))",
+      "convalidated": true
+    },
+    {
+      "relation": "treinamentos",
+      "conname": "treinamentos_colaborador_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id, colaborador_id) REFERENCES colaboradores(empresa_id, id)",
+      "convalidated": true
+    },
+    {
+      "relation": "treinamentos",
+      "conname": "treinamentos_empresa_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "treinamentos",
+      "conname": "treinamentos_modalidade_check",
+      "definition": "CHECK ((modalidade = ANY (ARRAY['presencial'::text, 'online'::text, 'semipresencial'::text])))",
+      "convalidated": true
+    },
+    {
+      "relation": "treinamentos",
+      "conname": "treinamentos_treinamento_tipo_id_fkey",
+      "definition": "FOREIGN KEY (treinamento_tipo_id) REFERENCES treinamento_tipos(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "user_profiles",
+      "conname": "user_profiles_empresa_id_fkey",
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)",
+      "convalidated": true
+    },
+    {
+      "relation": "user_profiles",
+      "conname": "user_profiles_id_fkey",
+      "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE",
+      "convalidated": true
+    }
+  ],
+  "grants": [
+    {
+      "relation": "ambientes",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "ambientes",
+      "role": "authenticated",
+      "table_privileges": "SELECT",
+      "insert_columns": "active,descricao,empresa_id,nome",
+      "update_columns": "active,descricao,nome"
+    },
+    {
+      "relation": "colaboradores",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "colaboradores",
+      "role": "authenticated",
+      "table_privileges": "SELECT",
+      "insert_columns": "active,ambiente_id,cpf,data_admissao,empresa_id,funcao_id,matricula,nome,setor_id",
+      "update_columns": "active,ambiente_id,data_demissao,funcao_id,matricula,nome,setor_id"
+    },
+    {
+      "relation": "documentos",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "documentos",
+      "role": "authenticated",
+      "table_privileges": "DELETE,SELECT",
+      "insert_columns": "arquivo_path,colaborador_id,emissao,empresa_id,numero,observacoes,subtipo_exame,tipo_id,titulo,vencimento",
+      "update_columns": "arquivo_path,colaborador_id,emissao,numero,observacoes,subtipo_exame,tipo_id,titulo,vencimento"
+    },
+    {
+      "relation": "empresas",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "empresas",
+      "role": "authenticated",
+      "table_privileges": "SELECT",
+      "insert_columns": "cidade,cnpj,email,logo_url,razao_social,responsavel,setor,status,telefone,uf",
+      "update_columns": "cidade,cnpj,email,logo_url,razao_social,responsavel,setor,status,telefone,uf"
+    },
+    {
+      "relation": "funcoes",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "funcoes",
+      "role": "authenticated",
+      "table_privileges": "SELECT",
+      "insert_columns": "active,descricao,empresa_id,nome,riscos",
+      "update_columns": "active,descricao,nome,riscos"
+    },
+    {
+      "relation": "matriz_treinamentos",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "matriz_treinamentos",
+      "role": "authenticated",
+      "table_privileges": "DELETE,SELECT",
+      "insert_columns": "empresa_id,funcao_id,obrigatorio,treinamento_tipo_id",
+      "update_columns": "obrigatorio"
+    },
+    {
+      "relation": "setores",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "setores",
+      "role": "authenticated",
+      "table_privileges": "SELECT",
+      "insert_columns": "active,descricao,empresa_id,nome",
+      "update_columns": "active,descricao,nome"
+    },
+    {
+      "relation": "treinamento_tipos",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "treinamento_tipos",
+      "role": "authenticated",
+      "table_privileges": "SELECT",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "treinamentos",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "treinamentos",
+      "role": "authenticated",
+      "table_privileges": "SELECT",
+      "insert_columns": "carga_horaria,certificado_url,colaborador_id,data_realizacao,data_vencimento,empresa_id,instrutor,modalidade,treinamento_tipo_id",
+      "update_columns": "carga_horaria,certificado_url,colaborador_id,data_realizacao,data_vencimento,instrutor,modalidade,treinamento_tipo_id"
+    },
+    {
+      "relation": "user_profiles",
+      "role": "anon",
+      "table_privileges": "",
+      "insert_columns": "",
+      "update_columns": ""
+    },
+    {
+      "relation": "user_profiles",
+      "role": "authenticated",
+      "table_privileges": "SELECT",
+      "insert_columns": "",
+      "update_columns": "active,role"
+    }
+  ]
+}

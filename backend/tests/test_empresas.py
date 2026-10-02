@@ -24,6 +24,31 @@ ROW = {
 }
 
 
+@pytest.mark.parametrize("role", ["gestor", "empresa"])
+def test_private_logo_reference_persisted_for_own_tenant(client, upstream, role):
+    upstream["role"] = role
+    reference = f"logos/{OWN}/logo.png"
+    response = client.patch(f"/api/v1/empresas/{OWN}", headers=HEADERS, json={"logo_url": reference})
+    assert response.status_code == 200
+    assert response.json()["logo_url"] == reference
+
+
+@pytest.mark.parametrize("reference", [f"logos/{OTHER}/logo.png", "https://example/logo.png", f"logos/{OWN}/logo.svg"])
+def test_logo_reference_invalid_or_foreign(client, upstream, reference):
+    upstream["role"] = "gestor"
+    response = client.patch(f"/api/v1/empresas/{OWN}", headers=HEADERS, json={"logo_url": reference})
+    assert response.status_code == 422
+    assert not upstream["operations"]
+
+
+@pytest.mark.parametrize("role", ["admin", "operacional"])
+def test_logo_reference_not_managed_by_commercial_admin_or_operational(client, upstream, role):
+    upstream["role"] = role
+    response = client.patch(f"/api/v1/empresas/{OWN}", headers=HEADERS, json={"logo_url": f"logos/{OWN}/logo.png"})
+    assert response.status_code == 403
+    assert not upstream["operations"]
+
+
 @pytest.fixture
 def upstream(app):
     state = {"role": "admin", "active": True, "company_status": "ativa",
@@ -203,3 +228,21 @@ def test_missing_authentication_and_invalid_uuid_never_query_companies(client, u
     assert client.get("/api/v1/empresas").status_code == 401
     assert client.get("/api/v1/empresas/not-a-uuid", headers=HEADERS).status_code == 422
     assert upstream["operations"] == []
+
+
+@pytest.mark.parametrize('role', ['empresa', 'gestor'])
+@pytest.mark.parametrize('status', ['ativa', 'suspensa', 'pendente'])
+def test_b05_tenant_cannot_change_administrative_status_even_with_registration_patch(client, upstream, role, status):
+    upstream['role'] = role
+    response = client.patch(f'/api/v1/empresas/{OWN}', json={'status': status, 'cidade': 'new'}, headers=HEADERS)
+    assert response.status_code == 403
+    assert upstream['operations'] == []
+
+
+@pytest.mark.parametrize('role', ['empresa', 'gestor'])
+def test_b05_suspended_tenant_reactivation_denied_before_repository(client, upstream, role):
+    upstream['role'] = role
+    upstream['company_status'] = 'suspensa'
+    response = client.patch(f'/api/v1/empresas/{OWN}', json={'status': 'ativa'}, headers=HEADERS)
+    assert response.status_code == 403
+    assert upstream['operations'] == []

@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 
 from app.core.errors import AppError
@@ -38,6 +39,8 @@ class EmpresasService:
 
     def create(self, data: EmpresaCreate) -> EmpresaResponse:
         self._require_admin()
+        if data.logo_url is not None:
+            raise AppError(403, "access_denied", "Logos são gerenciados pela própria empresa.")
         return self._response(self.repository.create(data.model_dump(mode="json")))
 
     def update(self, empresa_id: UUID, data: EmpresaUpdate) -> EmpresaResponse:
@@ -46,6 +49,13 @@ class EmpresasService:
             raise AppError(403, "access_denied", "Você não tem permissão para editar empresas.")
         if "status" in data.model_fields_set:
             self._require_admin()
+        if "logo_url" in data.model_fields_set:
+            if self.actor.role not in {"gestor", "empresa"} or empresa_id != self.actor.empresa_id:
+                raise AppError(403, "access_denied", "Logos são gerenciados pela própria empresa.")
+            if data.logo_url is not None and not re.fullmatch(
+                rf"logos/{empresa_id}/logo\.(png|jpg|webp)", data.logo_url,
+            ):
+                raise AppError(422, "invalid_logo_reference", "Referência de logo inválida para esta empresa.")
         # Suspension is an update, never a DELETE: preserve related records.
         return self._response(self.repository.update(
             empresa_id, data.model_dump(mode="json", exclude_unset=True),

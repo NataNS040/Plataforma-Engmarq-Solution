@@ -7,6 +7,7 @@ from app.api.routes.usuarios import router as usuarios_router
 from app.api.routes.colaboradores import router as colaboradores_router
 from app.api.routes.catalogos import router as catalogos_router
 from app.api.routes.treinamentos import router as treinamentos_router
+from app.api.routes.dashboard import router as dashboard_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(health_router)
@@ -16,3 +17,4 @@ api_router.include_router(usuarios_router)
 api_router.include_router(colaboradores_router)
 api_router.include_router(catalogos_router)
 api_router.include_router(treinamentos_router)
+api_router.include_router(dashboard_router)

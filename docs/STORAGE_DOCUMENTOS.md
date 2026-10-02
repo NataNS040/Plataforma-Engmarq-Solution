@@ -1,7 +1,145 @@
 # Storage privado de Documentos, ASO e certificados
 
-Preparado localmente em 01/10/2026. Nenhuma alteração remota, commit ou push.
-O bucket remoto permanece público até uma implantação explicitamente autorizada.
+> Histórico do cutover 019/020: os estados abaixo descrevem etapas de 01/10/2026.
+> Para o fechamento deste ciclo, veja [a revisão final](audits/2026-10-02/REVISAO_FINAL_CICLO.md),
+> o [escopo final da 021](audits/2026-10-02/ESCOPO_FINAL_021_SEGUNDO_PREFLIGHT.md)
+> e o [relatório de logos 022](audits/2026-10-02/RELATORIO_LOGOS_022.md).
+
+
+## Atualização: falha da 020 no Supabase hospedado (01/10/2026)
+
+A tentativa da 020 falhou com SQLSTATE 42501 em
+`ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY`. O estado pós-falha
+não foi consultado remotamente. RLS de Storage é administrado pelo Supabase;
+`storage.objects` pertence a `supabase_storage_admin`. Não mudar ownership,
+não conceder superuser e não desabilitar RLS para corrigir isso.
+
+**Executar primeiro**, em uma execução nova do SQL Editor e com o mesmo papel
+SQL da futura tentativa: `supabase/tests/020_failed_attempt_preflight_readonly.sql`.
+Esse arquivo substitui o preflight antigo como primeiro passo desta recuperação.
+Contém BEGIN TRANSACTION READ ONLY, o preflight consolidado pós-019 e diagnósticos
+específicos de rollback/privilégios. Nenhum comando remoto foi executado pelo agente.
+O baseline informado é 12 documentos, 4 URLs legadas, 0 paths, 4 backfills
+pendentes e 4 objetos. RLS deve estar ligado e o trigger de status habilitado;
+funções/trigger/guards da 020 devem estar ausentes no rollback esperado. Bucket,
+policies, grants e inventário devem corresponder ao baseline anterior. Contagens
+iguais não provam a identidade de cada registro/objeto nem o conteúdo dos blobs.
+Histórico indisponível continua sendo atenção; conferir logs do executor.
+Qualquer BLOQUEIO exige investigação antes da nova tentativa. Vestígios da 020
+não devem ser interpretados como rollback confirmado só porque a versão nova é
+reexecutável. Não reaplicar 019 ou alterar migrations anteriores.
+
+A 020 corrigida mantém BEGIN/COMMIT, locks, backfill somente em NULL,
+configuração privada/10 MB/7 MIME, isolamento de empresa e papéis, guards de
+certificados e validação de referência. Substitui apenas o ALTER de RLS por
+uma assertiva de catálogo que aborta se RLS não estiver habilitado. Duas funções
+usam CREATE OR REPLACE; as quatro guards ganham DROP POLICY IF EXISTS; o trigger
+de referência ganha DROP TRIGGER IF EXISTS. As quatro policies permissivas já
+tinham DROP IF EXISTS. Não há escrita, exclusão ou movimentação de objetos.
+Funções preexistentes com assinatura/owner incompatível continuam falhando com
+segurança; não são removidas com CASCADE.
+
+| Comando da 020 | Auditoria de compatibilidade |
+|---|---|
+| ALTER TABLE storage.objects ENABLE RLS | Incompatível para o papel hospedado informado; removido. A verificação relrowsecurity o substitui. |
+| DROP POLICY / CREATE POLICY storage.objects | Suportados pela plataforma hospedada via autorização específica de policies; PostgreSQL puro exige owner. O preflight mostra supautils.policy_grants e verifica o papel atual, sem testar DDL remoto. Sem evidência de autorização, bloqueia. Não inferir permissão pelo erro do ALTER. |
+| UPDATE storage.buckets | DML de configuração, não DDL de ownership; exige UPDATE, SELECT e acesso pela RLS. Preservado para manter corte/configuração atômicos. O preflight verifica privilégios e bypass/leitura integral; as APIs de Storage continuam sendo o caminho para manipular arquivos. |
+| LOCK storage.objects / storage.buckets SHARE ROW EXCLUSIVE | Não exige ownership; exige UPDATE/DELETE/TRUNCATE (ou MAINTAIN em versões que o suportam). Já precedeu o erro relatado. Mantido para impedir mudanças concorrentes; o preflight usa os privilégios comuns, sem adquirir locks. |
+| LOCK / UPDATE public.documentos | Permissões da tabela da aplicação; o preflight verifica leitura, UPDATE/lock e owner. Backfill altera só arquivo_path; nenhum registro é removido. |
+| ALTER public.documentos DISABLE/ENABLE TRIGGER trg_documento_status | Exige owner da tabela da aplicação; não altera Storage nem RLS. Pausa apenas cálculo de status e restaura O na mesma transação. Já precedeu o erro relatado. |
+| CREATE OR REPLACE FUNCTION no schema privado | Exige CREATE/USAGE no schema e owner de função existente. Não cria função no schema gerenciado storage. SECURITY DEFINER, search_path vazio e ACLs são preservados. |
+| REVOKE / GRANT funções privadas | Exige owner/grant option dessas funções da aplicação. Preservados; nenhum GRANT/REVOKE de tabela gerenciada. |
+| DROP / CREATE TRIGGER public.documentos | DROP exige owner; CREATE exige TRIGGER e EXECUTE da função. Papel owner usado pela migration atende; não se cria trigger em storage.objects. |
+| DO, SELECT, helper da 019, BEGIN/COMMIT | Suportados com leitura integral, EXECUTE no helper e privilégios da aplicação. Preflight mantém checks de estrutura/helper da 019. |
+
+O rollback integral é **esperado**, porque backfill, estado do trigger e criação
+de função estavam entre BEGIN e o COMMIT que não foi alcançado. Em conexão
+persistente a transação fica abortada até ROLLBACK/fechamento; não há commit
+parcial automático. O SET do origin anterior ao BEGIN é configuração da sessão
+e não é parte desse rollback de dados. Se o executor dividiu/reescreveu o script
+ou houve execução separada, essa conclusão exige confirmação pelos logs/preflight.
+
+Após conferir todos os resultados, a versão local revisada está em
+`supabase/migrations/020_documentos_private_storage.sql`. Em uma futura execução
+manual autorizada, incluir antes do arquivo inteiro o SET do origin já validado,
+na mesma execução. Ainda não foi aplicada remotamente. Não executar push.
+
+Fontes oficiais: [permissões de schemas gerenciados](https://supabase.com/docs/guides/platform/permissions),
+[restrições e exceção para policies](https://supabase.com/changelog/34270-restricting-access-on-auth-storage-and-realtime-schemas-on-april-21-2025),
+[supautils: Manage Policies](https://github.com/supabase/supautils#manage-policies),
+[Storage RLS](https://supabase.com/docs/guides/storage/security/access-control),
+[privilégios de LOCK](https://www.postgresql.org/docs/17/sql-lock.html).
+
+Validação desta correééo: suíte SQL `npm test`: **288/288 passaram**; frontend
+`npm test -- --run tests/documentos-storage.test.ts`: **38/38 passaram**;
+`git diff --check`: passou.
+
+Os testes locais usam PGlite/fixtures, sem Supautils e sem serviço Storage/CDN.
+Eles validam reexecução completa, rollback de erro 42501 injetado no ponto antigo,
+12 registros/4 objetos/4 backfills, preflight read-only, falha fechada sem RLS e
+privilégios de lock/configuração com papel não-owner. O teste PostgreSQL puro
+confirma separadamente que policies exigem ownership sem a extensão hospedada;
+ele não é prova de autorização do papel remoto.
+
+Estado atualizado em 01/10/2026 com os resultados reais fornecidos pelo operador.
+A implementação está no commit e3bf17e6154bc4a013db54f680b2802ea6bc95da.
+Nesta atualização não houve execução remota, alteração de dados, commit ou push.
+O bucket ainda está público; a 020 não foi aplicada.
+
+## Estado real informado pelo operador
+
+| Etapa | Estado |
+|---|---|
+| Preflight inicial consolidado | CONCLUÍDO: 0 BLOQUEIOS e 6 ATENÇÕES |
+| Migration 019 | APLICADA; arquivo_path existente e helper funcionando |
+| Preflight pós-019 / pré-020 executado | APROVADO |
+| Migration 020 | PENDENTE |
+| Validação pós-020 | PENDENTE |
+| Migration 018 | PENDENTE; aguardar a conclusão segura da 020 |
+
+O preflight inicial encontrou ausência de vestígios detectáveis da 018, duas FKs
+originais, RLS nas três tabelas de Treinamentos, cinco policies baseline, nenhum
+relacionamento cross-tenant inválido e nenhum certificado com path inválido.
+O histórico de migrations não estava acessível; isso continua sendo uma atenção,
+sem transformar ausência de vestígios em prova absoluta de rollback.
+
+Resultados reais pós-019 recebidos: 12 documentos, 4 referências legadas,
+0 canônicas, 4 pendentes de backfill; 4 objetos, 0 MIME incompatível e 0 tamanho
+incompatível. As quatro URLs foram aceitas pelo helper e encontraram seus objetos.
+São observações de homologação, **não constantes ou pré-condições numéricas** da 020.
+
+O erro 42701 ao repetir a 019 confirma que a coluna já existe; não reaplicar 019.
+A existência da coluna, sozinha, não confirma todos os DDLs: o preflight atualizado
+verifica também constraint e helper. A aprovação remota informada refere-se ao
+preflight anterior; a versão consolidada atual ainda precisa ser revisada/executada
+pelo operador para confirmar seus checks adicionais de catálogos e 020.
+
+## Preflight consolidado pós-019
+
+Arquivo existente atualizado: `supabase/tests/019_documentos_cutover_preflight_readonly.sql`.
+Não foi criado outro preflight. Ele retorna uma única tabela CHECK / RESULTADO /
+STATUS, com OK, ATENÇÃO ou BLOQUEIO. O arquivo contém o SET válido antes do SELECT:
+
+```sql
+SET engmarq.storage_origin = 'https://kkjckayiqvlqpdjyoxyv.supabase.co';
+```
+
+Executar o arquivo inteiro na mesma execução/sessão do SQL Editor. É uma
+configuração de sessão; não modifica banco, bucket, policies ou registros. Não usar
+sintaxe de .env ou uma URL solta. O origin é do projeto, não uma credencial nem uma
+URL real de documento; deve continuar igual ao projeto utilizado pelo frontend.
+
+Os checks incluem estruturas da 019, ausência de vestígios 018/020, tenant dos
+paths, referências canônicas/legadas, objetos existentes, MIME/tamanho e inventário.
+Diferença entre URL antiga e path de substituição aparece como ATENÇÃO, pois esse
+desenho preserva ambos os arquivos. Objetos sem referência atual também são
+ATENÇÃO e serão preservados: nenhuma limpeza automática é autorizada.
+Histórico indisponível é ATENÇÃO. Definições de policies/grants ainda requerem
+revisão; contagens ou nomes corretos não comprovam equivalência das expressões.
+
+Para avançar: nenhum BLOQUEIO, revisar as ATENÇÕES, publicar o frontend compatível
+em manutenção e retirar clientes antigos antes da 020. Código preparado não
+comprova que essa versão já foi publicada no ambiente remoto.
 
 ## Modelo e consumidores
 
@@ -31,6 +169,8 @@ Treinamentos mantém `empresa_id/certificados/uuid.ext` em `certificado_url` e u
 o mesmo helper de autorização/assinatura. Seu download rejeita outro namespace.
 EPI usa `assinaturas` e Empresas usa `logos`; esses buckets não são alterados.
 
+EPI/assinaturas fora do escopo da 021; será tratado na migração própria do módulo EPI. A 021 não exige presença das tabelas EPI, bucket ou policies de assinaturas. As métricas de Documentos usam suas próprias dependências; a ausência do módulo futuro não as torna indisponíveis. A dívida inclui a API EPI, isolamento por tenant, assinatura privada e revisão do uso legado de `getPublicUrl`.
+
 ## Policies e configuração propostas
 
 - Empresa/gestor ativos, empresa ativa: leitura e upload no próprio tenant;
@@ -59,14 +199,14 @@ Proteções de relacionamentos de Documentos/ASO além de Storage ficam fora des
 
 ## Migrations e implantação exata
 
-A 018 foi mantida **intacta**: a ausência de aplicação parcial remota ainda não foi
-confirmada. Não execute `db push`/runner automático com todas as migrations pendentes
+A 018 foi mantida **intacta**: o operador informou ausência de vestígios detectáveis,
+mas o histórico não foi acessível. Não execute `db push`/runner automático com todas as migrations pendentes
 nesse ambiente: a ordem numérica tentaria 018 antes da correção do bucket.
 Aplicar arquivos selecionados, em sessões/transações próprias, com registro correto
 de sucesso no histórico usado pelo runner. Não marcar como aplicada uma migration
 que falhou ou que não foi executada.
 
-1. Obter acesso SQL de leitura ao projeto correto e executar
+1. **CONCLUÍDO no ambiente informado.** Para auditoria/revalidação, obter acesso SQL de leitura ao projeto correto e executar
    `supabase/tests/018_storage_preflight_readonly.sql` em sessão nova.
    O script aborta se encontrar footprints da 018 ou registro de aplicação no
    histórico padrão; exibe policies, grants e contagens sem objetos/dados pessoais.
@@ -79,10 +219,11 @@ que falhou ou que não foi executada.
    a relatórios públicos. Confirmar o projeto e o origin HTTPS exato utilizados
    no frontend. Conferir contagens atuais: a auditoria anterior tinha 4 objetos e
    4 URLs, mas não assumir que permanecem iguais na data de implantação.
-3. Aplicar **019_documentos_path_compat.sql** isoladamente. Ela apenas adiciona
+3. **019 JÁ APLICADA: não repetir.** Ela apenas adiciona
    coluna nullable, constraint e parser privado; não converte dados, não muda o
    bucket/policies e mantém o frontend antigo compatível.
-4. Definir `engmarq.storage_origin` no acesso SQL de manutenção, usando o origin
+4. **PREFLIGHT ANTERIOR APROVADO.** O consolidado atualizado inclui o SET do origin
+   já validado pelo operador. Definir `engmarq.storage_origin` no acesso SQL de manutenção, usando o origin
    confiável do projeto, sem barra final. Executar o preflight somente leitura
    `supabase/tests/019_documentos_cutover_preflight_readonly.sql`. Revisar MIME,
    tamanho e referências: contagens incompatíveis precisam ser zero. A 020 valida
@@ -101,9 +242,8 @@ que falhou ou que não foi executada.
    Referência externa, signed URL, tenant inválido, objeto ausente, metadata ausente/incompatível ou
    arquivo acima do limite abortam tudo. Se houver erro, fechar/ROLLBACK a sessão
    abortada; não liberar a aplicação nem reabrir o bucket público como correção.
-   No SQL Editor, incluir `SET engmarq.storage_origin = 'https://PROJECT_REF.supabase.co';`
-   antes do conteúdo completo da 020, na mesma execução, substituindo o exemplo
-   pelo origin confiável. Uma execução anterior do Editor pode usar outra conexão.
+   No SQL Editor, incluir o SET exato mostrado acima antes do conteúdo completo
+   da 020, na mesma execução. Uma execução anterior do Editor pode usar outra conexão.
 7. Confirmar public=false, configuração, contagens, paths e policies em leitura.
    Homologar com JWTs reais: empresa/gestor, operacional, outro tenant e admin.
    Verificar os arquivos antigos, upload/substituição de Documento, ASO e
@@ -128,8 +268,9 @@ Ainda não há um runner de implantação automatizado neste repositório.
 
 Os quatro registros conhecidos podem ser convertidos sem mover arquivos:
 remover o prefixo reconhecido da URL, validar empresa/bucket/path e existência,
-gravar somente arquivo_path quando NULL. A implementação não embute URLs nem
-IDs reais. A conversão real só acontecerá quando a 020 for autorizada/executada.
+gravar somente arquivo_path quando NULL. Migrations não embutem URLs nem IDs reais;
+o preflight contém apenas o origin explicitamente validado pelo operador.
+A conversão real só acontecerá quando a 020 for autorizada/executada.
 Se um registro já tem path de substituição, ele é preservado; a antiga URL também
 precisa continuar válida para a referência anterior.
 
@@ -140,9 +281,9 @@ Clientes antigos precisam ser retirados antes do corte. Nenhum rollback de front
 para a versão que abre URLs públicas é compatível com o bucket privado.
 
 Os testes SQL usam PGlite, migrations reais e fixtures sintéticas, sem rede.
-Não validam o serviço Storage/CDN real. O estado remoto/rollback da 018 não foi
-reconsultado nem considerado confirmado nesta implementação. A implantação
-permanece condicionada aos preflights e à homologação real.
+Não validam o serviço Storage/CDN real. Nesta atualização, os resultados remotos
+foram fornecidos pelo operador e não reconsultados por este agente. A 019 e o
+preflight anterior estão concluídos; 020, homologação pós-020 e 018 permanecem pendentes.
 
 ## Testes
 
@@ -162,3 +303,8 @@ passaram em 12 arquivos; `npm run typecheck`: passou; `npm run build`: passou;
 Supabase `npm test`: 284 passaram; `git diff --check`: passou. Há um warning de
 depreciação Starlette/httpx no backend e um aviso de bundle acima de 500 kB no build.
 Os 32 testes SQL novos e os testes de Storage do frontend fazem parte desses totais.
+
+Nesta atualização de preflights/documentação: suíte Supabase novamente validada
+com 284 testes passando; preflight consolidado verifica pré/pós-cutover, histórico
+indisponível e dados incompatíveis sem alterar o snapshot sintético dos registros.
+As migrations 018/019/020 e o código funcional frontend/backend não foram alterados.

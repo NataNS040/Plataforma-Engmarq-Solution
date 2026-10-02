@@ -53,6 +53,12 @@ sem Secret Key/service_role. Respostas são validadas por schemas e erros saniti
 
 ## Migration 018
 
+Estado remoto informado pelo operador em 01/10/2026: 018 ainda não aplicada;
+019 aplicada; preflight pós-019/pré-020 aprovado (12 documentos, 4 URLs legadas,
+0 paths canônicos, 4 pendentes; 4 objetos, MIME/tamanho incompatíveis = 0).
+A 018 deve aguardar 020 e sua validação pós-corte. Veja `STORAGE_DOCUMENTOS.md`
+para o runbook atualizado e o preflight consolidado existente. Não reaplicar 019.
+
 Depende de 017; transação única, sem correção automática de dados legados.
 
 - Acrescenta UNIQUE `(empresa_id,id)` em colaboradores e troca as FKs simples

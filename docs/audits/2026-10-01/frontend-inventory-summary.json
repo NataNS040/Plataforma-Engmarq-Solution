@@ -1,0 +1,10 @@
+{
+  "actualMethodOccurrences": 89,
+  "classes": {
+    "A": 16,
+    "B": 12,
+    "C": 8,
+    "D": 53
+  },
+  "excludedNonSupabase": 7
+}

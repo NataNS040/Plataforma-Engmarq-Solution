@@ -1,0 +1,9 @@
+{
+  "removedOccurrences": 16,
+  "classes": {
+    "C": 8,
+    "D": 8
+  },
+  "allDatabaseAccessNowFastAPI": true,
+  "remainingDirectDatabaseCallsInDashboard": 0
+}

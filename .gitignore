@@ -17,6 +17,10 @@ htmlcov/
 # Logs
 logs
 *.log
+# Disposable outputs from local audit fixtures (keep reports and generators).
+docs/audits/**/local-*.json
+docs/audits/**/scoped-021-local-checks.json
+docs/audits/**/final-validation.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

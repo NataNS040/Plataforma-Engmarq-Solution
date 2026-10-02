@@ -1,0 +1,90 @@
+﻿FILE,LINE,COLUMN,METHOD,RESOURCE,CLASS,REASON,SOURCE
+frontend/src/modules/auth/AuthProvider.tsx,26,5,from,user_profiles,A,Read caller own profile under RLS,.from('user_profiles')
+frontend/src/modules/auth/AuthProvider.tsx,27,5,select,user_profiles,A,Read caller own profile under RLS,.select('*')
+frontend/src/modules/auth/AuthProvider.tsx,42,7,getSession,user_profiles,A,Supabase Auth session/identity/password,.getSession()
+frontend/src/modules/auth/AuthProvider.tsx,49,22,onAuthStateChange,user_profiles,A,Supabase Auth session/identity/password,"} = supabase.auth.onAuthStateChange((_event, newSession) => {"
+frontend/src/modules/auth/AuthProvider.tsx,69,24,signOut,user_profiles,A,Supabase Auth session/identity/password,await supabase.auth.signOut()
+frontend/src/modules/auth/LoginPage.tsx,51,42,signInWithPassword,,A,Supabase Auth session/identity/password,const { error } = await supabase.auth.signInWithPassword({
+frontend/src/modules/perfil/PerfilPage.tsx,43,42,updateUser,,A,Supabase Auth session/identity/password,const { error } = await supabase.auth.updateUser({ password: values.password })
+frontend/src/services/api/client.ts,88,50,getSession,,A,Supabase Auth session/identity/password,"const { data, error } = await supabase.auth.getSession()"
+frontend/src/services/dashboardService.ts,37,17,from,colaboradores,C,Dashboard bypasses FastAPI for migrated domain,"? supabase.from('colaboradores').select('id', { count: 'exact', head: true }).eq('empresa_id', empresaId).eq('active', true)"
+frontend/src/services/dashboardService.ts,37,39,select,colaboradores,C,Dashboard bypasses FastAPI for migrated domain,"? supabase.from('colaboradores').select('id', { count: 'exact', head: true }).eq('empresa_id', empresaId).eq('active', true)"
+frontend/src/services/dashboardService.ts,41,17,from,documentos,D,Legacy document authorization/view risk,"? supabase.from('documentos').select('id, status')"
+frontend/src/services/dashboardService.ts,41,36,select,documentos,D,Legacy document authorization/view risk,"? supabase.from('documentos').select('id, status')"
+frontend/src/services/dashboardService.ts,42,17,from,documentos,D,Legacy document authorization/view risk,": supabase.from('documentos').select('id, status').eq('empresa_id', empresaId),"
+frontend/src/services/dashboardService.ts,42,36,select,documentos,D,Legacy document authorization/view risk,": supabase.from('documentos').select('id, status').eq('empresa_id', empresaId),"
+frontend/src/services/dashboardService.ts,46,17,from,treinamentos,C,Dashboard bypasses FastAPI for migrated domain,": supabase.from('treinamentos').select('id, status').eq('empresa_id', empresaId),"
+frontend/src/services/dashboardService.ts,46,38,select,treinamentos,C,Dashboard bypasses FastAPI for migrated domain,": supabase.from('treinamentos').select('id, status').eq('empresa_id', empresaId),"
+frontend/src/services/dashboardService.ts,49,17,from,empresas,C,Dashboard bypasses FastAPI for migrated domain,"? supabase.from('empresas').select('id', { count: 'exact', head: true })"
+frontend/src/services/dashboardService.ts,49,34,select,empresas,C,Dashboard bypasses FastAPI for migrated domain,"? supabase.from('empresas').select('id', { count: 'exact', head: true })"
+frontend/src/services/dashboardService.ts,96,11,from,vw_dashboard_documentos,D,Legacy document authorization/view risk,.from('vw_dashboard_documentos')
+frontend/src/services/dashboardService.ts,97,11,select,vw_dashboard_documentos,D,Legacy document authorization/view risk,".select('empresa_id, titulo, status_calculado, dias_restantes, vencimento')"
+frontend/src/services/dashboardService.ts,102,11,from,vw_dashboard_documentos,D,Legacy document authorization/view risk,.from('vw_dashboard_documentos')
+frontend/src/services/dashboardService.ts,103,11,select,vw_dashboard_documentos,D,Legacy document authorization/view risk,".select('empresa_id, titulo, status_calculado, dias_restantes, vencimento')"
+frontend/src/services/dashboardService.ts,112,11,from,vw_dashboard_treinamentos,C,Dashboard bypasses FastAPI for migrated domain,.from('vw_dashboard_treinamentos')
+frontend/src/services/dashboardService.ts,113,11,select,vw_dashboard_treinamentos,C,Dashboard bypasses FastAPI for migrated domain,".select('empresa_id, colaborador_nome, treinamento_nome, status_calculado, dias_restantes, data_vencimento')"
+frontend/src/services/documentosService.ts,11,5,from,documento_tipos,B,Read-only global legacy catalog; Exames migration not started,.from('documento_tipos')
+frontend/src/services/documentosService.ts,12,5,select,documento_tipos,B,Read-only global legacy catalog; Exames migration not started,.select('*')
+frontend/src/services/documentosService.ts,42,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/documentosService.ts,43,5,select,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,".select(companyOnly ? '*, tipo:documento_tipos(*)' : DOCUMENTO_SELECT)"
+frontend/src/services/documentosService.ts,55,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/documentosService.ts,56,5,select,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.select(DOCUMENTO_SELECT)
+frontend/src/services/documentosService.ts,70,5,from,documento_tipos,B,Read-only global legacy catalog; Exames migration not started,.from('documento_tipos')
+frontend/src/services/documentosService.ts,71,5,select,documento_tipos,B,Read-only global legacy catalog; Exames migration not started,.select('id')
+frontend/src/services/documentosService.ts,81,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/documentosService.ts,82,5,insert,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.insert({
+frontend/src/services/documentosService.ts,93,5,select,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.select('*')
+frontend/src/services/documentosService.ts,105,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/documentosService.ts,106,5,update,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.update(input)
+frontend/src/services/documentosService.ts,108,5,select,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.select('*')
+frontend/src/services/documentosService.ts,122,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/documentosService.ts,123,5,delete,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.delete()
+frontend/src/services/documentosStorage.ts,46,59,getSession,,A,Supabase Auth session/identity/password,"const { data: { session }, error } = await supabase.auth.getSession()"
+frontend/src/services/documentosStorage.ts,48,64,from,user_profiles,A,Caller profile / authorized Storage API with JWT; not database CRUD bypass,"const { data: profile, error: profileError } = await supabase.from('user_profiles')"
+frontend/src/services/documentosStorage.ts,49,5,select,user_profiles,A,Caller profile / authorized Storage API with JWT; not database CRUD bypass,".select('empresa_id,role,active').eq('id', session.user.id).single()"
+frontend/src/services/documentosStorage.ts,63,43,from,documentos,A,Caller profile / authorized Storage API with JWT; not database CRUD bypass,const { error } = await supabase.storage.from(DOCUMENTOS_BUCKET)
+frontend/src/services/documentosStorage.ts,64,5,upload,documentos,A,Caller profile / authorized Storage API with JWT; not database CRUD bypass,".upload(path, file, { cacheControl: '3600', upsert: false, contentType: mime[ext] })"
+frontend/src/services/documentosStorage.ts,73,34,from,documentos,A,Caller profile / authorized Storage API with JWT; not database CRUD bypass,const bucket = supabase.storage.from(DOCUMENTOS_BUCKET)
+frontend/src/services/documentosStorage.ts,75,19,createSignedUrl,documentos,A,Caller profile / authorized Storage API with JWT; not database CRUD bypass,"? await bucket.createSignedUrl(path, SIGNED_URL_SECONDS, { download })"
+frontend/src/services/documentosStorage.ts,76,19,createSignedUrl,documentos,A,Caller profile / authorized Storage API with JWT; not database CRUD bypass,": await bucket.createSignedUrl(path, SIGNED_URL_SECONDS)"
+frontend/src/services/empresasService.ts,22,5,from,logos,B,"Logo Storage compatibility, public branding asset",.from('logos')
+frontend/src/services/empresasService.ts,23,5,upload,logos,B,"Logo Storage compatibility, public branding asset",".upload(path, file, { cacheControl: '3600', upsert: true })"
+frontend/src/services/empresasService.ts,27,36,from,logos,B,"Logo Storage compatibility, public branding asset",const { data } = supabase.storage.from('logos').getPublicUrl(path)
+frontend/src/services/empresasService.ts,27,50,getPublicUrl,logos,B,"Logo Storage compatibility, public branding asset",const { data } = supabase.storage.from('logos').getPublicUrl(path)
+frontend/src/services/examesService.ts,39,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/examesService.ts,40,5,select,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.select(ASO_SELECT)
+frontend/src/services/examesService.ts,51,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/examesService.ts,52,5,select,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.select(ASO_SELECT)
+frontend/src/services/examesService.ts,63,5,from,documento_tipos,B,Read-only global legacy catalog; Exames migration not started,.from('documento_tipos')
+frontend/src/services/examesService.ts,64,5,select,documento_tipos,B,Read-only global legacy catalog; Exames migration not started,.select('id')
+frontend/src/services/examesService.ts,75,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/examesService.ts,76,5,insert,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.insert({
+frontend/src/services/examesService.ts,89,5,select,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.select('*')
+frontend/src/services/examesService.ts,101,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/examesService.ts,102,5,update,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.update(input)
+frontend/src/services/examesService.ts,104,5,select,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.select('*')
+frontend/src/services/examesService.ts,113,5,from,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.from('documentos')
+frontend/src/services/examesService.ts,114,5,delete,documentos,D,Direct legacy document metadata CRUD exposes old admin policies; not corrected,.delete()
+frontend/src/services/examesService.ts,122,5,from,exames_catalogo,B,Read-only global legacy catalog; Exames migration not started,.from('exames_catalogo')
+frontend/src/services/examesService.ts,123,5,select,exames_catalogo,B,Read-only global legacy catalog; Exames migration not started,.select('*')
+frontend/src/services/fichasEpiService.ts,25,5,from,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.from('fichas_epi')
+frontend/src/services/fichasEpiService.ts,26,5,select,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.select(FICHA_EPI_SELECT)
+frontend/src/services/fichasEpiService.ts,35,5,from,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.from('fichas_epi')
+frontend/src/services/fichasEpiService.ts,36,5,select,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.select(FICHA_EPI_SELECT)
+frontend/src/services/fichasEpiService.ts,59,5,from,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.from('fichas_epi')
+frontend/src/services/fichasEpiService.ts,60,5,insert,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.insert({
+frontend/src/services/fichasEpiService.ts,66,5,select,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.select('*')
+frontend/src/services/fichasEpiService.ts,78,5,from,fichas_epi_itens,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.from('fichas_epi_itens')
+frontend/src/services/fichasEpiService.ts,79,5,insert,fichas_epi_itens,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.insert(itensPayload)
+frontend/src/services/fichasEpiService.ts,80,5,select,fichas_epi_itens,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.select('*')
+frontend/src/services/fichasEpiService.ts,84,19,from,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,"await supabase.from('fichas_epi').delete().eq('id', ficha.id)"
+frontend/src/services/fichasEpiService.ts,84,38,delete,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,"await supabase.from('fichas_epi').delete().eq('id', ficha.id)"
+frontend/src/services/fichasEpiService.ts,95,5,from,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.from('fichas_epi')
+frontend/src/services/fichasEpiService.ts,96,5,delete,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.delete({ count: 'exact' })
+frontend/src/services/fichasEpiService.ts,107,5,from,assinaturas,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.from('assinaturas')
+frontend/src/services/fichasEpiService.ts,108,5,upload,assinaturas,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,".upload(path, blob, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' })"
+frontend/src/services/fichasEpiService.ts,110,36,from,assinaturas,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,const { data } = supabase.storage.from('assinaturas').getPublicUrl(path)
+frontend/src/services/fichasEpiService.ts,110,56,getPublicUrl,assinaturas,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,const { data } = supabase.storage.from('assinaturas').getPublicUrl(path)
+frontend/src/services/fichasEpiService.ts,116,5,from,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.from('fichas_epi')
+frontend/src/services/fichasEpiService.ts,117,5,update,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.update({
+frontend/src/services/fichasEpiService.ts,123,5,select,fichas_epi,D,Legacy EPI admin permissions; signature public URL for private bucket requires review,.select('*')

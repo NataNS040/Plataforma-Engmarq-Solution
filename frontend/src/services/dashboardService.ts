@@ -1,143 +1,29 @@
-import { supabase } from '@/lib/supabase'
-import { handleSupabaseError } from '@/lib/errors'
+import { z } from 'zod'
+import { apiRequest } from './api/client'
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface DashboardKpis {
-  totalColaboradores: number | null // null: indicador indisponível para admin
-  totalEmpresas: number       // só para admin
-  totalDocumentos: number
-  totalTreinamentos: number | null
-  docsVencidos: number
-  docsVencendo: number
-  treinamentosVencidos: number | null
-  treinamentosVencendo: number | null
-  compliancePct: number       // % de docs+treinamentos em dia
+const count = z.number().int().nonnegative()
+const kpisSchema = z.object({
+  totalColaboradores: count.nullable(), totalEmpresas: count, totalDocumentos: count,
+  totalTreinamentos: count.nullable(), docsVencidos: count, docsVencendo: count,
+  treinamentosVencidos: count.nullable(), treinamentosVencendo: count.nullable(),
+  compliancePct: z.number().int().min(0).max(100), operacionalDisponivel: z.boolean(),
+})
+const alertaSchema = z.object({
+  tipo: z.enum(['documento', 'treinamento']), empresa_id: z.uuid(), titulo: z.string(),
+  nome_envolvido: z.string().nullable(), status: z.enum(['vencido', 'vencendo']),
+  dias_restantes: z.number().int().nullable(), vencimento: z.string().nullable(),
+})
+export type DashboardKpis = z.infer<typeof kpisSchema>
+export type AlertaCritico = z.infer<typeof alertaSchema>
+const scopeParam = (scope: string) => encodeURIComponent(scope === 'all' ? scope : z.uuid().parse(scope))
+
+// Scope is a request validated by the API, never an authorization source.
+// Compatibility flags cannot change the server role/tenant decision.
+export function buscarKpis(empresaId: string | 'all', _includeColaboradores = empresaId !== 'all'): Promise<DashboardKpis> {
+  return apiRequest(`/dashboard/kpis?scope=${scopeParam(empresaId)}`, { parse: data => kpisSchema.parse(data) })
 }
-
-export interface AlertaCritico {
-  tipo: 'documento' | 'treinamento'
-  empresa_id: string
-  titulo: string
-  nome_envolvido: string | null
-  status: string
-  dias_restantes: number | null
-  vencimento: string | null
-}
-
-// ---------------------------------------------------------------------------
-// Aggregations
-// ---------------------------------------------------------------------------
-export async function buscarKpis(empresaId: string | 'all', includeColaboradores = empresaId !== 'all'): Promise<DashboardKpis> {
-  const isAll = empresaId === 'all'
-
-  const [colabs, docs, treins, empresas] = await Promise.all([
-    !isAll && includeColaboradores
-      ? supabase.from('colaboradores').select('id', { count: 'exact', head: true }).eq('empresa_id', empresaId).eq('active', true)
-      : Promise.resolve({ count: null, error: null }),
-
-    isAll
-      ? supabase.from('documentos').select('id, status')
-      : supabase.from('documentos').select('id, status').eq('empresa_id', empresaId),
-
-    isAll || !includeColaboradores
-      ? Promise.resolve({ data: null, error: null })
-      : supabase.from('treinamentos').select('id, status').eq('empresa_id', empresaId),
-
-    isAll
-      ? supabase.from('empresas').select('id', { count: 'exact', head: true })
-      : Promise.resolve({ count: 1, error: null, data: null }),
-  ])
-
-  if (colabs.error)  throw handleSupabaseError(colabs.error)
-  if (docs.error)    throw handleSupabaseError(docs.error)
-  if (treins.error)  throw handleSupabaseError(treins.error)
-  if (empresas.error) throw handleSupabaseError(empresas.error)
-
-  const docsData    = (docs.data ?? []) as { status: string }[]
-  const treinsData  = (treins.data ?? []) as { status: string }[]
-
-  const docsVencidos   = docsData.filter(d => d.status === 'vencido').length
-  const docsVencendo   = docsData.filter(d => d.status === 'vencendo').length
-  const docsOk         = docsData.filter(d => d.status === 'vigente').length
-
-  const treinsVencidos  = treinsData.filter(t => t.status === 'vencido').length
-  const treinsVencendo  = treinsData.filter(t => t.status === 'vencendo').length
-  const treinsOk        = treinsData.filter(t => t.status === 'em_dia').length
-
-  const totalItems = docsData.length + treinsData.length
-  const totalOk    = docsOk + treinsOk
-  const compliancePct = totalItems > 0 ? Math.round((totalOk / totalItems) * 100) : 100
-
-  return {
-    totalColaboradores: !isAll && includeColaboradores ? colabs.count ?? 0 : null,
-    totalEmpresas:      empresas.count ?? 0,
-    totalDocumentos:    docsData.length,
-    totalTreinamentos:  isAll || !includeColaboradores ? null : treinsData.length,
-    docsVencidos,
-    docsVencendo,
-    treinamentosVencidos: isAll || !includeColaboradores ? null : treinsVencidos,
-    treinamentosVencendo: isAll || !includeColaboradores ? null : treinsVencendo,
-    compliancePct,
-  }
-}
-
-export async function buscarAlertasCriticos(
-  empresaId: string | 'all',
-  limit = 5,
-  includeTreinamentos = empresaId !== 'all'
-): Promise<AlertaCritico[]> {
-  const isAll = empresaId === 'all'
-
-  const [docs, treins] = await Promise.all([
-    isAll
-      ? supabase
-          .from('vw_dashboard_documentos')
-          .select('empresa_id, titulo, status_calculado, dias_restantes, vencimento')
-          .in('status_calculado', ['vencido', 'vencendo'])
-          .order('dias_restantes', { ascending: true, nullsFirst: false })
-          .limit(limit)
-      : supabase
-          .from('vw_dashboard_documentos')
-          .select('empresa_id, titulo, status_calculado, dias_restantes, vencimento')
-          .in('status_calculado', ['vencido', 'vencendo'])
-          .eq('empresa_id', empresaId)
-          .order('dias_restantes', { ascending: true, nullsFirst: false })
-          .limit(limit),
-
-    isAll || !includeTreinamentos
-      ? Promise.resolve({ data: null, error: null })
-      : supabase
-          .from('vw_dashboard_treinamentos')
-          .select('empresa_id, colaborador_nome, treinamento_nome, status_calculado, dias_restantes, data_vencimento')
-          .in('status_calculado', ['vencido', 'vencendo'])
-          .eq('empresa_id', empresaId)
-          .order('dias_restantes', { ascending: true, nullsFirst: false })
-          .limit(limit),
-  ])
-
-  const alertasDoc: AlertaCritico[] = (docs.data ?? []).map(d => ({
-    tipo:            'documento',
-    empresa_id:      d.empresa_id,
-    titulo:          d.titulo,
-    nome_envolvido:  null,
-    status:          d.status_calculado,
-    dias_restantes:  d.dias_restantes,
-    vencimento:      d.vencimento,
-  }))
-
-  const alertasTrein: AlertaCritico[] = (treins.data ?? []).map(t => ({
-    tipo:            'treinamento',
-    empresa_id:      t.empresa_id,
-    titulo:          t.treinamento_nome,
-    nome_envolvido:  t.colaborador_nome,
-    status:          t.status_calculado,
-    dias_restantes:  t.dias_restantes,
-    vencimento:      t.data_vencimento,
-  }))
-
-  return [...alertasDoc, ...alertasTrein]
-    .sort((a, b) => (a.dias_restantes ?? 9999) - (b.dias_restantes ?? 9999))
-    .slice(0, limit)
+export function buscarAlertasCriticos(empresaId: string | 'all', limit = 5, _includeTreinamentos = empresaId !== 'all'): Promise<AlertaCritico[]> {
+  z.number().int().min(1).max(50).parse(limit)
+  return apiRequest(`/dashboard/alertas?scope=${scopeParam(empresaId)}&limit=${limit}`,
+    { parse: data => z.array(alertaSchema).parse(data) })
 }

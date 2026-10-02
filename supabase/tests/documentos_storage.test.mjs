@@ -5,14 +5,23 @@ import { after, before, test } from 'node:test'
 import { PGlite } from '@electric-sql/pglite'
 
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
-const origin = 'https://synthetic.supabase.co'
+// Production SQL is executed unchanged in memory. Synthetic rows use the exact
+// trusted prefix; a URL literal never performs a network request.
+const origin = 'https://kkjckayiqvlqpdjyoxyv.supabase.co'
 const load = async name => (await readFile(new URL(name,import.meta.url),'utf8')).replace(/^\uFEFF/,'')
 const migrate = async (db,name) => db.exec(await load(`../migrations/${name}`))
 const preflight = async db => db.exec(await load('018_storage_preflight_readonly.sql'))
+const cutoverPreflight = async db => {
+  // Retain our explicit session configuration for the read-only preflight.
+  const sql=(await load('019_documentos_cutover_preflight_readonly.sql'))
+    .replace(/^SET engmarq\.storage_origin = '[^']+';$/m,'')
+  return (await db.query(sql)).rows
+}
 async function setup(db) {
   await seedTenantBase(db,name => migrate(db,name),id)
   await migrate(db,'017_catalogos_tenant_security.sql')
-  await db.exec(`ALTER TABLE storage.objects ADD COLUMN metadata jsonb;
+  await db.exec(`ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE storage.objects ADD COLUMN metadata jsonb;
     UPDATE storage.buckets SET public=true,file_size_limit=NULL,allowed_mime_types=NULL WHERE id='documentos';`)
   for (const n of [1,2,3,4]) {
     const company = id(n<4?101:102); const path=`${company}/synthetic${n}.pdf`
@@ -29,7 +38,11 @@ async function setup(db) {
   await preflight(db)
   await migrate(db,'019_documentos_path_compat.sql')
   await db.query("SELECT set_config('engmarq.storage_origin',$1,false)",[origin])
-  await db.exec(await load('019_documentos_cutover_preflight_readonly.sql'))
+  const checks=await cutoverPreflight(db)
+  assert.equal(checks.filter(row=>row.STATUS==='BLOQUEIO').length,0)
+  assert.ok(checks.some(row=>row.CHECK==='019: helper de conversão' && row.STATUS==='OK'))
+  assert.ok(checks.some(row=>row.CHECK==='Histórico de migrations: 018/020' && row.STATUS==='ATENÇÃO'))
+  assert.ok(checks.some(row=>row.CHECK==='Referências pendentes de backfill' && row.RESULTADO==='4 registro(s)'))
 }
 const db = new PGlite()
 let original
@@ -42,6 +55,31 @@ before(async () => {
   await db.exec('CREATE POLICY unexpected_broad_policy ON storage.objects FOR ALL TO PUBLIC USING (true) WITH CHECK (true)')
 })
 after(() => db.close())
+test('production 020 explicitly restores the trusted origin, never arbitrary session input',async () => {
+  const isolated=new PGlite()
+  try {
+    await setup(isolated)
+    await isolated.query("SELECT set_config('engmarq.storage_origin',$1,false)",['https://untrusted.test'])
+    await migrate(isolated,'020_documentos_private_storage.sql')
+    assert.equal((await isolated.query("SELECT current_setting('engmarq.storage_origin') origin")).rows[0].origin,origin)
+    assert.equal((await isolated.query('SELECT count(*)::int n FROM documentos WHERE arquivo_path IS NOT NULL')).rows[0].n,4)
+    await assert.rejects(isolated.query('SELECT engmarq_private.documento_legacy_path($1,$2,$3)',
+      [`https://untrusted.test/storage/v1/object/public/documentos/${id(101)}/synthetic1.pdf`,id(101),origin]),/Unrecognized legacy/)
+  } finally {await isolated.close()}
+})
+test('B03 a Supabase-shaped foreign origin still fails atomically under unchanged production SQL',async()=>{
+ const isolated=new PGlite()
+ try {
+  await setup(isolated)
+  await isolated.query('UPDATE documentos SET arquivo_url=$1 WHERE id=$2',[
+    `https://foreign-project.supabase.co/storage/v1/object/public/documentos/${id(101)}/synthetic1.pdf`,id(901)])
+  const before=(await isolated.query('SELECT * FROM documentos ORDER BY id')).rows
+  await assert.rejects(migrate(isolated,'020_documentos_private_storage.sql'),/Unrecognized legacy document reference/)
+  await isolated.exec('ROLLBACK')
+  assert.deepEqual((await isolated.query('SELECT * FROM documentos ORDER BY id')).rows,before)
+  assert.equal((await isolated.query("SELECT public FROM storage.buckets WHERE id='documentos'")).rows[0].public,true)
+ }finally{await isolated.close()}
+})
 async function actor(n,run,role='authenticated') {
   await db.exec('BEGIN')
   try {
@@ -126,12 +164,17 @@ test('operacional and admin cannot clear a canonical reference',async () => {
   })
 })
 test('020 guards coexist with unchanged 018; read-only preflight detects its footprints',async () => {
+  const cutover=await cutoverPreflight(db)
+  assert.ok(cutover.some(row=>row.CHECK==='020: funções já existentes' && row.STATUS==='BLOQUEIO'))
+  assert.ok(cutover.some(row=>row.CHECK==='020: guards de Storage já existentes' && row.STATUS==='BLOQUEIO'))
   await migrate(db,'018_treinamentos_tenant_security.sql')
+  const applied=await cutoverPreflight(db)
+  assert.ok(applied.some(row=>row.CHECK==='018: funções criadas' && row.STATUS==='BLOQUEIO'))
   await assert.rejects(preflight(db),/018 footprint/)
   await db.exec('ROLLBACK')
   assert.equal((await db.query("SELECT count(*)::int n FROM pg_policies WHERE schemaname='storage' AND policyname LIKE 'certificados_%'")).rows[0].n,4)
 })
-for(const scenario of ['external_url','foreign_tenant','missing_object','unsupported_mime','missing_origin','oversize']) {
+for(const scenario of ['external_url','foreign_tenant','missing_object','unsupported_mime','oversize']) {
   test(`020 aborts atomically on ${scenario}`,async () => {
     const isolated=new PGlite()
     try {
@@ -142,9 +185,11 @@ for(const scenario of ['external_url','foreign_tenant','missing_object','unsuppo
       if(scenario==='missing_object')await isolated.query("DELETE FROM storage.objects WHERE id=$1",[id(801)])
       if(scenario==='unsupported_mime')await isolated.exec(`UPDATE storage.objects SET metadata='{"mimetype":"application/x-unknown","size":9}'`)
       if(scenario==='oversize')await isolated.exec(`UPDATE storage.objects SET metadata='{"mimetype":"application/pdf","size":10485761}'`)
-      if(scenario==='missing_origin')await isolated.exec("SELECT set_config('engmarq.storage_origin','',false)")
       const snapshot=(await isolated.query('SELECT * FROM documentos ORDER BY id')).rows
       const count=(await isolated.query('SELECT count(*)::int n FROM storage.objects')).rows[0].n
+      const checks=await cutoverPreflight(isolated)
+      assert.ok(checks.some(row=>row.STATUS==='BLOQUEIO'),`preflight must block ${scenario}`)
+      assert.deepEqual((await isolated.query('SELECT * FROM documentos ORDER BY id')).rows,snapshot)
       await assert.rejects(migrate(isolated,'020_documentos_private_storage.sql'))
       await isolated.exec('ROLLBACK')
       assert.equal((await isolated.query("SELECT public FROM storage.buckets WHERE id='documentos'")).rows[0].public,true)
@@ -154,3 +199,175 @@ for(const scenario of ['external_url','foreign_tenant','missing_object','unsuppo
     } finally { await isolated.close() }
   })
 }
+
+
+test('020 can be reapplied without collisions or changes to records/objects', async () => {
+  const isolated=new PGlite()
+  try {
+    await setup(isolated)
+    await migrate(isolated,'020_documentos_private_storage.sql')
+    const rows=(await isolated.query('SELECT * FROM documentos ORDER BY id')).rows
+    const objects=(await isolated.query('SELECT * FROM storage.objects ORDER BY id')).rows
+    await migrate(isolated,'020_documentos_private_storage.sql')
+    assert.deepEqual((await isolated.query('SELECT * FROM documentos ORDER BY id')).rows,rows)
+    assert.deepEqual((await isolated.query('SELECT * FROM storage.objects ORDER BY id')).rows,objects)
+    assert.equal((await isolated.query("SELECT count(*)::int n FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname LIKE 'documentos_%'")).rows[0].n,8)
+    assert.equal((await isolated.query("SELECT count(*)::int n FROM pg_trigger WHERE tgname='guard_documento_reference'")).rows[0].n,1)
+  } finally { await isolated.close() }
+})
+
+test('failure at the former ownership error point rolls back backfill, trigger state and function; retry succeeds',async () => {
+ const isolated=new PGlite()
+ try {
+  await setup(isolated)
+  for (let n=0;n<8;n++) await isolated.query(`INSERT INTO documentos (id,empresa_id,tipo_id,titulo)
+    VALUES ($1,$2,(SELECT id FROM documento_tipos WHERE nome='PGR'),'No attachment')`,[id(950+n),id(101)])
+  const rows=(await isolated.query('SELECT * FROM documentos ORDER BY id')).rows
+  const policies=(await isolated.query('SELECT * FROM pg_policies ORDER BY policyname')).rows
+  const sql=await load('../migrations/020_documentos_private_storage.sql')
+  const point=/DROP\s+POLICY\s+IF\s+EXISTS\s+documentos_storage_select\s+ON\s+storage\.objects\s*;/i
+  assert.match(sql,point,'fault injection must match the real production statement')
+  const failing=sql.replace(point,statement =>
+   "DO $$ BEGIN RAISE EXCEPTION 'must be owner of table objects' USING ERRCODE='42501'; END $$;\n"+statement)
+  assert.notEqual(failing,sql)
+  await assert.rejects(isolated.exec(failing),e=>e.code==='42501')
+  await isolated.exec('ROLLBACK')
+  assert.deepEqual((await isolated.query('SELECT * FROM documentos ORDER BY id')).rows,rows)
+  assert.deepEqual((await isolated.query('SELECT * FROM pg_policies ORDER BY policyname')).rows,policies)
+  assert.equal((await isolated.query("SELECT to_regprocedure('engmarq_private.can_access_documento(text,boolean)') f")).rows[0].f,null)
+  assert.equal((await isolated.query("SELECT tgenabled FROM pg_trigger WHERE tgname='trg_documento_status'")).rows[0].tgenabled,'O')
+  const before=(await isolated.query('SELECT * FROM storage.objects ORDER BY id')).rows
+  const preflightSql=(await load('020_failed_attempt_preflight_readonly.sql')).replaceAll('https://kkjckayiqvlqpdjyoxyv.supabase.co',origin)
+  const result=await isolated.exec(preflightSql)
+  assert.ok(result.some(r=>r.rows?.some(row=>row.check_name==='pending_backfill' && row.status==='OK')))
+  assert.ok(result.some(r=>r.rows?.some(row=>row.check_name==='documentos' && row.status==='OK')))
+  assert.ok(result.some(r=>r.rows?.some(row=>row.operation?.includes('CREATE POLICY') && row.supported===true)))
+  const finalRows=result.filter(r=>r.rows?.length).at(-1).rows
+  assert.deepEqual(Object.keys(finalRows[0]),['CHECK','RESULTADO','STATUS'])
+  assert.ok(finalRows.every(r=>['OK','ATENÇÃO','BLOQUEIO'].includes(r.STATUS)))
+  for (const label of ['documentos','legacy_references','canonical_references','pending_backfill','objetos'])
+    assert.equal(finalRows.find(r=>r.CHECK===`Baseline: ${label}`).STATUS,'OK')
+  assert.equal(finalRows.find(r=>r.CHECK==='Storage: RLS ativo em storage.objects').STATUS,'OK')
+  assert.equal(finalRows.find(r=>r.CHECK==='Bucket documentos: estado pré-cutover').STATUS,'OK')
+  assert.equal(finalRows.find(r=>r.CHECK==='Storage: quatro policies legadas de documentos').STATUS,'OK')
+  const checks=finalRows.slice(0,-2)
+  assert.deepEqual(finalRows.slice(-2).map(r=>r.CHECK),['TOTAL_BLOQUEIOS','TOTAL_ATENCOES'])
+  assert.equal(Number(finalRows.at(-2).RESULTADO),checks.filter(r=>r.STATUS==='BLOQUEIO').length)
+  assert.equal(Number(finalRows.at(-1).RESULTADO),checks.filter(r=>r.STATUS==='ATENÇÃO').length)
+  assert.equal(Number(finalRows.at(-2).RESULTADO),0)
+  assert.ok(Number(finalRows.at(-1).RESULTADO)>0)
+
+  assert.deepEqual((await isolated.query('SELECT * FROM documentos ORDER BY id')).rows,rows)
+  assert.deepEqual((await isolated.query('SELECT * FROM storage.objects ORDER BY id')).rows,before)
+  await migrate(isolated,'020_documentos_private_storage.sql')
+  assert.equal((await isolated.query('SELECT count(*)::int n FROM documentos')).rows[0].n,12)
+  assert.equal((await isolated.query('SELECT count(*)::int n FROM documentos WHERE arquivo_path IS NOT NULL')).rows[0].n,4)
+ } finally { await isolated.close() }
+})
+
+test('020 fails closed when platform RLS is disabled; it never enables RLS itself',async () => {
+ const isolated=new PGlite()
+ try {
+  await setup(isolated)
+  await isolated.exec('ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY')
+  await assert.rejects(migrate(isolated,'020_documentos_private_storage.sql'),/Storage RLS must already be enabled/)
+  await isolated.exec('ROLLBACK')
+  assert.equal((await isolated.query('SELECT count(*)::int n FROM documentos WHERE arquivo_path IS NOT NULL')).rows[0].n,0)
+  assert.equal((await isolated.query("SELECT relrowsecurity FROM pg_class WHERE oid='storage.objects'::regclass")).rows[0].relrowsecurity,false)
+  assert.doesNotMatch(await load('../migrations/020_documentos_private_storage.sql'),/ALTER TABLE storage\.objects/i)
+ } finally { await isolated.close() }
+})
+
+
+test('non-owner SQL privileges support Storage locks/bucket config but do not grant policy ownership in vanilla PostgreSQL',async () => {
+ const isolated=new PGlite()
+ try {
+  await setup(isolated)
+  await isolated.exec(`CREATE ROLE hosted_storage_owner NOLOGIN;
+    CREATE ROLE migration_operator NOLOGIN;
+    GRANT USAGE ON SCHEMA storage TO migration_operator;
+    GRANT SELECT,UPDATE ON storage.objects,storage.buckets TO migration_operator;
+    ALTER TABLE storage.objects OWNER TO hosted_storage_owner;
+    ALTER TABLE storage.buckets OWNER TO hosted_storage_owner;
+    BEGIN; SET LOCAL ROLE migration_operator;
+    LOCK TABLE storage.buckets,storage.objects IN SHARE ROW EXCLUSIVE MODE;
+    UPDATE storage.buckets SET public=false WHERE id='documentos';`)
+  for (const sql of ['ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY',
+    'CREATE POLICY synthetic_policy ON storage.objects USING (true)',
+    'DROP POLICY documentos_storage_select ON storage.objects']) {
+   await isolated.exec('SAVEPOINT ownership')
+   await assert.rejects(isolated.exec(sql),e=>e.code==='42501')
+   await isolated.exec('ROLLBACK TO SAVEPOINT ownership')
+  }
+  await isolated.exec('ROLLBACK')
+ } finally { await isolated.close() }
+})
+
+
+for (const [scenario,change,label] of [
+ ['count drift',"DELETE FROM documentos WHERE arquivo_url IS NULL",'Baseline: documentos'],
+ ['invalid MIME',`UPDATE storage.objects SET metadata=jsonb_set(metadata,'{mimetype}','"application/x-unknown"')`,'Objetos: MIME ausente ou incompatível com a 020'],
+ ['invalid size',`UPDATE storage.objects SET metadata=jsonb_set(metadata,'{size}','"malformed"')`,'Objetos: tamanho ausente, inválido ou acima de 10 MB'],
+ ['RLS disabled','ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY','Storage: RLS ativo em storage.objects'],
+ ['private bucket',"UPDATE storage.buckets SET public=false WHERE id='documentos'",'Bucket documentos: estado pré-cutover'],
+ ['missing baseline policy','DROP POLICY documentos_storage_insert ON storage.objects','Storage: quatro policies legadas de documentos'],
+ ['020 footprints',null,'020: funções já existentes'],
+]) {
+ test(`failed-020 final consolidated report blocks ${scenario} without changing state`,async () => {
+  const isolated=new PGlite()
+  try {
+   await setup(isolated)
+   for(let n=0;n<8;n++) await isolated.query(`INSERT INTO documentos (id,empresa_id,tipo_id,titulo)
+    VALUES ($1,$2,(SELECT id FROM documento_tipos WHERE nome='PGR'),'No attachment')`,[id(950+n),id(101)])
+   if(scenario==='020 footprints') await migrate(isolated,'020_documentos_private_storage.sql')
+   else if(scenario==='count drift') await isolated.query('DELETE FROM documentos WHERE id=$1',[id(950)])
+   else await isolated.exec(change)
+   const snapshot=async()=>Promise.all([
+    isolated.query('SELECT * FROM documentos ORDER BY id'),
+    isolated.query('SELECT * FROM storage.objects ORDER BY id'),
+    isolated.query('SELECT * FROM storage.buckets ORDER BY id'),
+    isolated.query('SELECT * FROM pg_policies ORDER BY schemaname,tablename,policyname'),
+    isolated.query("SELECT tgname,tgenabled,pg_get_triggerdef(oid) definition FROM pg_trigger WHERE tgrelid='documentos'::regclass ORDER BY tgname"),
+    isolated.query("SELECT proname,pg_get_functiondef(p.oid) definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='engmarq_private' ORDER BY proname")
+   ]).then(results=>results.map(r=>r.rows))
+   const before=await snapshot()
+   const sql=(await load('020_failed_attempt_preflight_readonly.sql')).replaceAll('https://kkjckayiqvlqpdjyoxyv.supabase.co',origin)
+   assert.match(sql,/BEGIN TRANSACTION READ ONLY;/)
+   const result=await isolated.exec(sql)
+   const finalRows=result.filter(r=>r.rows?.length).at(-1).rows
+   assert.equal(finalRows.find(r=>r.CHECK===label)?.STATUS,'BLOQUEIO')
+   const checks=finalRows.slice(0,-2)
+   assert.equal(Number(finalRows.at(-2).RESULTADO),checks.filter(r=>r.STATUS==='BLOQUEIO').length)
+   assert.equal(Number(finalRows.at(-1).RESULTADO),checks.filter(r=>r.STATUS==='ATENÇÃO').length)
+   assert.ok(finalRows.every(r=>['OK','ATENÇÃO','BLOQUEIO'].includes(r.STATUS)))
+   assert.deepEqual(await snapshot(),before)
+  } finally {await isolated.close()}
+ })
+}
+
+test('final consolidated report separates read access from missing migration privileges',async () => {
+ const isolated=new PGlite()
+ try {
+  await setup(isolated)
+  // Synthetic read-only auditor: no hosted policy hook, ownership or write grants.
+  await isolated.exec(`CREATE ROLE preflight_auditor NOLOGIN BYPASSRLS;
+   GRANT pg_read_all_settings TO preflight_auditor;
+   GRANT USAGE ON SCHEMA public,storage,auth,engmarq_private TO preflight_auditor;
+   GRANT SELECT ON ALL TABLES IN SCHEMA public,storage TO preflight_auditor;
+   GRANT EXECUTE ON FUNCTION engmarq_private.documento_legacy_path(text,uuid,text) TO preflight_auditor;
+   SET ROLE preflight_auditor;`)
+  const sql=(await load('020_failed_attempt_preflight_readonly.sql')).replaceAll('https://kkjckayiqvlqpdjyoxyv.supabase.co',origin)
+  const result=await isolated.exec(sql)
+  const rows=result.filter(r=>r.rows?.length).at(-1).rows
+  assert.equal(rows.find(r=>r.CHECK==='Permissões: SELECT integral em storage.objects').STATUS,'OK')
+  for (const label of [
+   'Permissões: LOCK SHARE ROW EXCLUSIVE em storage.objects',
+   'Permissões: UPDATE em storage.buckets',
+   'Permissões: CREATE POLICY / DROP POLICY storage.objects',
+   'Permissões: ALTER/DROP/CREATE TRIGGER public.documentos',
+   'Permissões: schema engmarq_private',
+  ]) assert.equal(rows.find(r=>r.CHECK===label)?.STATUS,'BLOQUEIO',label)
+  assert.equal(Number(rows.at(-2).RESULTADO),rows.slice(0,-2).filter(r=>r.STATUS==='BLOQUEIO').length)
+  await isolated.exec('RESET ROLE')
+ } finally {await isolated.close()}
+})

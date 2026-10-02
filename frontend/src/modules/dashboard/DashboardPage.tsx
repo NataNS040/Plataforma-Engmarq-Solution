@@ -9,14 +9,11 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer,
 } from "recharts"
 import {
-  Users, GraduationCap, FileText, Heart, Building2, ShieldCheck,
+  Users, GraduationCap, FileText, Heart,
   Calendar, Download, Plus, ArrowRight,
-  Filter, AlertTriangle,
 } from "lucide-react"
-import { getChartColor } from "@/lib/theme"
 import { comingSoon } from "@/lib/comingSoon"
 import { exportToCsv } from "@/lib/csvExport"
-import type { EmpresaComContagem } from "@/services/empresasService"
 
 /* ============================================================
    Shared helpers
@@ -38,261 +35,21 @@ type TimelineKind = "crit" | "warn" | "ok"
 function DashboardAdmin() {
   const navigate = useNavigate()
   const kpisQuery = useDashboardKpis('all')
-  const kpis = kpisQuery.data
-  const alertasQuery = useDashboardAlertas('all', 5)
-  const alertas = alertasQuery.data ?? []
   const empresasQuery = useEmpresas()
   const empresas = empresasQuery.data ?? []
-
-  const compliancePct = kpis?.compliancePct ?? 0
-  const donutData = kpis ? [
-    { l: 'Docs em dia',         v: kpis.totalDocumentos - kpis.docsVencidos - kpis.docsVencendo,   c: 'var(--color-success)' },
-    { l: 'Docs vencendo',       v: kpis.docsVencendo,                                               c: 'var(--color-warning)' },
-    { l: 'Docs vencidos',       v: kpis.docsVencidos,                                               c: 'var(--color-danger)' },
-    { l: 'Trein. monitorados',  v: (kpis.totalTreinamentos ?? 0),                                          c: 'var(--blue-500)' },
-  ].filter(d => d.v > 0) : []
-
   return (
     <div className="content">
-
-      {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1>Dashboard</h1>
-          <p className="sub">Visão consolidada · {kpis?.totalEmpresas ?? '—'} empresas · Indicadores de colaboradores e treinamentos indisponíveis para admin. Conformidade e pendências consideram somente documentos.</p>
-        </div>
-        <div className="toolbar">
-          <button className="tbtn"><Calendar size={14} /> {currentDateLabel()}</button>
-          <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Filtros do dashboard')}><Filter size={14} /> Filtros</button>
-          <button
-            className="tbtn"
-            onClick={() => exportToCsv('empresas.csv', [
-              { header: 'Empresa',        value: (e: EmpresaComContagem) => e.razao_social },
-              { header: 'CNPJ',           value: (e: EmpresaComContagem) => e.cnpj },
-              { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
-              { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
-              { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
-
-              { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
-            ], empresas)}
-          ><Download size={14} /> Exportar</button>
-          <button className="tbtn primary" onClick={() => navigate('/empresas?nova=1')}><Plus size={14} /> Nova empresa</button>
-        </div>
+      <div className="page-header"><div><h1>Dashboard</h1><p className="sub">Empresas e cadastro comercial</p></div></div>
+      <div className="glass kpi"><div className="kpi-label">Empresas cadastradas</div>
+        <div className="kpi-value">{kpisQuery.data?.totalEmpresas ?? '\u2014'}</div>
       </div>
-
-      {/* KPIs */}
-      <div className="kpi-row">
-        <div className="glass kpi">
-          <div className="kpi-label">
-            <span>Empresas ativas</span>
-            <span className="kpi-ic blue"><Building2 size={15} /></span>
-          </div>
-          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-foot">cadastradas</span>
-          </div>
-        </div>
-
-        <div className="glass kpi">
-          <div className="kpi-label">
-            <span>Colaboradores monitorados</span>
-            <span className="kpi-ic violet"><Users size={15} /></span>
-          </div>
-          <div className="kpi-value">{kpis ? kpis.totalColaboradores?.toLocaleString('pt-BR') ?? 'Indisponível' : '—'}</div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-foot">ativos</span>
-          </div>
-        </div>
-
-        <div className="glass kpi">
-          <div className="kpi-label">
-            <span>Compliance médio</span>
-            <span className="kpi-ic green"><ShieldCheck size={15} /></span>
-          </div>
-          <div className="kpi-value">{kpis ? `${kpis.compliancePct}%` : '—'}</div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-foot">meta 95%</span>
-          </div>
-        </div>
-
-        <div className="glass kpi">
-          <div className="kpi-label">
-            <span>Alertas críticos</span>
-            <span className="kpi-ic red"><AlertTriangle size={15} /></span>
-          </div>
-          <div className="kpi-value" style={{ color: (kpis?.docsVencidos ?? 0) + (kpis?.treinamentosVencidos ?? 0) > 0 ? "var(--red-500)" : undefined }}>
-            {kpis ? kpis.docsVencidos + (kpis.treinamentosVencidos ?? 0) : '—'}
-          </div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="kpi-foot">docs + trein. vencidos</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Linha 2: Gauge + Donut */}
-      <div className="row-2">
-
-        {/* Gauge compliance geral */}
-        <div className="glass">
-          <div className="chart-head">
-            <div>
-              <div className="ctitle">Compliance geral</div>
-              <div className="csub">Score consolidado · meta 95%</div>
-            </div>
-          </div>
-          <div className="gauge-wrap">
-            <div style={{ position: "relative", width: 180, height: 180 }}>
-              <ResponsiveContainer width={180} height={180}>
-                <PieChart>
-                  <Pie
-                    data={[{ value: compliancePct }, { value: Math.max(0, 100 - compliancePct) }]}
-                    cx="50%" cy="50%"
-                    startAngle={225} endAngle={-45}
-                    innerRadius={58} outerRadius={76}
-                    dataKey="value" strokeWidth={0}
-                  >
-                    <Cell fill="var(--blue-600)" />
-                    <Cell fill="var(--bg-tint-1)" />
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color: "var(--ink-900)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                  {kpis ? `${compliancePct}%` : '—'}
-                </span>
-                <span style={{ fontSize: 11, color: "var(--ink-400)", marginTop: 4 }}>compliance</span>
-              </div>
-            </div>
-            <div className="gauge-cap">
-              Meta de <strong>95%</strong> de conformidade. {compliancePct >= 95 ? 'Meta atingida!' : `Faltam ${95 - compliancePct} p.p. para a meta.`}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Linha 3: Donut + Timeline */}
-      <div className="row-2">
-
-        {/* Donut: distribuição de pendências */}
-        <div className="glass">
-          <div className="chart-head">
-            <div>
-              <div className="ctitle">Distribuição de pendências</div>
-              <div className="csub">Por área de conformidade</div>
-            </div>
-          </div>
-          <div className="donut-wrap">
-            <div style={{ position: "relative", flexShrink: 0 }}>
-              <ResponsiveContainer width={180} height={180}>
-                <PieChart>
-                  <Pie
-                    data={donutData.length ? donutData : [{ l: '—', v: 1, c: '#E2E8F0' }]}
-                    cx="50%" cy="50%"
-                    innerRadius={52} outerRadius={72}
-                    startAngle={90} endAngle={-270}
-                    dataKey="v" strokeWidth={2} stroke="var(--surface)"
-                  >
-                    {(donutData.length ? donutData : [{ c: '#E2E8F0' }]).map((entry, idx) => <Cell key={idx} fill={entry.c} />)}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--ink-900)", lineHeight: 1 }}>
-                  {kpis ? kpis.docsVencidos + kpis.docsVencendo + (kpis.treinamentosVencidos ?? 0) + (kpis.treinamentosVencendo ?? 0) : '—'}
-                </span>
-                <span style={{ fontSize: 10, color: "var(--ink-400)", marginTop: 3 }}>pendências</span>
-              </div>
-            </div>
-            <div className="donut-legend">
-              {donutData.map((d, i) => (
-                <div key={i} className="lg">
-                  <div className="left"><span className="sw" style={{ background: d.c }} />{d.l}</div>
-                  <span className="val">{d.v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        <div className="glass">
-          <div className="chart-head">
-            <div>
-              <div className="ctitle">Vencimentos próximos</div>
-              <div className="csub">Itens críticos das próximas 2 semanas</div>
-            </div>
-          </div>
-          <div className="tl-list">
-            {alertas.length === 0 && (
-              <div style={{ textAlign:'center', padding:24, color:'var(--ink-400)', fontSize:12 }}>Nenhum vencimento crítico nos próximos dias.</div>
-            )}
-            {alertas.map((t, i) => {
-              const kind: TimelineKind = t.status === 'vencido' ? 'crit' : t.status === 'vencendo' ? 'warn' : 'ok'
-              const when = t.dias_restantes === null ? 'Em breve' : t.dias_restantes < 0 ? `Há ${Math.abs(t.dias_restantes)}d` : t.dias_restantes === 0 ? 'Hoje' : `${t.dias_restantes}d`
-              return (
-                <div key={i} className={`tl-item ${kind}`}>
-                  <span className="when">{when}</span>
-                  <span className="dot" />
-                  <div className="body">{t.titulo}<span className="meta">{t.nome_envolvido ?? t.tipo}</span></div>
-                  <button className="tbtn primary is-soon" title="Em breve" onClick={() => comingSoon('Ir direto ao item')}>Resolver <ArrowRight size={13} /></button>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Tabela: empresas em risco */}
-      <div className="glass" style={{ padding: 0, overflow: "hidden" }}>
-        <div style={{ padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <div>
-            <div className="ctitle">Empresas cadastradas</div>
-            <div className="csub">10 mais recentes</div>
-          </div>
-          <div className="toolbar">
-            <div className="seg">
-              <button className="on">Todas</button>
-              <button className="is-soon" title="Em breve" onClick={() => comingSoon('Filtro por risco crítico')}>Crítico</button>
-              <button className="is-soon" title="Em breve" onClick={() => comingSoon('Filtro por atenção')}>Atenção</button>
-            </div>
-            <button className="tbtn" onClick={() => navigate('/empresas')}><ArrowRight size={14} /> Ver todas</button>
-          </div>
-        </div>
-        <table className="tbl">
-          <thead>
-            <tr>
-              <th>Empresa</th>
-              <th>Setor</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {empresas.length === 0 && (
-              <tr><td colSpan={4} style={{ textAlign:'center', padding:32, color:'var(--ink-400)', fontSize:12 }}>Nenhuma empresa cadastrada.</td></tr>
-            )}
-            {empresas.slice(0, 10).map((e, i) => (
-              <tr key={e.id} onClick={() => navigate('/empresas')} style={{ cursor: 'pointer' }}>
-                <td>
-                  <div className="cell-person">
-                    <div className="ava" style={{ background: getChartColor(i), borderRadius: 8 }}>
-                      {e.razao_social.slice(0, 1)}
-                    </div>
-                    <div>
-                      <div className="name">{e.razao_social}</div>
-                      <div className="role">{e.cnpj}</div>
-                    </div>
-                  </div>
-                </td>
-                <td>{e.setor ?? '—'}</td>
-                <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
-                <td><button className="tbtn ghost" onClick={e2 => { e2.stopPropagation(); navigate('/empresas') }}><ArrowRight size={14} /></button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
+      <div className="glass"><h2>Empresas</h2><table className="tbl">
+        <thead><tr><th>Empresa</th><th>CNPJ</th><th>Status</th><th></th></tr></thead>
+        <tbody>{empresas.map(e => <tr key={e.id}>
+          <td>{e.razao_social}</td><td>{e.cnpj}</td><td>{e.status}</td>
+          <td><button className="tbtn ghost" onClick={() => navigate('/empresas')}>Abrir <ArrowRight size={14} /></button></td>
+        </tr>)}</tbody>
+      </table></div>
     </div>
   )
 }

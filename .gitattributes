@@ -1,0 +1,4 @@
+# Preserve the audited bytes of these applied/prepared SQL migrations.
+supabase/migrations/020_documentos_private_storage.sql -text whitespace=cr-at-eol
+supabase/migrations/021_documentos_empresas_security.sql -text whitespace=cr-at-eol
+supabase/migrations/022_logos_tenant_storage.sql -text

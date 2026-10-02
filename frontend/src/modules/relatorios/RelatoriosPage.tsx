@@ -94,10 +94,10 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
   const empresaId = isAdmin ? empresaIdEscolhida : (empresaIdPerfil ?? '')
   const empresaNome = empresas.find(e => e.id === empresaId)?.razao_social ?? ''
 
-  const kpisQuery = useDashboardKpis(empresaId || undefined)
+  const kpisQuery = useDashboardKpis(isAdmin ? 'all' : empresaId || undefined)
   const treinosQuery = useTreinamentos(isAdmin ? undefined : empresaId || undefined)
   const examesQuery = useExames(isAdmin ? undefined : empresaId || undefined)
-  const documentosQuery = useDocumentos(empresaId || undefined)
+  const documentosQuery = useDocumentos(isAdmin ? undefined : empresaId || undefined)
   // Dado ainda carregando pra empresa escolhida — gerar agora exportaria
   // planilhas vazias em vez de esperar a resposta real do banco.
   const dadosCarregando = !!empresaId && (
@@ -108,7 +108,7 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
     e.preventDefault()
     if (formato === 'pdf') { comingSoon('Relatório em PDF'); return }
     if (cat === 'acidentes') { comingSoon('Relatório de acidentes'); return }
-    if (isAdmin && (cat === 'treinamentos' || cat === 'exames')) { toast.error('Registros individuais restritos à equipe da empresa.'); return }
+    if (isAdmin && cat !== 'geral') { toast.error('Registros individuais restritos à equipe da empresa.'); return }
     if (!empresaId) { toast.error('Selecione uma empresa para gerar o relatório.'); return }
     if (dadosCarregando) { toast.info('Ainda carregando os dados da empresa — aguarde um instante.'); return }
 
@@ -119,7 +119,10 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
       const cutoff = periodStartIso(period)
       const kpis = kpisQuery.data
 
-      if (cat === 'geral') {
+      if (isAdmin) {
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Empresa: empresaNome, TotalEmpresas: kpis?.totalEmpresas ?? '' }]), 'Comercial')
+      }
+      if (!isAdmin && cat === 'geral') {
         const resumo = [
           { Métrica: 'Empresa',                Valor: empresaNome },
           { Métrica: 'Período',                Valor: PERIOD_LABELS[period] },
@@ -162,7 +165,7 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetRowsOrPlaceholder(rows, 'Exames')), 'Exames')
       }
 
-      if (cat === 'geral' || cat === 'documentos') {
+      if (!isAdmin && (cat === 'geral' || cat === 'documentos')) {
         const rows = (documentosQuery.data ?? [])
           .filter(d => !d.emissao || d.emissao >= cutoff)
           .map(d => ({
@@ -263,12 +266,7 @@ function RelatoriosAdmin() {
   const kpis = kpisQuery.data
 
   const metricas: MetricaItem[] = kpis ? [
-    { label: 'Empresas monitoradas',   valor: kpis.totalEmpresas,          cor: 'var(--blue-500)'   },
-    { label: 'Colaboradores ativos',   valor: kpis.totalColaboradores ?? 'Indisponível',     cor: 'var(--navy-500)'   },
-    { label: 'Conformidade geral',     valor: `${kpis.compliancePct}%`,    cor: 'var(--green-500)'  },
-    { label: 'Documentos vencidos',    valor: kpis.docsVencidos,           cor: 'var(--red-500)'    },
-    { label: 'Treinamentos vencidos',  valor: kpis.treinamentosVencidos ?? 'Indispon\u00edvel',   cor: 'var(--red-500)'    },
-    { label: 'Treinamentos monitorados', valor: kpis.totalTreinamentos ?? 'Indispon\u00edvel',    cor: 'var(--green-500)'  },
+    { label: 'Empresas cadastradas', valor: kpis.totalEmpresas, cor: 'var(--blue-500)' },
   ] : []
 
   return (
@@ -276,7 +274,7 @@ function RelatoriosAdmin() {
       <div className="page-header">
         <div>
           <h1>Relatórios</h1>
-          <p className="sub">Indicadores de treinamentos indisponíveis para admin; conformidade considera somente documentos.</p>
+          <p className="sub">Cadastro comercial de empresas. Indicadores operacionais internos indisponíveis.</p>
         </div>
         <button className="tbtn accent" onClick={() => setShowGerar(true)}>
           <BarChart3 size={15} /> Gerar relatório

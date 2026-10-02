@@ -9,7 +9,7 @@ import { useAuth } from '@/modules/auth/AuthProvider'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
 import { useEmpresa, useAtualizarEmpresa } from '@/hooks/queries/useEmpresas'
 import { useUsuariosDaEmpresa } from '@/hooks/queries/useUsuarios'
-import { uploadEmpresaLogo, type EmpresaInput } from '@/services/empresasService'
+import { uploadEmpresaLogo, downloadEmpresaLogo, type EmpresaInput } from '@/services/empresasService'
 import { getAvatarColor } from '@/lib/theme'
 import { CatalogosTab } from './CatalogosTab'
 import { CriarUsuarioModal } from './CriarUsuarioModal'
@@ -149,28 +149,49 @@ function EmpresaDadosCard({ empresaId, editing, setEditing, cardTitle, responsav
 // ---------------------------------------------------------------------------
 // Identidade — logo real (bucket 'logos')
 // ---------------------------------------------------------------------------
-function LogoCard({ empresaId, brandLabel }: { empresaId: string; brandLabel: string }) {
+export function LogoCard({ empresaId, brandLabel }: { empresaId: string; brandLabel: string }) {
+  const { profile, role, empresaId: ownEmpresaId } = useCurrentProfile()
   const { data: empresa } = useEmpresa(empresaId)
   const atualizar = useAtualizarEmpresa()
   const [uploading, setUploading] = useState(false)
+  const [logoImage, setLogoImage] = useState<{ key: string; url: string } | null>(null)
+  const [logoVersion, setLogoVersion] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const canReadLogo = !!profile?.active && ownEmpresaId === empresaId
+    && empresa?.status === 'ativa' && (role === 'gestor' || role === 'empresa' || role === 'operacional')
+  const canManageLogo = canReadLogo && (role === 'gestor' || role === 'empresa')
+  const logoReference = empresa?.logo_url
+  const logoKey = `${profile?.id}/${empresaId}/${logoReference}/${logoVersion}`
+  const logoUrl = canReadLogo && logoImage?.key === logoKey ? logoImage.url : null
+
+  useEffect(() => {
+    let cancelled = false
+    let objectUrl: string | undefined
+    if (canReadLogo && logoReference) {
+      void downloadEmpresaLogo(empresaId, logoReference).then(blob => {
+        if (cancelled) return
+        objectUrl = URL.createObjectURL(blob)
+        setLogoImage({ key: logoKey, url: objectUrl })
+      }).catch(() => { if (!cancelled) toast.error('Não foi possível carregar a logo.') })
+    }
+    return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl) }
+  }, [canReadLogo, empresaId, logoReference, logoKey])
 
   async function handleFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ''
-    if (!file) return
+    if (!file || !canManageLogo) return
     setUploading(true)
     try {
       const url = await uploadEmpresaLogo(empresaId, file)
       await atualizar.mutateAsync({ id: empresaId, input: { logo_url: url } })
+      setLogoVersion(version => version + 1)
     } catch (err) {
       toast.error((err as Error).message)
     } finally {
       setUploading(false)
     }
   }
-
-  const logoUrl = empresa?.logo_url ?? null
 
   return (
     <div className="card mp-card">
@@ -190,10 +211,10 @@ function LogoCard({ empresaId, brandLabel }: { empresaId: string; brandLabel: st
         )}
       </div>
       <div style={{ display:'flex', gap:8, marginTop:16 }}>
-        <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onChange={e => void handleFile(e)}/>
-        <button className="tbtn" disabled={uploading} onClick={() => inputRef.current?.click()}>
+        <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={e => void handleFile(e)}/>
+        {canManageLogo && <button className="tbtn" disabled={uploading} onClick={() => inputRef.current?.click()}>
           {uploading ? <Loader2 size={13} className="btn-spinner"/> : <Plus size={13}/>} {logoUrl ? 'Trocar logo' : 'Adicionar logo'}
-        </button>
+        </button>}
         <button className="tbtn ghost is-soon" title="Em breve" onClick={() => comingSoon('Cor de marca')}>Cor de marca</button>
       </div>
     </div>

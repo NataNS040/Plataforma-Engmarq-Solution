@@ -19,12 +19,9 @@ import type { FichaEpiComItens } from '@/services/fichasEpiService'
 import { FichaEpiModal } from './FichaEpiModal'
 import { FichaEpiDetailModal } from './FichaEpiDetailModal'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
-import { useEmpresas } from '@/hooks/queries/useEmpresas'
-import { useDashboardKpis } from '@/hooks/queries/useDashboard'
 import type { DocStatus as DbDocStatus } from '@/types/database'
-import { getChartColor, getAvatarColor } from '@/lib/theme'
+import { getAvatarColor } from '@/lib/theme'
 import { exportToCsv } from '@/lib/csvExport'
-import type { EmpresaComContagem } from '@/services/empresasService'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -253,130 +250,13 @@ function DateEntryModal({ onClose, empresaId }: { onClose: () => void; empresaId
 // DocumentosAdmin
 // ---------------------------------------------------------------------------
 function DocumentosAdmin() {
-  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
-
-  if (selectedEmpresa) {
-    return (
-      <DocumentosEmpresa
-        empresaIdProp={selectedEmpresa.id}
-        empresaNome={selectedEmpresa.nome}
-        onBack={() => setSelectedEmpresa(null)}
-      />
-    )
-  }
-
-  return <DocumentosAdminList onSelect={setSelectedEmpresa} />
+  return <div className="content"><h1>Documentos</h1><p>Acesso restrito aos integrantes da empresa.</p></div>
 }
 
-function DocumentosAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
-  const empresasQuery = useEmpresas()
-  const empresas = empresasQuery.data ?? []
-  const kpisQuery = useDashboardKpis('all')
-  const kpis = kpisQuery.data
-
-  return (
-    <div className="content">
-      <div className="page-header">
-        <div>
-          <h1>Documentos</h1>
-          <p className="sub">Visão consolidada · documentos mestres das {empresas.length} empresas-cliente</p>
-        </div>
-        <div className="toolbar">
-          <button
-            className="tbtn"
-            onClick={() => exportToCsv('documentos_empresas.csv', [
-              { header: 'Empresa',        value: (e: EmpresaComContagem) => e.razao_social },
-              { header: 'CNPJ',           value: (e: EmpresaComContagem) => e.cnpj },
-              { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
-              { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
-              { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
-
-              { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
-            ], empresas)}
-          ><Download size={14} /> Exportar consolidado</button>
-        </div>
-      </div>
-
-      <div className="kpi-row">
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic violet"><FileText size={16} /></span></div>
-          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Documentos monitorados</span><span className="kpi-ic blue"><FileText size={16} /></span></div>
-          <div className="kpi-value">{kpis?.totalDocumentos ?? '—'}</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Vencendo</span><span className="kpi-ic orange"><Clock size={16} /></span></div>
-          <div className="kpi-value">{kpis?.docsVencendo ?? '—'}</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Vencidos</span><span className="kpi-ic red"><AlertTriangle size={16} /></span></div>
-          <div className="kpi-value" style={{ color: (kpis?.docsVencidos ?? 0) > 0 ? 'var(--red-500)' : undefined }}>
-            {kpis?.docsVencidos ?? '—'}
-          </div>
-        </div>
-      </div>
-
-      <div className="glass" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-          <div className="ctitle">Empresas — status documental</div>
-          <div className="csub">Clique numa empresa para ver os documentos</div>
-        </div>
-        <div style={{ overflow: 'auto' }}>
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>Empresa</th>
-                <th>Setor</th>
-                <th>Cidade / UF</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {empresas.length === 0 && (
-                <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
-              )}
-              {empresas.map((e, i) => (
-                <tr
-                  key={e.id}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => onSelect({ id: e.id, nome: e.razao_social })}
-                >
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span className="ava" style={{ background: getChartColor(i), borderRadius: 8, width: 32, height: 32, fontSize: 12, flexShrink: 0 }}>
-                        {e.razao_social.slice(0, 1)}
-                      </span>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 13 }}>{e.razao_social}</div>
-                        <div style={{ fontSize: 11, color: 'var(--ink-500)' }}>{e.cnpj}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{e.setor ?? '—'}</td>
-                  <td style={{ fontSize: 12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
-                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// NovoDocumentoModal
-// ---------------------------------------------------------------------------
 const novoDocSchema = z.object({
-  tipo_id:    z.string().min(1, 'Selecione o tipo de documento'),
-  titulo:     z.string().min(2, 'Informe o título'),
-  numero:     z.string(),
-  emissao:    z.string(),
-  vencimento: z.string(),
-  observacoes: z.string(),
+  tipo_id: z.string().min(1, 'Selecione o tipo de documento'),
+  titulo: z.string().min(2, 'Informe o título'),
+  numero: z.string(), emissao: z.string(), vencimento: z.string(), observacoes: z.string(),
 })
 type NovoDocForm = z.infer<typeof novoDocSchema>
 

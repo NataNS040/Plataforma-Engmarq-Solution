@@ -1,0 +1,37 @@
+﻿[
+    {
+        "path":  "supabase/migrations/015_user_profiles_tenant_management.sql",
+        "sha256":  "7a3d6db8f1e694756287d931dcb831f2be676755e41f5348692a4c8079864e6b",
+        "matches":  true
+    },
+    {
+        "path":  "supabase/migrations/016_colaboradores_tenant_security.sql",
+        "sha256":  "631cdae22348a47c0d095959b7a84504b0bc57cd755580ff702b8a8ebe85f9ad",
+        "matches":  true
+    },
+    {
+        "path":  "supabase/migrations/017_catalogos_tenant_security.sql",
+        "sha256":  "1cc374788529cf92685f376589946f28d80086083f89922c4177c58a82455b70",
+        "matches":  true
+    },
+    {
+        "path":  "supabase/migrations/018_treinamentos_tenant_security.sql",
+        "sha256":  "feca76ce34c57266acbe59a280f95276d4c1375984c5cefd086ca71342739a71",
+        "matches":  true
+    },
+    {
+        "path":  "supabase/migrations/019_documentos_path_compat.sql",
+        "sha256":  "57a99089d3f684c57e6c3d15c95f446bff35992c9a7eaa3103ba329c744e8bf8",
+        "matches":  true
+    },
+    {
+        "path":  "supabase/migrations/020_documentos_private_storage.sql",
+        "sha256":  "6aff35a817e0f65ba592b86e70e9e3d5cda134b9f2c4d24b79496e9533c86fb8",
+        "matches":  true
+    },
+    {
+        "path":  "supabase/migrations/021_documentos_empresas_security.sql",
+        "sha256":  "5ee8bf5d93b3bbd80f4d71819d65e18d3882c3d4a821f36b05e6d821b04519f6",
+        "matches":  true
+    }
+]

@@ -1,0 +1,8 @@
+﻿FILE,LINE,METHOD,SOURCE,REASON
+frontend/src/modules/colaboradores/ColaboradoresPage.tsx,122,from,const registrosExtras = Array.from(extras.values()).map(regs => {,"API facade/Array.from/Headers operation, not Supabase"
+frontend/src/modules/colaboradores/ColaboradoresPage.tsx,885,from,"return ['Todos', ...Array.from(nomes).sort()]","API facade/Array.from/Headers operation, not Supabase"
+frontend/src/modules/treinamentos/TreinamentosPage.tsx,521,from,"return ['Todos', ...Array.from(s).sort()]","API facade/Array.from/Headers operation, not Supabase"
+frontend/src/services/api/client.ts,82,delete,headers.delete('Authorization'),"API facade/Array.from/Headers operation, not Supabase"
+frontend/src/services/catalogosService.ts,17,update,"export const atualizarSetor = (id: string, input: CatalogoUpdateInput) => catalogosApi.setores.update(id, input)","API facade/Array.from/Headers operation, not Supabase"
+frontend/src/services/catalogosService.ts,18,update,"export const atualizarFuncao = (id: string, input: FuncaoUpdateInput) => catalogosApi.funcoes.update(id, input)","API facade/Array.from/Headers operation, not Supabase"
+frontend/src/services/catalogosService.ts,19,update,"export const atualizarAmbiente = (id: string, input: CatalogoUpdateInput) => catalogosApi.ambientes.update(id, input)","API facade/Array.from/Headers operation, not Supabase"

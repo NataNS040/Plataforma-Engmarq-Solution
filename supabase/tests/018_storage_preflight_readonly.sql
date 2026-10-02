@@ -1,4 +1,9 @@
 -- Execute on a NEW read-only database session. Never reapply 018 to investigate.
+-- Initial consolidated preflight was completed remotely (operator-provided results):
+-- 0 blockers, 6 warnings, no detectable 018 footprints, 2 original FKs, 3 RLS tables,
+-- 5 baseline policies and no cross-tenant relationships/invalid certificate paths.
+-- 019 is now applied; use 019_documentos_cutover_preflight_readonly.sql for the cutover.
+-- This legacy diagnostic script has multiple result sets, not a consolidated summary.
 BEGIN TRANSACTION READ ONLY;
 DO $$
 BEGIN

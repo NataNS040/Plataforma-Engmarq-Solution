@@ -1,5 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 import { buscarKpis } from '@/services/dashboardService'
+import { apiRequest } from '@/services/api/client'
 import { listarDocumentos } from '@/services/documentosService'
 import { listarAsos } from '@/services/examesService'
 import { listarFichasEpi } from '@/services/fichasEpiService'
@@ -12,11 +13,14 @@ const { from, query, result } = vi.hoisted(() => {
   return { from: vi.fn(() => query), query, result }
 })
 vi.mock('@/lib/supabase', () => ({ supabase: { from } }))
+vi.mock('@/services/api/client', () => ({ apiRequest: vi.fn() }))
 
 beforeEach(() => {
   from.mockClear()
   for (const fn of Object.values(query)) fn.mockClear()
   result.data = []
+  vi.mocked(apiRequest).mockReset().mockResolvedValue({ totalColaboradores: null,
+    totalTreinamentos: null, treinamentosVencidos: null, totalEmpresas: 7 })
 })
 
 it('global admin dashboard has unavailable employee count and never selects colaboradores', async () => {
@@ -30,15 +34,17 @@ it('global admin dashboard has unavailable employee count and never selects cola
   expect(kpis.totalEmpresas).toBe(7)
 })
 
-it('admin company-specific dashboard also avoids employee SELECT', async () => {
-  expect((await buscarKpis('company', false)).totalColaboradores).toBeNull()
+it('admin tenant-specific dashboard propagates server denial without employee SELECT', async () => {
+  vi.mocked(apiRequest).mockRejectedValue(new Error('403'))
+  await expect(buscarKpis('74455974-ed31-40ba-b8af-dc335bf59801', false)).rejects.toThrow('403')
   expect(from.mock.calls.flat()).not.toContain('colaboradores')
 })
 
 it('tenant dashboard keeps own employee count', async () => {
-  expect((await buscarKpis('own')).totalColaboradores).toBe(7)
-  expect(from).toHaveBeenCalledWith('colaboradores')
-  expect(query.eq).toHaveBeenCalledWith('empresa_id', 'own')
+  vi.mocked(apiRequest).mockResolvedValue({ totalColaboradores: 7 })
+  expect((await buscarKpis('74455974-ed31-40ba-b8af-dc335bf59801')).totalColaboradores).toBe(7)
+  expect(from).not.toHaveBeenCalled()
+  expect(apiRequest).toHaveBeenCalledWith('/dashboard/kpis?scope=74455974-ed31-40ba-b8af-dc335bf59801',expect.any(Object))
 })
 
 it('admin company documents omit employee join and request only unassigned records', async () => {

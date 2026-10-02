@@ -25,7 +25,7 @@ export function useDocumentos(empresaId: string | null | undefined) {
   return useQuery({
     queryKey: [...qk.documentos.list(empresaId ?? ''), isAdmin],
     queryFn: () => listarDocumentos(empresaId!, isAdmin),
-    enabled: !!empresaId,
+    enabled: !!empresaId && !isAdmin,
   })
 }
 
