@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { qk } from '@/lib/queryKeys'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
+import { listarAsos, listarAsosDoColaborador } from '@/services/examesService'
 import {
   listarDocumentoTipos,
   listarDocumentos,
@@ -21,18 +22,25 @@ export function useDocumentoTipos() {
 }
 
 export function useDocumentos(empresaId: string | null | undefined) {
-  const { isAdmin } = useCurrentProfile()
+  const { isAdmin, profile, empresaId: actorEmpresaId, canReadColaboradores } = useCurrentProfile()
+  const allowed = !!empresaId && empresaId === actorEmpresaId && canReadColaboradores
   return useQuery({
-    queryKey: [...qk.documentos.list(empresaId ?? ''), isAdmin],
-    queryFn: () => listarDocumentos(empresaId!, isAdmin),
-    enabled: !!empresaId && !isAdmin,
+    queryKey: [...qk.documentos.list(empresaId ?? ''), isAdmin, profile?.id, allowed],
+    queryFn: async () => {
+      const [docs, asos] = await Promise.all([listarDocumentos(empresaId!, isAdmin), listarAsos(empresaId!)])
+      return [...docs, ...asos.map(a => ({ ...a, created_at: a.created_at ?? '' }))]
+    },
+    enabled: allowed,
   })
 }
 
 export function useDocumentosDoColaborador(colaboradorId: string | null | undefined) {
   return useQuery({
     queryKey: qk.documentos.byColaborador(colaboradorId ?? ''),
-    queryFn: () => listarDocumentosDoColaborador(colaboradorId!),
+    queryFn: async () => {
+      const [docs, asos] = await Promise.all([listarDocumentosDoColaborador(colaboradorId!), listarAsosDoColaborador(colaboradorId!)])
+      return [...docs, ...asos.map(a => ({ ...a, created_at: a.created_at ?? '' }))]
+    },
     enabled: !!colaboradorId,
   })
 }
@@ -42,6 +50,8 @@ export function useCriarDocumento() {
   return useMutation({
     mutationFn: (input: DocumentoInput) => criarDocumento(input),
     onSuccess: doc => {
+      qc.invalidateQueries({ queryKey: qk.exames.all })
+      qc.invalidateQueries({ queryKey: qk.dashboard.all })
       qc.invalidateQueries({ queryKey: qk.documentos.list(doc.empresa_id) })
       if (doc.colaborador_id) qc.invalidateQueries({ queryKey: qk.documentos.byColaborador(doc.colaborador_id) })
       toast.success('Documento cadastrado.')
@@ -60,6 +70,8 @@ export function useAtualizarDocumento() {
       colaboradorId?: string | null
     }) => atualizarDocumento(id, input).then(d => ({ ...d, empresaId, colaboradorId })),
     onSuccess: result => {
+      qc.invalidateQueries({ queryKey: qk.exames.all })
+      qc.invalidateQueries({ queryKey: qk.dashboard.all })
       qc.invalidateQueries({ queryKey: qk.documentos.list(result.empresaId) })
       if (result.colaboradorId) qc.invalidateQueries({ queryKey: qk.documentos.byColaborador(result.colaboradorId) })
       toast.success('Documento atualizado.')
@@ -74,6 +86,8 @@ export function useDeletarDocumento() {
     mutationFn: ({ id, empresaId }: { id: string; empresaId: string }) =>
       deletarDocumento(id).then(() => empresaId),
     onSuccess: empresaId => {
+      qc.invalidateQueries({ queryKey: qk.exames.all })
+      qc.invalidateQueries({ queryKey: qk.dashboard.all })
       qc.invalidateQueries({ queryKey: qk.documentos.list(empresaId) })
       toast.success('Documento removido.')
     },

@@ -1,13 +1,12 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 import { resolverDocumentoPath, assinarDocumento, abrirDocumento, uploadArquivoPrivado } from '@/services/documentosStorage'
 import { uploadDocumentoArquivo, criarDocumento, atualizarDocumento } from '@/services/documentosService'
-import { uploadAsoArquivo, criarAso } from '@/services/examesService'
 import { uploadCertificado, baixarCertificado } from '@/services/treinamentosService'
 
 const { getSession, profile, upload, sign, from, query, result, toastError } = vi.hoisted(() => {
   const result = { data: {} as unknown, error: null }
   const query: Record<string, ReturnType<typeof vi.fn>> = {}
-  for (const method of ['select','eq','ilike','limit','insert','update']) query[method] = vi.fn(() => query)
+  for (const method of ['select','eq','neq','ilike','limit','insert','update']) query[method] = vi.fn(() => query)
   query.single = vi.fn(() => Promise.resolve(result))
   return { getSession: vi.fn(), profile: vi.fn(), upload: vi.fn(), sign: vi.fn(), from: vi.fn(), query, result, toastError: vi.fn() }
 })
@@ -86,7 +85,7 @@ it('operacional reads but cannot upload', async () => {
   await expect(uploadArquivoPrivado(company, file)).rejects.toThrow()
   expect(upload).not.toHaveBeenCalled()
 })
-it.each([uploadDocumentoArquivo, uploadAsoArquivo])('Documentos/ASO upload returns a path without any URL', async send => {
+it.each([uploadDocumentoArquivo])('Documentos upload returns a path without any URL', async send => {
   const uploaded = await send(company, file)
   expect(uploaded).toMatch(new RegExp(`^${company}/[a-f0-9-]+\\.pdf$`))
   expect(from).toHaveBeenCalledWith('documentos')
@@ -114,15 +113,11 @@ it('rejects unsupported files, oversize files and forged upload tenants', async 
   await expect(uploadArquivoPrivado('../forged', file)).rejects.toThrow()
   expect(upload).not.toHaveBeenCalled()
 })
-it('persists canonical path for Documentos and ASO, without signed/public URL', async () => {
+it('persists canonical path for Documentos without signed/public URL', async () => {
   const input = { empresa_id: company, tipo_id: 'type', titulo: 'Synthetic', arquivo_path: path }
   await criarDocumento(input)
   expect(query.insert).toHaveBeenLastCalledWith(expect.objectContaining({ arquivo_path: path }))
   expect(query.insert.mock.calls[0][0]).not.toHaveProperty('arquivo_url')
-  result.data = { id: 'type' }
-  await criarAso({ ...input, colaborador_id: 'employee', subtipo_exame: 'admissional' })
-  expect(query.insert.mock.calls[1][0]).not.toHaveProperty('arquivo_url')
-  expect(query.insert.mock.calls[1][0].arquivo_path).toBe(path)
   await atualizarDocumento('document', { arquivo_path: path })
   expect(query.update).toHaveBeenCalledWith({ arquivo_path: path })
 })

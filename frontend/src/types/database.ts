@@ -97,6 +97,7 @@ export interface Documento {
   arquivo_url: string | null
   status: DocStatus
   observacoes: string | null
+  resultado_aso: 'apto' | 'apto_com_restricao' | 'inapto' | null
   colaborador_id: string | null
   subtipo_exame: SubtipoExame | null
   exames_realizados: string[] | null

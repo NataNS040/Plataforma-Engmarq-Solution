@@ -69,6 +69,9 @@ def test_b04_counts_exact_and_actor_scope(client, upstream, role):
         assert request.method == 'HEAD'
         assert request.url.params['empresa_id'] == f'eq.{OWN}'
         assert request.headers['prefer'] == 'count=exact'
+    classified=[r for r in upstream['operations'] if r.url.params.get('status_calculado')]
+    assert len(classified)==3
+    assert all(r.url.path=='/rest/v1/vw_dashboard_documentos' for r in classified)
 
 
 def test_b04_alerts_scoped_sorted_and_limited(client, upstream):

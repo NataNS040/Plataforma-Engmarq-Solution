@@ -8,7 +8,8 @@ import { listarFichasEpi } from '@/services/fichasEpiService'
 const { from, query, result } = vi.hoisted(() => {
   const result = { data: [] as unknown[], count: 7, error: null }
   const query: Record<string, ReturnType<typeof vi.fn>> = {}
-  for (const method of ['select', 'eq', 'order', 'is', 'not']) query[method] = vi.fn(() => query)
+  for (const method of ['select', 'eq', 'order', 'is', 'not', 'neq', 'ilike', 'limit']) query[method] = vi.fn(() => query)
+  query.single = vi.fn(() => Promise.resolve({ data: { id: 'aso-type' }, error: null }))
   query.then = vi.fn((resolve: (value: typeof result) => unknown) => Promise.resolve(resolve(result)))
   return { from: vi.fn(() => query), query, result }
 })
@@ -51,9 +52,10 @@ it('admin company documents omit employee join and request only unassigned recor
   expect(await listarDocumentos('company', true)).toEqual([])
   expect(query.select).toHaveBeenCalledWith('*, tipo:documento_tipos(*)')
   expect(query.is).toHaveBeenCalledWith('colaborador_id', null)
+  expect(query.neq).toHaveBeenCalledWith('tipo_id', 'aso-type')
 })
 
-it.each([listarDocumentos, listarAsos, listarFichasEpi])(
+it.each([listarDocumentos, listarFichasEpi])(
   'tenant consumer tolerates a null employee relation without an inner join or extra employee query', async list => {
     result.data = [{ id: 'record', colaborador: null }]
     expect(await list('own')).toEqual(result.data)
@@ -62,3 +64,10 @@ it.each([listarDocumentos, listarAsos, listarFichasEpi])(
     expect(query.select.mock.calls.every(([select]) => !String(select).includes('!inner'))).toBe(true)
   },
 )
+
+it('ASO consumer uses FastAPI rather than selecting all employee documents', async () => {
+  vi.mocked(apiRequest).mockResolvedValue([])
+  expect(await listarAsos('own')).toEqual([])
+  expect(apiRequest).toHaveBeenCalledWith('/exames',expect.any(Object))
+  expect(from).not.toHaveBeenCalled()
+})

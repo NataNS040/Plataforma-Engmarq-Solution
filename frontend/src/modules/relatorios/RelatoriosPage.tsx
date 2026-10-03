@@ -161,6 +161,7 @@ function GerarRelModal({ onClose }: GerarRelModalProps) {
             Emissão:      a.emissao ?? '',
             Vencimento:   a.vencimento ?? '',
             Status:       DOC_STATUS_LABEL[a.status],
+            Resultado:    a.resultado_aso === 'apto' ? 'Apto' : a.resultado_aso === 'inapto' ? 'Inapto' : a.resultado_aso === 'apto_com_restricao' ? 'Apto com restrição' : 'Não informado',
           }))
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetRowsOrPlaceholder(rows, 'Exames')), 'Exames')
       }

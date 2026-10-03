@@ -38,10 +38,12 @@ export interface DocumentoInput {
 const DOCUMENTO_SELECT = `*, tipo:documento_tipos(*), colaborador:colaboradores(id, nome)`
 
 export async function listarDocumentos(empresaId: string, companyOnly = false): Promise<DocumentoComTipo[]> {
+  const asoTipo = await getTipoIdPorNome('ASO')
   let query = supabase
     .from('documentos')
     .select(companyOnly ? '*, tipo:documento_tipos(*)' : DOCUMENTO_SELECT)
     .eq('empresa_id', empresaId)
+    .neq('tipo_id', asoTipo)
     .order('vencimento', { ascending: true, nullsFirst: false })
   if (companyOnly) query = query.is('colaborador_id', null)
   const { data, error } = await query
@@ -51,10 +53,12 @@ export async function listarDocumentos(empresaId: string, companyOnly = false): 
 }
 
 export async function listarDocumentosDoColaborador(colaboradorId: string): Promise<DocumentoComTipo[]> {
+  const asoTipo = await getTipoIdPorNome('ASO')
   const { data, error } = await supabase
     .from('documentos')
     .select(DOCUMENTO_SELECT)
     .eq('colaborador_id', colaboradorId)
+    .neq('tipo_id', asoTipo)
     .order('vencimento', { ascending: true, nullsFirst: false })
 
   if (error) throw handleSupabaseError(error, 'Não foi possível carregar os documentos do colaborador.')
@@ -63,8 +67,7 @@ export async function listarDocumentosDoColaborador(colaboradorId: string): Prom
 
 // Resolução estável de tipo_id por nome exato do catálogo — em vez de regex
 // sobre o nome (frágil, com fallback silencioso pro primeiro tipo em ordem
-// alfabética quando não achava nada). Mesmo padrão de getOrCreateAsoTipoId()
-// em examesService.ts.
+// alfabética quando não achava nada).
 export async function getTipoIdPorNome(nome: string): Promise<string> {
   const { data, error } = await supabase
     .from('documento_tipos')
@@ -77,6 +80,7 @@ export async function getTipoIdPorNome(nome: string): Promise<string> {
 }
 
 export async function criarDocumento(input: DocumentoInput): Promise<Documento> {
+  if (input.tipo_id === await getTipoIdPorNome('ASO')) throw new Error('Cadastre ASOs no módulo Exames.')
   const { data, error } = await supabase
     .from('documentos')
     .insert({
@@ -101,10 +105,13 @@ export async function atualizarDocumento(
   id: string,
   input: Partial<Omit<DocumentoInput, 'empresa_id'>>
 ): Promise<Documento> {
+  const asoTipo = await getTipoIdPorNome('ASO')
+  if (input.tipo_id === asoTipo) throw new Error('Gerencie ASOs no módulo Exames.')
   const { data, error } = await supabase
     .from('documentos')
     .update(input)
     .eq('id', id)
+    .neq('tipo_id', asoTipo)
     .select('*')
     .single()
 
@@ -118,10 +125,12 @@ export async function uploadDocumentoArquivo(empresaId: string, file: File): Pro
 }
 
 export async function deletarDocumento(id: string): Promise<void> {
+  const asoTipo = await getTipoIdPorNome('ASO')
   const { error } = await supabase
     .from('documentos')
     .delete()
     .eq('id', id)
+    .neq('tipo_id', asoTipo)
 
   if (error) throw handleSupabaseError(error, 'Não foi possível deletar o documento.')
 }

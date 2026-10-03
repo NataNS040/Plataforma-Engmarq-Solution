@@ -1,4 +1,6 @@
 import { abrirDocumento } from '@/services/documentosStorage'
+import { Link } from 'react-router-dom'
+import { abrirAso } from '@/services/examesService'
 import { useState, useMemo, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -318,7 +320,7 @@ function NovoDocumentoModal({ onClose, empresaId }: { onClose: () => void; empre
                 <DocField label="Tipo de documento" full>
                   <select className="mp-input" {...register('tipo_id')} disabled={tiposQuery.isLoading}>
                     <option value="">Selecione…</option>
-                    {(tiposQuery.data ?? []).map(t => (
+                    {(tiposQuery.data ?? []).filter(t => t.nome.trim().toLowerCase() !== 'aso').map(t => (
                       <option key={t.id} value={t.id}>{t.nome}</option>
                     ))}
                   </select>
@@ -466,7 +468,7 @@ function EditarDocumentoModal({ doc, empresaId, onClose }: {
                 <DocField label="Tipo de documento" full>
                   <select className="mp-input" {...register('tipo_id')} disabled={tiposQuery.isLoading}>
                     <option value="">Selecione…</option>
-                    {(tiposQuery.data ?? []).map(t => (
+                    {(tiposQuery.data ?? []).filter(t => t.nome.trim().toLowerCase() !== 'aso').map(t => (
                       <option key={t.id} value={t.id}>{t.nome}</option>
                     ))}
                   </select>
@@ -863,7 +865,13 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
                     <td><span className={`chip ${r.st.key}`}>{r.st.label}</span></td>
                     <td>
                       <div className="doc-actions">
-                        {r.kind === 'empresa' ? (
+                        {r.cat === 'aso' ? (
+                          <>
+                            <Link className="tbtn ghost sm" to="/exames">Ver em Exames</Link>
+                            <button className="icon-btn sm" title="Visualizar ASO" disabled={r.kind !== 'empresa' || !(r.arquivo_path || r.arquivo_url)} onClick={() => void abrirAso(r.id).catch(() => toast.error('Não foi possível acessar o ASO.'))}><Eye size={15}/></button>
+                            <button className="icon-btn sm" title="Baixar ASO" disabled={r.kind !== 'empresa' || !(r.arquivo_path || r.arquivo_url)} onClick={() => void abrirAso(r.id,true).catch(() => toast.error('Não foi possível acessar o ASO.'))}><Download size={15}/></button>
+                          </>
+                        ) : r.kind === 'empresa' ? (
                           <>
                             <button className="icon-btn sm" title="Visualizar" onClick={() => { const d = docsBanco.find(x => x.id === r.id); if (d) setViewDoc(d) }}><Eye size={15} /></button>
                             <button className="icon-btn sm" title="Baixar" disabled={!(r.arquivo_path || r.arquivo_url)} onClick={() => void abrirDocumento(r, r.empresa_id, r.nome)}><Download size={15} /></button>

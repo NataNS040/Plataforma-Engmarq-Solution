@@ -19,11 +19,13 @@ class DashboardRepository:
             raise AppError(503, 'dashboard_unavailable', 'Não foi possível carregar o dashboard.') from None
 
     def count(self, table, company=None, status=None, active=False):
-        query = self.client.table(table).select('id', count='exact', head=True)
+        live_docs = table == 'documentos' and status is not None
+        query = self.client.table('vw_dashboard_documentos' if live_docs else table).select(
+            'empresa_id' if live_docs else 'id', count='exact', head=True)
         if company is not None:
             query = query.eq('empresa_id', str(company))
         if status is not None:
-            query = query.eq('status', status)
+            query = query.eq('status_calculado' if live_docs else 'status', status)
         if active:
             query = query.eq('active', True)
         count = self.execute(query).count

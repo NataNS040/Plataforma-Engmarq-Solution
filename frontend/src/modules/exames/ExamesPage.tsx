@@ -1,723 +1,157 @@
-import { abrirDocumento } from '@/services/documentosStorage'
-import { useState, useMemo, useRef } from 'react'
-import {
-  CheckCircle2, Clock, AlertTriangle, Calendar, Download, Plus,
-  Eye, Trash2, X, Search, Loader2, UploadCloud,
-} from 'lucide-react'
-import { useAuth } from '@/modules/auth/AuthProvider'
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { Plus, Download, Eye, Trash2, Pencil, X, Loader2 } from 'lucide-react'
 import { useCurrentProfile } from '@/hooks/useCurrentProfile'
-import { useExames, useCriarExame, useDeletarExame, useExamesCatalogo } from '@/hooks/queries/useExames'
+import { useExames, useCriarExame, useAtualizarExame, useDeletarExame, useExamesCatalogo } from '@/hooks/queries/useExames'
 import { useColaboradores } from '@/hooks/queries/useColaboradores'
-import { useEmpresas } from '@/hooks/queries/useEmpresas'
-import { useDashboardKpis } from '@/hooks/queries/useDashboard'
-import type { SubtipoExame } from '@/types/database'
-import { getAvatarColor, getInitials, getChartColor } from '@/lib/theme'
-import { comingSoon } from '@/lib/comingSoon'
+import { abrirAso, uploadAsoArquivo, type AsoComDetalhes, type AsoInput } from '@/services/examesService'
+import { qk } from '@/lib/queryKeys'
 import { exportToCsv } from '@/lib/csvExport'
-import { uploadAsoArquivo } from '@/services/examesService'
-import type { EmpresaComContagem } from '@/services/empresasService'
+import type { SubtipoExame, Documento } from '@/types/database'
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-function todayMid() {
-  const t = new Date(); t.setHours(0, 0, 0, 0); return t
+export const SUBTIPOS: Record<SubtipoExame, string> = {
+  admissional: 'Admissional', periodico: 'Periódico', retorno_trabalho: 'Retorno ao trabalho',
+  mudanca_risco: 'Mudança de risco ocupacional', demissional: 'Demissional',
 }
-function pISO(s: string): Date | null {
-  if (!s) return null
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-function brDate(iso: string | undefined | null) {
-  if (!iso) return '—'
-  const [y, m, d] = iso.split('-')
-  return `${d}/${m}/${y}`
-}
-function addYears(iso: string, n: number) {
-  const d = pISO(iso)!; d.setFullYear(d.getFullYear() + n)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-function asoStatus(validadeISO: string | undefined | null) {
-  const d = pISO(validadeISO ?? '')
-  if (!d) return { key: 'neutral' as const, label: 'Sem validade', rel: '' }
-  const days = Math.round((d.getTime() - todayMid().getTime()) / 86400000)
-  if (days < 0)  return { key: 'crit' as const, label: 'Vencido',  rel: `há ${Math.abs(days)} ${Math.abs(days) === 1 ? 'dia' : 'dias'}` }
-  if (days <= 30) return { key: 'warn' as const, label: 'Vencendo', rel: `em ${days} ${days === 1 ? 'dia' : 'dias'}` }
-  return { key: 'ok' as const, label: 'Em dia', rel: `em ${days} dias` }
-}
+export const RESULTADOS = { apto: 'Apto', apto_com_restricao: 'Apto com restrição', inapto: 'Inapto' }
+export const STATUS = { vigente: 'Vigente', vencendo: 'Vencendo', vencido: 'Vencido' }
+export const subtipoLabel = (s: SubtipoExame | null) => s ? SUBTIPOS[s] : 'Não informado (legado)'
+export const resultadoLabel = (s: Documento['resultado_aso']) => s ? RESULTADOS[s] : 'Não informado'
+const brDate = (s: string | null) => s ? s.split('-').reverse().join('/') : 'Não informado'
 
-type AsoStatusKey = 'ok' | 'warn' | 'crit' | 'neutral'
-
-const avatarColor = getAvatarColor
-const initials = getInitials
-
-// ---------------------------------------------------------------------------
-// Static data
-// ---------------------------------------------------------------------------
-const TIPOS = ['Admissional', 'Periódico', 'Mudança de risco', 'Retorno ao trabalho', 'Demissional']
-const RESULTADOS = ['Apto', 'Apto com restrição', 'Inapto']
-const RES_KEY: Record<string, AsoStatusKey> = { 'Apto': 'ok', 'Apto com restrição': 'warn', 'Inapto': 'crit' }
-
-const SUBTIPO_MAP: Record<string, SubtipoExame> = {
-  'Admissional':         'admissional',
-  'Periódico':           'periodico',
-  'Mudança de risco':    'mudanca_risco',
-  'Retorno ao trabalho': 'retorno_trabalho',
-  'Demissional':         'demissional',
-}
-
-interface AsoSeed { id: string; colab: string; tipo: string; realizado: string; validade: string; resultado: string; exames: string[] }
-
-// ---------------------------------------------------------------------------
-// Field helper
-// ---------------------------------------------------------------------------
-function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
-  return (
-    <div className="mp-field" style={full ? { gridColumn:'1 / -1' } : undefined}>
-      <label>{label}</label>
-      {children}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Status preview
-// ---------------------------------------------------------------------------
-function StatusPreviewWidget({ validade }: { validade: string }) {
-  const st = asoStatus(validade)
-  return (
-    <div className="status-preview">
-      <div className="status-preview-label">Status automático</div>
-      {validade
-        ? <div className="status-preview-body">
-            <span className={`chip ${st.key}`} style={{ fontSize:12 }}>{st.label}</span>
-            <span style={{ fontSize:12, color:'var(--ink-500)' }}>vence {brDate(validade)} · {st.rel}</span>
-          </div>
-        : <div style={{ fontSize:12, color:'var(--ink-400)' }}>Informe a validade para calcular o status.</div>}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// NewAsoModal
-// ---------------------------------------------------------------------------
-function NewAsoModal({ onClose, empresaId }: { onClose: () => void; empresaId: string }) {
-  const [colabId, setColabId] = useState('')
-  const [tipo, setTipo] = useState('')
-  const [resultado, setResultado] = useState('')
-  const [realizado, setRealizado] = useState('')
-  const [validade, setValidade] = useState('')
-  const [examsSel, setExamsSel] = useState<string[]>([])
+function AsoModal({ empresaId, aso, onClose }: { empresaId: string; aso?: AsoComDetalhes; onClose: () => void }) {
+  const [colaborador, setColaborador] = useState(aso?.colaborador_id ?? '')
+  const [subtipo, setSubtipo] = useState<SubtipoExame | ''>(aso?.subtipo_exame ?? '')
+  const [emissao, setEmissao] = useState(aso?.emissao ?? '')
+  const [vencimento, setVencimento] = useState(aso?.vencimento ?? '')
+  const [resultado, setResultado] = useState<NonNullable<Documento['resultado_aso']> | ''>(aso?.resultado_aso ?? '')
+  const [observacoes, setObservacoes] = useState(aso?.observacoes ?? '')
+  const [procedimentos, setProcedimentos] = useState(aso?.exames_realizados ?? [])
   const [file, setFile] = useState<File | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
+  const colabs = useColaboradores(empresaId)
+  const catalog = useExamesCatalogo()
+  const criar = useCriarExame()
+  const editar = useAtualizarExame()
+  const qc = useQueryClient()
 
-  const colabsQuery   = useColaboradores(empresaId)
-  const catalogoQuery = useExamesCatalogo()
-  const criar         = useCriarExame()
-
-  const catalogo = catalogoQuery.data ?? []
-
-  const toggleExame = (nome: string) =>
-    setExamsSel(prev => prev.includes(nome) ? prev.filter(e => e !== nome) : [...prev, nome])
-
-  const suggest = () => { if (realizado) setValidade(addYears(realizado, 1)) }
-  const canSave = colabId && tipo && resultado && realizado && validade
-
-  async function handleSave() {
-    const colab = (colabsQuery.data ?? []).find(c => c.id === colabId)
-    if (!colab) return
-    setIsUploading(true)
+  async function save(e: React.FormEvent) {
+    e.preventDefault(); setError('')
+    if (!colaborador || !subtipo) { setError('Informe colaborador e subtipo.'); return }
+    if (emissao && vencimento && vencimento < emissao) { setError('Vencimento anterior à emissão.'); return }
+    if (file && (file.type !== 'application/pdf' || file.size > 10485760)) { setError('Envie PDF de até 10 MB.'); return }
+    setBusy(true)
+    let row: AsoComDetalhes | undefined
     try {
-      let arquivoPath: string | null = null
-      if (file) arquivoPath = await uploadAsoArquivo(empresaId, file)
-      await criar.mutateAsync({
-        empresa_id:        empresaId,
-        colaborador_id:    colabId,
-        titulo:            `ASO — ${colab.nome}`,
-        subtipo_exame:     SUBTIPO_MAP[tipo] ?? 'periodico',
-        emissao:           realizado || null,
-        vencimento:        validade || null,
-        observacoes:       resultado,
-        exames_realizados: examsSel.length > 0 ? examsSel : null,
-        arquivo_path:      arquivoPath,
-      })
+      const colab = colabs.data?.find(c => c.id === colaborador)
+      const input: AsoInput = { empresa_id: empresaId, colaborador_id: colaborador, subtipo_exame: subtipo,
+        titulo: aso?.titulo ?? `ASO — ${colab?.nome ?? 'Colaborador'}`, emissao: emissao || null,
+        vencimento: vencimento || null, resultado_aso: resultado || null, observacoes: observacoes || null,
+        exames_realizados: procedimentos }
+      if (aso) {
+        // Only send changed fields so untouched legacy observations/arrays/dates remain byte-for-byte intact.
+        const patch: Partial<Omit<AsoInput, 'empresa_id'>> = {}
+        if (colaborador !== aso.colaborador_id) patch.colaborador_id = colaborador
+        if (subtipo !== aso.subtipo_exame) patch.subtipo_exame = subtipo
+        if (emissao !== (aso.emissao ?? '')) patch.emissao = emissao || null
+        if (vencimento !== (aso.vencimento ?? '')) patch.vencimento = vencimento || null
+        if (resultado !== (aso.resultado_aso ?? '')) patch.resultado_aso = resultado || null
+        if (observacoes !== (aso.observacoes ?? '')) patch.observacoes = observacoes || null
+        if (JSON.stringify(procedimentos) !== JSON.stringify(aso.exames_realizados ?? [])) patch.exames_realizados = procedimentos
+        row = Object.keys(patch).length ? await editar.mutateAsync({ id: aso.id, empresaId,
+          colaboradorId: colaborador, input: patch }) : aso
+      } else row = await criar.mutateAsync(input)
+      setSaved(true)
+      if (file) await uploadAsoArquivo(row.id, file)
+      await Promise.all([qc.invalidateQueries({ queryKey: qk.exames.all }),
+        qc.invalidateQueries({ queryKey: qk.documentos.all }), qc.invalidateQueries({ queryKey: qk.dashboard.all })])
       onClose()
-    } catch { /* toast já disparado */ }
-    finally { setIsUploading(false) }
+    } catch (err) {
+      if (row) {
+        await qc.invalidateQueries({ queryKey: qk.exames.all })
+        setError('ASO salvo. Não foi possível confirmar o anexo; feche e edite o registro para conferir o arquivo.')
+      } else setError(err instanceof Error ? err.message : 'Não foi possível salvar o ASO.')
+    } finally { setBusy(false) }
   }
-
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" style={{ maxWidth:560 }} onClick={e => e.stopPropagation()}>
-        <div className="modal-head">
-          <div>
-            <h2>Registrar ASO</h2>
-            <div style={{ fontSize:12.5, color:'var(--ink-500)', marginTop:2 }}>Atestado de Saúde Ocupacional · status automático por validade</div>
-          </div>
-          <button className="icon-btn sm" onClick={onClose}><X size={16}/></button>
-        </div>
-        <div className="modal-body">
-          <div className="mp-form">
-            <Field label="Colaborador" full>
-              <select className="mp-input" value={colabId} onChange={e => setColabId(e.target.value)} disabled={colabsQuery.isLoading}>
-                <option value="">Selecione…</option>
-                {(colabsQuery.data ?? []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-            </Field>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <Field label="Tipo de exame">
-                <select className="mp-input" value={tipo} onChange={e => setTipo(e.target.value)}>
-                  <option value="">Selecione…</option>
-                  {TIPOS.map(t => <option key={t}>{t}</option>)}
-                </select>
-              </Field>
-              <Field label="Resultado">
-                <select className="mp-input" value={resultado} onChange={e => setResultado(e.target.value)}>
-                  <option value="">Selecione…</option>
-                  {RESULTADOS.map(r => <option key={r}>{r}</option>)}
-                </select>
-              </Field>
-              <Field label="Data de realização">
-                <input className="mp-input" type="date" value={realizado} onChange={e => setRealizado(e.target.value)} onBlur={() => { if (!validade) suggest() }}/>
-              </Field>
-              <Field label="Data de validade">
-                <input className="mp-input" type="date" value={validade} onChange={e => setValidade(e.target.value)}/>
-              </Field>
-            </div>
-            {realizado && !validade && (
-              <button className="tbtn ghost" style={{ alignSelf:'flex-start', fontSize:12 }} onClick={suggest}>
-                <Clock size={12}/> Sugerir validade (+1 ano)
-              </button>
-            )}
-            <StatusPreviewWidget validade={validade}/>
-
-            {/* Exames realizados */}
-            <div style={{ gridColumn:'1 / -1' }}>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:'var(--ink-600)', marginBottom:8 }}>
-                Exames realizados
-                {examsSel.length > 0 && <span style={{ marginLeft:8, fontWeight:400, color:'var(--ink-400)' }}>{examsSel.length} selecionado{examsSel.length > 1 ? 's' : ''}</span>}
-              </label>
-              {catalogoQuery.isLoading
-                ? <div style={{ fontSize:12, color:'var(--ink-400)' }}>Carregando catálogo…</div>
-                : <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 16px', maxHeight:220, overflowY:'auto', padding:'10px 12px', border:'1px solid var(--border)', borderRadius:8, background:'var(--surface-2)' }}>
-                    {catalogo.map(e => (
-                      <label key={e.id} style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, cursor:'pointer', padding:'3px 0', userSelect:'none' }}>
-                        <input
-                          type="checkbox"
-                          checked={examsSel.includes(e.nome)}
-                          onChange={() => toggleExame(e.nome)}
-                          style={{ accentColor:'var(--primary)', width:14, height:14, cursor:'pointer', flexShrink:0 }}
-                        />
-                        {e.nome}
-                      </label>
-                    ))}
-                  </div>
-              }
-            </div>
-
-            <div
-              className="dropzone"
-              style={{ cursor:'pointer', borderColor: isDragging ? 'var(--navy-600)' : file ? 'var(--green-500)' : undefined, background: isDragging ? 'var(--bg-tint-1)' : file ? 'var(--green-50, #f0fdf4)' : undefined }}
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) setFile(f) }}
-            >
-              <input ref={fileInputRef} type="file" accept=".pdf" style={{ display:'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) setFile(f) }}/>
-              {file ? (
-                <>
-                  <div className="dropzone-ic"><CheckCircle2 size={20} style={{ color:'var(--green-500)' }}/></div>
-                  <div className="dropzone-title">{file.name}</div>
-                  <div className="dropzone-sub">{(file.size / 1024).toFixed(0)} KB</div>
-                  <button type="button" className="tbtn ghost sm" style={{ marginTop:4, fontSize:11 }} onClick={e => { e.stopPropagation(); setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}><X size={12}/> Remover</button>
-                </>
-              ) : (
-                <>
-                  <div className="dropzone-ic"><UploadCloud size={20}/></div>
-                  <div className="dropzone-title">Arraste ou clique para anexar o PDF do ASO</div>
-                  <div className="dropzone-sub">PDF · opcional · máx. 10 MB</div>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="modal-foot">
-            <button className="tbtn" onClick={onClose}>Cancelar</button>
-            <button
-              className="tbtn primary"
-              disabled={!canSave || criar.isPending || isUploading}
-              style={(!canSave || criar.isPending || isUploading) ? { opacity:0.5, pointerEvents:'none' } : undefined}
-              onClick={() => void handleSave()}
-            >
-              {(criar.isPending || isUploading) ? <Loader2 size={13} className="btn-spinner" /> : <CheckCircle2 size={13}/>}
-              {(criar.isPending || isUploading) ? 'Salvando...' : 'Salvar ASO'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  return <div className="modal-backdrop"><form className="modal" style={{ maxWidth: 600 }} onSubmit={e => void save(e)}>
+    <div className="modal-head"><h2>{aso ? 'Editar ASO' : 'Registrar ASO'}</h2><button type="button" className="icon-btn" disabled={busy} onClick={onClose}><X size={16}/></button></div>
+    <div className="modal-body"><div className="mp-form">
+      <label>Colaborador<select className="mp-input" value={colaborador} onChange={e => setColaborador(e.target.value)} disabled={busy || colabs.isLoading}>
+        <option value="">Selecione</option>{colabs.data?.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+      </select></label>
+      <label>Subtipo<select className="mp-input" value={subtipo} onChange={e => setSubtipo(e.target.value as SubtipoExame)}>
+        <option value="">Não informado</option>{Object.entries(SUBTIPOS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+      </select></label>
+      <label>Data de emissão<input className="mp-input" type="date" value={emissao} onChange={e => setEmissao(e.target.value)}/></label>
+      <label>Vencimento (quando aplicável)<input className="mp-input" type="date" value={vencimento} onChange={e => setVencimento(e.target.value)}/></label>
+      <label>Resultado informado<select className="mp-input" value={resultado} onChange={e => setResultado(e.target.value as typeof resultado)}>
+        <option value="">Não informado</option>{Object.entries(RESULTADOS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+      </select></label>
+      <label>Observações<textarea className="mp-input" value={observacoes} onChange={e => setObservacoes(e.target.value)}/></label>
+      <fieldset><legend>Procedimentos realizados</legend>{catalog.data?.map(p => <label key={p.id} style={{ display: 'block' }}>
+        <input type="checkbox" checked={procedimentos.includes(p.nome)} onChange={() => setProcedimentos(old => old.includes(p.nome) ? old.filter(x => x !== p.nome) : [...old,p.nome])}/> {p.nome}
+      </label>)}</fieldset>
+      <label>PDF opcional (até 10 MB)<input type="file" accept="application/pdf,.pdf" onChange={e => setFile(e.target.files?.[0] ?? null)}/></label>
+      {aso?.arquivo_path || aso?.arquivo_url ? <p>O arquivo atual será preservado; um novo anexo substitui a referência.</p> : null}
+      {(colabs.isError || catalog.isError) && <p role="alert">Não foi possível carregar colaboradores ou procedimentos.</p>}
+      {error && <p role="alert">{error}</p>}
+    </div></div>
+    <div className="modal-foot"><button type="button" className="tbtn" disabled={busy} onClick={onClose}>Fechar</button>
+      <button className="tbtn primary" disabled={busy || saved || colabs.isLoading || catalog.isLoading || colabs.isError || catalog.isError}>{busy ? 'Salvando…' : 'Salvar ASO'}</button></div>
+  </form></div>
 }
 
-// ---------------------------------------------------------------------------
-// ScheduleModal
-// ---------------------------------------------------------------------------
-function ScheduleModal({ prefill, onClose, empresaId }: { prefill: string | null; onClose: () => void; empresaId: string | null }) {
-  const colabsQuery = useColaboradores(empresaId)
-  const colabs = colabsQuery.data ?? []
-
-  // Pré-seleciona o colaborador quando o modal é aberto a partir da linha de
-  // uma ASO específica (prefill = nome) — ajustado durante o render (não em
-  // efeito) assim que a lista de colaboradores carrega, guardado pela
-  // comparação com o último prefill já aplicado.
-  const prefillId = useMemo(() => colabs.find(c => c.nome === prefill)?.id ?? '', [colabs, prefill])
-  const [colab, setColab] = useState('')
-  const [lastPrefillId, setLastPrefillId] = useState('')
-  if (prefillId && prefillId !== lastPrefillId) {
-    setLastPrefillId(prefillId)
-    setColab(prefillId)
-  }
-
-  const [tipo, setTipo] = useState('Periódico')
-  const [data, setData] = useState('')
-  const [hora, setHora] = useState('')
-  const canSave = colab && data && hora
-
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" style={{ maxWidth:500 }} onClick={e => e.stopPropagation()}>
-        <div className="modal-head">
-          <div>
-            <h2>Agendar exame</h2>
-            <div style={{ fontSize:12.5, color:'var(--ink-500)', marginTop:2 }}>Agenda da clínica ocupacional</div>
-          </div>
-          <button className="icon-btn sm" onClick={onClose}><X size={16}/></button>
-        </div>
-        <div className="modal-body">
-          <div className="mp-form">
-            <Field label="Colaborador" full>
-              <select className="mp-input" value={colab} onChange={e => setColab(e.target.value)} disabled={colabsQuery.isLoading}>
-                <option value="">Selecione…</option>
-                {colabs.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-            </Field>
-            <Field label="Tipo de exame" full>
-              <select className="mp-input" value={tipo} onChange={e => setTipo(e.target.value)}>
-                {TIPOS.map(t => <option key={t}>{t}</option>)}
-              </select>
-            </Field>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <Field label="Data"><input className="mp-input" type="date" value={data} onChange={e => setData(e.target.value)}/></Field>
-              <Field label="Horário"><input className="mp-input" type="time" value={hora} onChange={e => setHora(e.target.value)}/></Field>
-            </div>
-          </div>
-          <div className="modal-foot">
-            <button className="tbtn" onClick={onClose}>Cancelar</button>
-            <button
-              className="tbtn primary is-soon"
-              disabled={!canSave}
-              title="Em breve"
-              style={!canSave ? { opacity:0.5, pointerEvents:'none' } : undefined}
-              onClick={() => { comingSoon('Agenda de exames'); onClose() }}
-            >
-              <CheckCircle2 size={13}/> Agendar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// ConfirmDelete
-// ---------------------------------------------------------------------------
-function ConfirmDelete({ row, onCancel, onConfirm }: { row: AsoSeed; onCancel: () => void; onConfirm: () => void }) {
-  return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal" style={{ maxWidth:430 }} onClick={e => e.stopPropagation()}>
-        <div className="modal-body" style={{ paddingTop:26 }}>
-          <div style={{ display:'flex', gap:14, alignItems:'flex-start' }}>
-            <div className="del-ic"><Trash2 size={20}/></div>
-            <div>
-              <h2 style={{ margin:'0 0 6px', fontSize:18, fontFamily:'var(--font-display)' }}>Excluir ASO?</h2>
-              <p style={{ margin:0, fontSize:13, color:'var(--ink-500)', lineHeight:1.5 }}>
-                O ASO <strong style={{ color:'var(--ink-900)' }}>{row.tipo}</strong> de <strong style={{ color:'var(--ink-900)' }}>{row.colab}</strong> será removido permanentemente. Esta ação não pode ser desfeita.
-              </p>
-            </div>
-          </div>
-          <div className="modal-foot">
-            <button className="tbtn" onClick={onCancel}>Cancelar</button>
-            <button className="tbtn danger" onClick={onConfirm}><Trash2 size={13}/> Excluir</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// ExamesEmpresa
-// ---------------------------------------------------------------------------
-function ExamesEmpresa({ empresaIdProp, empresaNome, onBack }: {
-  empresaIdProp?: string | null
-  empresaNome?: string
-  onBack?: () => void
-}) {
-  const { empresaId: empresaIdPerfil } = useCurrentProfile()
-  const empresaId = empresaIdProp ?? empresaIdPerfil
-  const asosQuery = useExames(empresaId)
-  const asosBanco = asosQuery.data ?? []
-
-  // Adaptar dados do banco para o shape que a UI usa
-  const asos = useMemo(() => asosBanco.map(a => ({
-    id: a.id,
-    colab: a.colaborador?.nome ?? a.titulo,
-    tipo: a.subtipo_exame
-      ? ({
-          admissional:     'Admissional',
-          periodico:       'Periódico',
-          mudanca_risco:   'Mudança de risco',
-          retorno_trabalho:'Retorno ao trabalho',
-          demissional:     'Demissional',
-        }[a.subtipo_exame] ?? 'Periódico')
-      : 'Periódico',
-    realizado: a.emissao ?? '',
-    validade:  a.vencimento ?? '',
-    resultado: a.observacoes ?? 'Apto',
-    exames:    a.exames_realizados ?? [],
-    empresa_id: a.empresa_id,
-    arquivo_path: a.arquivo_path ?? null,
-    arquivo_url: a.arquivo_url ?? null,
-  })), [asosBanco])
-
-  const [fTipo, setFTipo] = useState('Todos')
-  const [fStatus, setFStatus] = useState('all')
-  const [q, setQ] = useState('')
-  const [newOpen, setNewOpen] = useState(false)
-  const [schedOpen, setSchedOpen] = useState(false)
-  const [confirmDel, setConfirmDel] = useState<typeof asos[number] | null>(null)
-  const [prefill, setPrefill] = useState<string | null>(null)
-
-  const rows = useMemo(() => asos.map(a => ({ ...a, cor: avatarColor(a.colab), cargo: '—', setor: '—', st: asoStatus(a.validade) })), [asos])
-  const kpis = useMemo(() => {
-    const total = rows.length
-    const ok   = rows.filter(r => r.st.key === 'ok').length
-    const warn = rows.filter(r => r.st.key === 'warn').length
-    const crit = rows.filter(r => r.st.key === 'crit').length
-    return { total, ok, warn, crit, pct: total ? Math.round((ok / total) * 100) : 0 }
-  }, [rows])
-
-  const filtered = useMemo(() => rows
-    .filter(r => fTipo === 'Todos' || r.tipo === fTipo)
-    .filter(r => fStatus === 'all' || r.st.key === fStatus)
-    .filter(r => !q.trim() || `${r.colab} ${r.cargo} ${r.setor} ${r.tipo}`.toLowerCase().includes(q.toLowerCase()))
-    .sort((a, b) => (a.validade < b.validade ? -1 : 1)),
-    [rows, fTipo, fStatus, q]
-  )
-
-  const deletar = useDeletarExame()
-  const doDelete = async (row: typeof asos[number]) => {
-    if (!empresaId) return
-    const original = asosBanco.find(a => a.id === row.id)
-    try {
-      await deletar.mutateAsync({ id: row.id, empresaId, colaboradorId: original?.colaborador_id ?? null })
-      setConfirmDel(null)
-    } catch { /* toast já disparado */ }
-  }
-  const openSchedFor = (nome: string) => { setPrefill(nome); setSchedOpen(true) }
-
-  return (
-    <div className="content">
-      <div className="page-header">
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          {onBack && (
-            <button className="icon-btn sm" title="Voltar" onClick={onBack} style={{ marginRight:4 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-          )}
-          <div>
-            <h1>ASOs e PCMSO{empresaNome ? ` · ${empresaNome}` : ''}</h1>
-            <p className="sub">Atestados de saúde ocupacional · status automático por validade</p>
-          </div>
-        </div>
-        <div className="toolbar">
-          <button
-            className="tbtn"
-            onClick={() => exportToCsv('asos.csv', [
-              { header: 'Colaborador',   value: (r: typeof filtered[number]) => r.colab },
-              { header: 'Tipo de exame', value: (r: typeof filtered[number]) => r.tipo },
-              { header: 'Realizado em',  value: (r: typeof filtered[number]) => r.realizado },
-              { header: 'Validade',      value: (r: typeof filtered[number]) => r.validade },
-              { header: 'Resultado',     value: (r: typeof filtered[number]) => r.resultado },
-              { header: 'Status',        value: (r: typeof filtered[number]) => r.st.label },
-            ], filtered)}
-          ><Download size={14}/> Exportar</button>
-          <button className="tbtn" onClick={() => { setPrefill(null); setSchedOpen(true) }}><Calendar size={14}/> Agendar exame</button>
-          <button className="tbtn primary" onClick={() => setNewOpen(true)}><Plus size={14}/> Registrar ASO</button>
-        </div>
-      </div>
-
-      {/* KPIs */}
-      <div className="kpi-row">
-        <div className="glass kpi">
-          <div className="kpi-label"><span>ASOs em dia</span><span className="kpi-ic green"><CheckCircle2 size={16}/></span></div>
-          <div className="kpi-value">{kpis.pct}%</div>
-          <div style={{ marginTop:8, fontSize:12, color:'var(--ink-500)' }}>{kpis.ok} de {kpis.total} dentro da validade</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Vencendo em 30 dias</span><span className="kpi-ic orange"><Clock size={16}/></span></div>
-          <div className="kpi-value">{kpis.warn}</div>
-          <div style={{ marginTop:8, fontSize:12, color:'var(--ink-500)' }}>exames a reagendar</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>ASOs vencidos</span><span className="kpi-ic red"><AlertTriangle size={16}/></span></div>
-          <div className="kpi-value" style={{ color: kpis.crit ? 'var(--red-500)' : undefined }}>{kpis.crit}</div>
-          <div style={{ marginTop:8, fontSize:12, color:'var(--ink-500)' }}>requer ação imediata</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Total de ASOs</span><span className="kpi-ic violet"><Calendar size={16}/></span></div>
-          <div className="kpi-value">{kpis.total}</div>
-          <div style={{ marginTop:8, fontSize:12, color:'var(--ink-500)' }}>registros monitorados</div>
-        </div>
-      </div>
-
-      {/* ASO layout */}
-      <div className="aso-layout">
-        {/* Tabela ASOs */}
-        <div className="glass" style={{ padding:0, overflow:'hidden' }}>
-          <div className="aso-head">
-            <div>
-              <div className="ctitle">Atestados de Saúde Ocupacional (ASO)</div>
-              <div className="csub">Status calculado automaticamente pela validade do exame</div>
-            </div>
-            <div className="aso-search">
-              <Search size={15}/>
-              <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar colaborador…"/>
-            </div>
-          </div>
-
-          <div className="aso-filters">
-            <div className="seg">
-              {['Todos', ...TIPOS].map(t => (
-                <button key={t} className={fTipo === t ? 'on' : ''} onClick={() => setFTipo(t)}>
-                  {t === 'Mudança de risco' ? 'Mudança' : t === 'Retorno ao trabalho' ? 'Retorno' : t}
-                </button>
-              ))}
-            </div>
-            <div className="seg">
-              {[['all','Status'],['ok','Em dia'],['warn','Vencendo'],['crit','Vencido']].map(([k,l]) => (
-                <button key={k} className={fStatus === k ? 'on' : ''} onClick={() => setFStatus(k)}>{l}</button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ overflow:'auto' }}>
-            <table className="tbl aso-tbl">
-              <thead>
-                <tr>
-                  <th>Colaborador</th>
-                  <th>Tipo</th>
-                  <th>Exames realizados</th>
-                  <th>Realização</th>
-                  <th>Validade</th>
-                  <th>Resultado</th>
-                  <th>Status</th>
-                  <th style={{ textAlign:'right' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 && (
-                  <tr><td colSpan={8} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhum ASO encontrado com esses filtros.</td></tr>
-                )}
-                {filtered.map(r => (
-                  <tr key={r.id}>
-                    <td>
-                      <div className="aso-person">
-                        <span className="ava" style={{ background:r.cor, width:34, height:34, fontSize:12 }}>{initials(r.colab)}</span>
-                        <div>
-                          <div className="aso-name">{r.colab}</div>
-                          <div className="aso-role">{r.cargo} · {r.setor}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td><span className="aso-tipo">{r.tipo}</span></td>
-                    <td style={{ maxWidth:240 }}>
-                      {r.exames.length > 0
-                        ? <span style={{ fontSize:11.5, color:'var(--ink-700)', lineHeight:1.6 }}>{r.exames.join('; ')}</span>
-                        : <span style={{ fontSize:11.5, color:'var(--ink-400)' }}>—</span>
-                      }
-                    </td>
-                    <td style={{ color:'var(--ink-700)', fontVariantNumeric:'tabular-nums' }}>{brDate(r.realizado)}</td>
-                    <td style={{ fontVariantNumeric:'tabular-nums' }}>
-                      <div style={{ fontWeight:600, color: r.st.key === 'crit' ? 'var(--red-500)' : r.st.key === 'warn' ? 'var(--orange-600)' : 'var(--ink-900)' }}>{brDate(r.validade)}</div>
-                      <div style={{ fontSize:11, color:'var(--ink-500)' }}>{r.st.rel}</div>
-                    </td>
-                    <td>
-                      <span className={`res-pill ${RES_KEY[r.resultado] ?? 'neutral'}`}>
-                        <span className="res-dot"/>{r.resultado}
-                      </span>
-                    </td>
-                    <td><span className={`chip ${r.st.key}`}>{r.st.label}</span></td>
-                    <td>
-                      <div className="aso-actions">
-                        <button className="icon-btn sm" title={(r.arquivo_path || r.arquivo_url) ? 'Visualizar PDF' : 'Sem PDF anexado'} disabled={!(r.arquivo_path || r.arquivo_url)} onClick={() => void abrirDocumento(r, r.empresa_id)}><Eye size={15}/></button>
-                        <button className="icon-btn sm" title={(r.arquivo_path || r.arquivo_url) ? 'Baixar PDF' : 'Sem PDF anexado'} disabled={!(r.arquivo_path || r.arquivo_url)} onClick={() => void abrirDocumento(r, r.empresa_id, `ASO - ${r.colab}.pdf`)}><Download size={15}/></button>
-                        {r.st.key !== 'ok'
-                          ? <button className="tbtn ghost sm accent" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>
-                          : <button className="tbtn ghost sm" onClick={() => openSchedFor(r.colab)}><Calendar size={13}/> Agendar</button>}
-                        <button className="icon-btn sm danger" title="Excluir" onClick={() => setConfirmDel(r)}><Trash2 size={15}/></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Agenda */}
-        <div className="glass aso-agenda">
-          <div className="agenda-head">
-            <div>
-              <div className="ctitle">Agenda de exames</div>
-              <div className="csub">Agendamentos futuros</div>
-            </div>
-            <button className="icon-btn sm" onClick={() => { setPrefill(null); setSchedOpen(true) }} title="Agendar"><Plus size={15}/></button>
-          </div>
-          <div style={{ padding:'32px 16px', textAlign:'center', color:'var(--ink-400)', fontSize:12 }}>
-            Nenhum agendamento registrado ainda.
-          </div>
-        </div>
-      </div>
-
-      {newOpen && empresaId && <NewAsoModal onClose={() => setNewOpen(false)} empresaId={empresaId}/>}
-      {schedOpen && <ScheduleModal prefill={prefill} onClose={() => setSchedOpen(false)} empresaId={empresaId}/>}
-      {confirmDel && <ConfirmDelete row={confirmDel} onCancel={() => setConfirmDel(null)} onConfirm={() => doDelete(confirmDel)}/>}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// ExamesAdmin
-// ---------------------------------------------------------------------------
-function ExamesAdmin() {
-  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null)
-
-  if (selectedEmpresa) {
-    return (
-      <div className="content"><button className="tbtn" onClick={() => setSelectedEmpresa(null)}>Voltar</button>
-        <p>Registros individuais de {selectedEmpresa.nome} são restritos à equipe da empresa.</p>
-      </div>
-    )
-  }
-
-  return <ExamesAdminList onSelect={setSelectedEmpresa} />
-}
-
-function ExamesAdminList({ onSelect }: { onSelect: (e: { id: string; nome: string }) => void }) {
-  const empresasQuery = useEmpresas()
-  const empresas = empresasQuery.data ?? []
-  const kpisQuery = useDashboardKpis('all')
-  const kpis = kpisQuery.data
-
-  return (
-    <div className="content">
-      <div className="page-header">
-        <div>
-          <h1>Exames médicos · PCMSO</h1>
-          <p className="sub">Saúde ocupacional consolidada · {empresas.length} empresas-cliente</p>
-        </div>
-        <div className="toolbar">
-          <button
-            className="tbtn primary"
-            onClick={() => exportToCsv('exames_empresas.csv', [
-              { header: 'Empresa',        value: (e: EmpresaComContagem) => e.razao_social },
-              { header: 'CNPJ',           value: (e: EmpresaComContagem) => e.cnpj },
-              { header: 'Setor',          value: (e: EmpresaComContagem) => e.setor ?? '' },
-              { header: 'Cidade',         value: (e: EmpresaComContagem) => e.cidade ?? '' },
-              { header: 'UF',             value: (e: EmpresaComContagem) => e.uf ?? '' },
-
-              { header: 'Status',         value: (e: EmpresaComContagem) => e.status },
-            ], empresas)}
-          ><Download size={14}/> Exportar consolidado</button>
-        </div>
-      </div>
-
-      <div className="kpi-row">
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Empresas monitoradas</span><span className="kpi-ic blue"><CheckCircle2 size={16}/></span></div>
-          <div className="kpi-value">{kpis?.totalEmpresas ?? '—'}</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>Colaboradores ativos</span><span className="kpi-ic green"><CheckCircle2 size={16}/></span></div>
-          <div className="kpi-value">{kpis ? kpis.totalColaboradores?.toLocaleString('pt-BR') ?? 'Indisponível' : '—'}</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>ASOs vencendo</span><span className="kpi-ic orange"><Clock size={16}/></span></div>
-          <div className="kpi-value">{kpis?.docsVencendo ?? '—'}</div>
-        </div>
-        <div className="glass kpi">
-          <div className="kpi-label"><span>ASOs vencidos</span><span className="kpi-ic red"><AlertTriangle size={16}/></span></div>
-          <div className="kpi-value" style={{ color: (kpis?.docsVencidos ?? 0) > 0 ? 'var(--red-500)' : undefined }}>
-            {kpis?.docsVencidos ?? '—'}
-          </div>
-        </div>
-      </div>
-
-      <div className="glass" style={{ padding:0, overflow:'hidden' }}>
-        <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
-          <div className="ctitle">Empresas — saúde ocupacional</div>
-          <div className="csub">ASOs individuais restritos à equipe da empresa</div>
-        </div>
-        <div style={{ overflow:'auto' }}>
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>Empresa</th>
-                <th>Setor</th>
-                <th>Cidade / UF</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {empresas.length === 0 && (
-                <tr><td colSpan={4} style={{ textAlign:'center', padding:40, color:'var(--ink-500)' }}>Nenhuma empresa cadastrada ainda.</td></tr>
-              )}
-              {empresas.map((e, i) => (
-                <tr
-                  key={e.id}
-                  style={{ cursor:'pointer' }}
-                  onClick={() => onSelect({ id: e.id, nome: e.razao_social })}
-                >
-                  <td>
-                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <span className="ava" style={{ background: getChartColor(i), borderRadius:8, width:32, height:32, fontSize:12, flexShrink:0 }}>
-                        {e.razao_social.slice(0,1)}
-                      </span>
-                      <div>
-                        <div style={{ fontWeight:600, fontSize:13 }}>{e.razao_social}</div>
-                        <div style={{ fontSize:11, color:'var(--ink-500)' }}>{e.cnpj}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{e.setor ?? '—'}</td>
-                  <td style={{ fontSize:12 }}>{[e.cidade, e.uf].filter(Boolean).join(' / ') || '—'}</td>
-                  <td><span className={`chip ${e.status === 'ativa' ? 'ok' : 'warn'}`}>{e.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  )
-}
-// ---------------------------------------------------------------------------
-// Export
-// ---------------------------------------------------------------------------
 export default function ExamesPage() {
-  const { profile } = useAuth()
-  return profile?.role === 'admin' ? <ExamesAdmin /> : <ExamesEmpresa />
+  const { empresaId, canReadColaboradores, canManageColaboradores } = useCurrentProfile()
+  const query = useExames(canReadColaboradores ? empresaId : undefined)
+  const deletar = useDeletarExame()
+  const [edit, setEdit] = useState<AsoComDetalhes | 'new' | null>(null)
+  const [remove, setRemove] = useState<AsoComDetalhes | null>(null)
+  const [search, setSearch] = useState('')
+  const [subtipo, setSubtipo] = useState('all')
+  const [status, setStatus] = useState('all')
+  if (!canReadColaboradores) return <div className="content"><h1>Exames / ASO</h1><p>Registros individuais restritos à equipe da empresa.</p></div>
+  const rows = (query.data ?? []).filter(r => (subtipo === 'all' || r.subtipo_exame === subtipo)
+    && (status === 'all' || r.status === status)
+    && `${r.colaborador?.nome ?? ''} ${r.titulo}`.toLowerCase().includes(search.toLowerCase()))
+  async function open(id: string, download = false) {
+    try { await abrirAso(id, download) } catch (err) { toast.error(err instanceof Error ? err.message : 'Não foi possível acessar o arquivo.') }
+  }
+  return <div className="content">
+    <div className="page-header"><div><h1>Exames / ASO</h1><p className="sub">Vencimento informado · alerta em 30 dias</p></div><div className="toolbar">
+      <button className="tbtn" disabled={query.isLoading || query.isError} onClick={() => exportToCsv('asos.csv', [
+        { header: 'Colaborador', value: r => r.colaborador?.nome ?? 'Não informado' },
+        { header: 'Subtipo', value: r => subtipoLabel(r.subtipo_exame) },
+        { header: 'Emissão', value: r => r.emissao ?? '' }, { header: 'Vencimento', value: r => r.vencimento ?? '' },
+        { header: 'Resultado', value: r => resultadoLabel(r.resultado_aso) }, { header: 'Status', value: r => STATUS[r.status] },
+      ], rows)}><Download size={14}/> Exportar</button>
+      {canManageColaboradores && <button className="tbtn primary" onClick={() => setEdit('new')}><Plus size={14}/> Registrar ASO</button>}
+    </div></div>
+    <div className="kpi-row">{Object.entries(STATUS).map(([k,v]) => <div className="glass kpi" key={k}><div className="kpi-label">{v}</div>
+      <div className="kpi-value">{query.isError || query.isLoading ? '—' : query.data?.filter(r => r.status === k).length ?? 0}</div></div>)}</div>
+    <div className="glass" style={{ padding: 20 }}><div className="toolbar">
+      <input className="mp-input" aria-label="Buscar ASO" placeholder="Buscar colaborador" value={search} onChange={e => setSearch(e.target.value)}/>
+      <select className="mp-input" aria-label="Filtrar subtipo" value={subtipo} onChange={e => setSubtipo(e.target.value)}><option value="all">Todos os subtipos</option>{Object.entries(SUBTIPOS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select>
+      <select className="mp-input" aria-label="Filtrar status" value={status} onChange={e => setStatus(e.target.value)}><option value="all">Todos os status</option>{Object.entries(STATUS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select>
+    </div>
+      {query.isLoading ? <p><Loader2 size={16}/> Carregando ASOs…</p> : query.isError ? <div role="alert"><p>{query.error.message}</p><button className="tbtn" onClick={() => void query.refetch()}>Tentar novamente</button></div> :
+      <div style={{ overflowX: 'auto' }}><table className="tbl"><thead><tr><th>Colaborador</th><th>Subtipo</th><th>Emissão</th><th>Vencimento</th><th>Resultado</th><th>Procedimentos</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+        {rows.length === 0 && <tr><td colSpan={8}>Nenhum ASO encontrado.</td></tr>}
+        {rows.map(r => <tr key={r.id}><td>{r.colaborador?.nome ?? 'Não informado (legado)'}</td><td>{subtipoLabel(r.subtipo_exame)}</td>
+          <td>{brDate(r.emissao)}</td><td>{brDate(r.vencimento)}</td><td>{resultadoLabel(r.resultado_aso)}</td><td>{r.exames_realizados?.join('; ') || 'Não informado'}</td>
+          <td><span className={`chip ${r.status === 'vencido' ? 'crit' : r.status === 'vencendo' ? 'warn' : 'ok'}`}>{STATUS[r.status]}</span></td>
+          <td><div className="toolbar"><button className="icon-btn" title="Visualizar arquivo" disabled={!r.arquivo_path && !r.arquivo_url} onClick={() => void open(r.id)}><Eye size={15}/></button>
+            <button className="icon-btn" title="Baixar arquivo" disabled={!r.arquivo_path && !r.arquivo_url} onClick={() => void open(r.id,true)}><Download size={15}/></button>
+            {canManageColaboradores && <><button className="icon-btn" title="Editar ASO" onClick={() => setEdit(r)}><Pencil size={15}/></button><button className="icon-btn danger" title="Excluir ASO" onClick={() => setRemove(r)}><Trash2 size={15}/></button></>}
+          </div></td></tr>)}
+      </tbody></table></div>}
+    </div>
+    {edit && empresaId && <AsoModal empresaId={empresaId} aso={edit === 'new' ? undefined : edit} onClose={() => setEdit(null)}/>}
+    {remove && empresaId && <div className="modal-backdrop"><div className="modal"><div className="modal-body"><h2>Excluir ASO?</h2><p>O registro será removido permanentemente. O arquivo será preservado.</p></div><div className="modal-foot">
+      <button className="tbtn" disabled={deletar.isPending} onClick={() => setRemove(null)}>Cancelar</button><button className="tbtn danger" disabled={deletar.isPending} onClick={() => void deletar.mutateAsync({id: remove.id,empresaId,colaboradorId: remove.colaborador_id}).then(() => setRemove(null)).catch(() => undefined)}>Excluir</button>
+    </div></div></div>}
+  </div>
 }

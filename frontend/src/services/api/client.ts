@@ -21,6 +21,7 @@ export class ApiError extends AppError {
 interface RequestOptions<T> {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   json?: unknown
+  body?: BodyInit
   headers?: HeadersInit
   signal?: AbortSignal
   timeoutMs?: number
@@ -104,7 +105,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions<T> = {
     const response = await fetch(url, {
       method: options.method ?? 'GET',
       headers,
-      body: options.json === undefined ? undefined : JSON.stringify(options.json),
+      body: options.json === undefined ? options.body : JSON.stringify(options.json),
       signal: controller.signal,
       credentials: 'omit',
       cache: 'no-store',

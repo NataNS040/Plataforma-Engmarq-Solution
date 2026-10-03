@@ -1,15 +1,20 @@
-import { uploadArquivoPrivado } from './documentosStorage'
-import { supabase } from '@/lib/supabase'
-import { handleSupabaseError } from '@/lib/errors'
-import type { Documento, DocumentoTipo, ExameCatalogo, SubtipoExame } from '@/types/database'
-
-export interface AsoComDetalhes extends Omit<Documento, 'tipo' | 'colaborador'> {
-  tipo: DocumentoTipo | null
-  colaborador: { id: string; nome: string } | null
-}
-
+import { z } from 'zod'
+import { apiRequest } from './api/client'
+import type { SubtipoExame } from '@/types/database'
+const tipoSchema = z.object({ id: z.string().uuid(), nome: z.string(), descricao: z.string().nullable(), validade_meses: z.number().nullable() })
+export const asoSchema = z.object({
+  id: z.string().uuid(), empresa_id: z.string().uuid(), tipo_id: z.string().uuid(),
+  colaborador_id: z.string().uuid().nullable(), titulo: z.string(), numero: z.string().nullable(),
+  emissao: z.string().nullable(), vencimento: z.string().nullable(), observacoes: z.string().nullable(),
+  subtipo_exame: z.enum(['admissional','periodico','retorno_trabalho','mudanca_risco','demissional']).nullable(),
+  resultado_aso: z.enum(['apto','apto_com_restricao','inapto']).nullable(), exames_realizados: z.array(z.string()).nullable(),
+  arquivo_path: z.string().nullable(), arquivo_url: z.string().nullable(), created_at: z.string().nullable(),
+  status: z.enum(['vigente','vencendo','vencido']), tipo: tipoSchema.nullable(),
+  colaborador: z.object({ id: z.string().uuid(), nome: z.string() }).nullable(),
+})
+export type AsoComDetalhes = z.infer<typeof asoSchema>
 export interface AsoInput {
-  empresa_id: string
+  empresa_id: string // cache context only; never sent as authorization
   colaborador_id: string
   titulo: string
   subtipo_exame: SubtipoExame
@@ -17,112 +22,34 @@ export interface AsoInput {
   vencimento?: string | null
   numero?: string | null
   observacoes?: string | null
+  resultado_aso?: AsoComDetalhes['resultado_aso']
   exames_realizados?: string[] | null
-  arquivo_path?: string | null
-  // tipo_id é resolvido automaticamente pelo serviço via upsert
-  tipo_id?: string
 }
-
-/** Upload do PDF do ASO — reaproveita o bucket 'documentos' (mesmo padrão de documentosService). */
-export async function uploadAsoArquivo(empresaId: string, file: File): Promise<string> {
-  return uploadArquivoPrivado(empresaId, file)
+const safeId = (id: string) => z.string().uuid().parse(id)
+export const listarAsos = (_empresaId: string) => apiRequest('/exames', { parse: data => z.array(asoSchema).parse(data) })
+export const listarAsosDoColaborador = (id: string) => apiRequest(`/colaboradores/${safeId(id)}/exames`, { parse: data => z.array(asoSchema).parse(data) })
+export const obterAso = (id: string) => apiRequest(`/exames/${safeId(id)}`, { parse: data => asoSchema.parse(data) })
+export function criarAso({ empresa_id: _empresa, ...input }: AsoInput) {
+  return apiRequest('/exames', { method: 'POST', json: { ...input, exames_realizados: input.exames_realizados ?? [] }, parse: data => asoSchema.parse(data) })
 }
-
-const ASO_SELECT = `
-  *,
-  tipo:documento_tipos(*),
-  colaborador:colaboradores(id, nome)
-`
-
-export async function listarAsos(empresaId: string): Promise<AsoComDetalhes[]> {
-  const { data, error } = await supabase
-    .from('documentos')
-    .select(ASO_SELECT)
-    .eq('empresa_id', empresaId)
-    .not('colaborador_id', 'is', null)
-    .order('vencimento', { ascending: true, nullsFirst: false })
-
-  if (error) throw handleSupabaseError(error, 'Não foi possível carregar os ASOs.')
-  return (data ?? []) as unknown as AsoComDetalhes[]
+export const atualizarAso = (id: string, input: Partial<Omit<AsoInput, 'empresa_id'>>) =>
+  apiRequest(`/exames/${safeId(id)}`, { method: 'PATCH', json: input, parse: data => asoSchema.parse(data) })
+export const deletarAso = (id: string) => apiRequest<void>(`/exames/${safeId(id)}`, { method: 'DELETE' })
+export const listarExamesCatalogo = () => apiRequest('/exames/catalogo', {
+  parse: data => z.array(z.object({ id: z.number(), nome: z.string(), ordem: z.number() })).parse(data),
+})
+export function uploadAsoArquivo(id: string, file: File) {
+  return apiRequest(`/exames/${safeId(id)}/arquivo`, { method: 'POST', body: file,
+    headers: { 'Content-Type': file.type }, timeoutMs: 60_000, parse: data => asoSchema.parse(data) })
 }
-
-export async function listarAsosDoColaborador(colaboradorId: string): Promise<AsoComDetalhes[]> {
-  const { data, error } = await supabase
-    .from('documentos')
-    .select(ASO_SELECT)
-    .eq('colaborador_id', colaboradorId)
-    .order('vencimento', { ascending: true, nullsFirst: false })
-
-  if (error) throw handleSupabaseError(error, 'Não foi possível carregar os ASOs do colaborador.')
-  return (data ?? []) as unknown as AsoComDetalhes[]
-}
-
-// Busca o tipo 'ASO' — sempre presente via seed da migration 001
-async function getOrCreateAsoTipoId(): Promise<string> {
-  const { data, error } = await supabase
-    .from('documento_tipos')
-    .select('id')
-    .ilike('nome', 'ASO')
-    .limit(1)
-    .single()
-  if (error || !data) throw new Error('Tipo de documento ASO não encontrado no banco. Execute a migration 001 para corrigir.')
-  return data.id as string
-}
-
-export async function criarAso(input: AsoInput): Promise<Documento> {
-  const tipoId = input.tipo_id ?? await getOrCreateAsoTipoId()
-  const { data, error } = await supabase
-    .from('documentos')
-    .insert({
-      empresa_id:        input.empresa_id,
-      tipo_id:           tipoId,
-      colaborador_id:    input.colaborador_id,
-      titulo:            input.titulo,
-      subtipo_exame:     input.subtipo_exame,
-      emissao:           input.emissao ?? null,
-      vencimento:        input.vencimento ?? null,
-      numero:            input.numero ?? null,
-      observacoes:       input.observacoes ?? null,
-      exames_realizados: input.exames_realizados ?? [],
-      arquivo_path:       input.arquivo_path ?? null,
+export async function abrirAso(id: string, download = false) {
+  const target = window.open('about:blank', '_blank')
+  if (target) target.opener = null
+  try {
+    const { url } = await apiRequest(`/exames/${safeId(id)}/${download ? 'download' : 'arquivo'}`, {
+      parse: data => z.object({ url: z.string().url(), expires_in: z.literal(60) }).parse(data),
     })
-    .select('*')
-    .single()
-
-  if (error) throw handleSupabaseError(error, 'Não foi possível criar o ASO.')
-  return data as Documento
-}
-
-export async function atualizarAso(
-  id: string,
-  input: Partial<Omit<AsoInput, 'empresa_id'>>
-): Promise<Documento> {
-  const { data, error } = await supabase
-    .from('documentos')
-    .update(input)
-    .eq('id', id)
-    .select('*')
-    .single()
-
-  if (error) throw handleSupabaseError(error, 'Não foi possível atualizar o ASO.')
-  return data as Documento
-}
-
-export async function deletarAso(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('documentos')
-    .delete()
-    .eq('id', id)
-
-  if (error) throw handleSupabaseError(error, 'Não foi possível deletar o ASO.')
-}
-
-export async function listarExamesCatalogo(): Promise<ExameCatalogo[]> {
-  const { data, error } = await supabase
-    .from('exames_catalogo')
-    .select('*')
-    .order('ordem')
-
-  if (error) throw handleSupabaseError(error, 'Não foi possível carregar o catálogo de exames.')
-  return (data ?? []) as unknown as ExameCatalogo[]
+    if (target) target.location.replace(url)
+    else window.location.assign(url)
+  } catch (error) { target?.close(); throw error }
 }

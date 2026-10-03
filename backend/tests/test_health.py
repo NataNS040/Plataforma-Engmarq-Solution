@@ -13,6 +13,9 @@ def test_only_implemented_routes_are_exposed(client):
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert set(response.json()["paths"]) == {
+        "/api/v1/exames", "/api/v1/exames/{id}", "/api/v1/exames/catalogo",
+        "/api/v1/exames/{id}/arquivo", "/api/v1/exames/{id}/download",
+        "/api/v1/colaboradores/{id}/exames",
         "/api/v1/dashboard/kpis", "/api/v1/dashboard/alertas",
         "/health", "/api/v1/health", "/api/v1/me",
         "/api/v1/empresas", "/api/v1/empresas/{empresa_id}", "/api/v1/usuarios",
