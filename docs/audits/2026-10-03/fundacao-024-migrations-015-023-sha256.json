@@ -1,0 +1,11 @@
+{
+  "015_user_profiles_tenant_management.sql": "7a3d6db8f1e694756287d931dcb831f2be676755e41f5348692a4c8079864e6b",
+  "016_colaboradores_tenant_security.sql": "631cdae22348a47c0d095959b7a84504b0bc57cd755580ff702b8a8ebe85f9ad",
+  "017_catalogos_tenant_security.sql": "1cc374788529cf92685f376589946f28d80086083f89922c4177c58a82455b70",
+  "018_treinamentos_tenant_security.sql": "feca76ce34c57266acbe59a280f95276d4c1375984c5cefd086ca71342739a71",
+  "019_documentos_path_compat.sql": "57a99089d3f684c57e6c3d15c95f446bff35992c9a7eaa3103ba329c744e8bf8",
+  "020_documentos_private_storage.sql": "6aff35a817e0f65ba592b86e70e9e3d5cda134b9f2c4d24b79496e9533c86fb8",
+  "021_documentos_empresas_security.sql": "5ee8bf5d93b3bbd80f4d71819d65e18d3882c3d4a821f36b05e6d821b04519f6",
+  "022_logos_tenant_storage.sql": "9cfd539e820c126588e466c8240028b922788b7095c2f67612c8c294ff57bb82",
+  "023_exames_aso.sql": "4ce3bfd1328fbac623120308985e49cd0902d9fc1a45ae9c2e4a000b71039b26"
+}

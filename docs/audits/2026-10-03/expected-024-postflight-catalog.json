@@ -1,0 +1,6119 @@
+[
+  {
+    "identity": "relation:public.documento_tipos",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.treinamento_tipos",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.vw_dashboard_documentos",
+    "detail": {
+      "rls": false,
+      "kind": "v",
+      "force": false,
+      "owner": "postgres",
+      "options": [
+        "security_invoker=true"
+      ],
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.user_profiles",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.funcoes",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.colaboradores",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.documentos",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.matriz_treinamentos",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.ambientes",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.fichas_epi_pkey",
+    "detail": {
+      "rls": false,
+      "kind": "i",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "relation:public.idx_fichas_epi_empresa_id",
+    "detail": {
+      "rls": false,
+      "kind": "i",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "relation:public.idx_fichas_epi_colaborador_id",
+    "detail": {
+      "rls": false,
+      "kind": "i",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "relation:public.exames_catalogo",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.fichas_epi_itens_pkey",
+    "detail": {
+      "rls": false,
+      "kind": "i",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "relation:public.idx_fichas_epi_itens_ficha_epi_id",
+    "detail": {
+      "rls": false,
+      "kind": "i",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "relation:public.idx_fichas_epi_itens_empresa_id",
+    "detail": {
+      "rls": false,
+      "kind": "i",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "relation:public.fichas_epi",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "relation:public.fichas_epi_itens",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "relation:public.setores",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.treinamentos",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.vw_dashboard_treinamentos",
+    "detail": {
+      "rls": false,
+      "kind": "v",
+      "force": false,
+      "owner": "postgres",
+      "options": [
+        "security_invoker=true"
+      ],
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.empresas",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.features",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.empresa_comercial",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.empresa_features",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.empresa_limites",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.empresa_uso",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.empresa_diagnostico_sst",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:public.auditoria_comercial",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "relation:engmarq_private.onboarding_solicitacoes",
+    "detail": {
+      "rls": true,
+      "kind": "r",
+      "force": false,
+      "owner": "postgres",
+      "options": null,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.razao_social",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.cnpj",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.logo_url",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.created_at",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.setor",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.cidade",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.uf",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.responsavel",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.email",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.telefone",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.status",
+    "detail": {
+      "type": "text",
+      "default": "'ativa'::text",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.cnpj_canonico",
+    "detail": {
+      "type": "text",
+      "default": "engmarq_private.cnpj_canonico(cnpj)",
+      "nullable": true,
+      "generated": "s"
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.cep",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.logradouro",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.numero",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.complemento",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresas.bairro",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.user_profiles.id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.user_profiles.email",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.user_profiles.full_name",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.user_profiles.role",
+    "detail": {
+      "type": "user_role",
+      "default": "'operacional'::user_role",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.user_profiles.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.user_profiles.active",
+    "detail": {
+      "type": "boolean",
+      "default": "true",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.user_profiles.created_at",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.setores.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.setores.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.setores.nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.setores.descricao",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.setores.active",
+    "detail": {
+      "type": "boolean",
+      "default": "true",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.funcoes.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.funcoes.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.funcoes.nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.funcoes.descricao",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.funcoes.riscos",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.funcoes.active",
+    "detail": {
+      "type": "boolean",
+      "default": "true",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.ambientes.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.ambientes.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.ambientes.nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.ambientes.descricao",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.ambientes.active",
+    "detail": {
+      "type": "boolean",
+      "default": "true",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.cpf",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.matricula",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.funcao_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.setor_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.ambiente_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.data_admissao",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.data_demissao",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.active",
+    "detail": {
+      "type": "boolean",
+      "default": "true",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.colaboradores.created_at",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documento_tipos.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documento_tipos.nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documento_tipos.descricao",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documento_tipos.validade_meses",
+    "detail": {
+      "type": "integer",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.tipo_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.titulo",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.numero",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.emissao",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.vencimento",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.arquivo_url",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.status",
+    "detail": {
+      "type": "doc_status",
+      "default": "'vigente'::doc_status",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.observacoes",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.created_at",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.colaborador_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.subtipo_exame",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.exames_realizados",
+    "detail": {
+      "type": "text[]",
+      "default": "'{}'::text[]",
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.arquivo_path",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.documentos.resultado_aso",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamento_tipos.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamento_tipos.nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamento_tipos.descricao",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamento_tipos.nr_referencia",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamento_tipos.validade_meses",
+    "detail": {
+      "type": "integer",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.matriz_treinamentos.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.matriz_treinamentos.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.matriz_treinamentos.funcao_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.matriz_treinamentos.treinamento_tipo_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.matriz_treinamentos.obrigatorio",
+    "detail": {
+      "type": "boolean",
+      "default": "true",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.colaborador_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.treinamento_tipo_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.data_realizacao",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.data_vencimento",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.carga_horaria",
+    "detail": {
+      "type": "numeric(5,1)",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.instrutor",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.certificado_url",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.status",
+    "detail": {
+      "type": "treinamento_status",
+      "default": "'em_dia'::treinamento_status",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.created_at",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.treinamentos.modalidade",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_documentos.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_documentos.tipo_nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_documentos.titulo",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_documentos.vencimento",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_documentos.status_calculado",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_documentos.dias_restantes",
+    "detail": {
+      "type": "integer",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_treinamentos.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_treinamentos.colaborador_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_treinamentos.colaborador_nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_treinamentos.treinamento_nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_treinamentos.data_realizacao",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_treinamentos.data_vencimento",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_treinamentos.status_calculado",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.vw_dashboard_treinamentos.dias_restantes",
+    "detail": {
+      "type": "integer",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.exames_catalogo.id",
+    "detail": {
+      "type": "integer",
+      "default": "nextval('exames_catalogo_id_seq'::regclass)",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.exames_catalogo.nome",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.exames_catalogo.ordem",
+    "detail": {
+      "type": "integer",
+      "default": "0",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.fichas_epi.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi.colaborador_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi.data_entrega",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi.observacoes",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi.foto_assinatura_url",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi.assinado_em",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi.assinado_por",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi.created_at",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_pkey.id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.idx_fichas_epi_empresa_id.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.idx_fichas_epi_colaborador_id.colaborador_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens.ficha_epi_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens.equipamento",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens.ca",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens.data_validade",
+    "detail": {
+      "type": "date",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens.status",
+    "detail": {
+      "type": "doc_status",
+      "default": "'vigente'::doc_status",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens.created_at",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.fichas_epi_itens_pkey.id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.idx_fichas_epi_itens_ficha_epi_id.ficha_epi_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.idx_fichas_epi_itens_empresa_id.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": true
+  },
+  {
+    "identity": "column:public.features.feature_key",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.features.descricao",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_comercial.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_comercial.origem",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_comercial.plano_comercial_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_comercial.titularidade",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_comercial.verificado_por",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_comercial.verificado_em",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_features.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_features.feature_key",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_features.enabled",
+    "detail": {
+      "type": "boolean",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_limites.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_limites.max_colaboradores_ativos",
+    "detail": {
+      "type": "integer",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_limites.ilimitado",
+    "detail": {
+      "type": "boolean",
+      "default": "false",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_uso.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_uso.colaboradores_ativos",
+    "detail": {
+      "type": "bigint",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_uso.apurado_em",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.possui_pgr",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.possui_pcmso",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.possui_treinamentos",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.programas_documentos_em_dia",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.treinamentos_em_dia",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.quantidade_aproximada_colaboradores",
+    "detail": {
+      "type": "integer",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.conhece_grau_risco",
+    "detail": {
+      "type": "boolean",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.grau_risco_informado",
+    "detail": {
+      "type": "smallint",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.schema_version",
+    "detail": {
+      "type": "integer",
+      "default": "1",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.informado_por",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.empresa_diagnostico_sst.informado_em",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "clock_timestamp()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.objeto",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.operacao",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.feature_key",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.anterior",
+    "detail": {
+      "type": "jsonb",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.novo",
+    "detail": {
+      "type": "jsonb",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.ator_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.executor",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:public.auditoria_comercial.registrado_em",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "clock_timestamp()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:engmarq_private.onboarding_solicitacoes.id",
+    "detail": {
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:engmarq_private.onboarding_solicitacoes.auth_user_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:engmarq_private.onboarding_solicitacoes.chave_idempotencia",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:engmarq_private.onboarding_solicitacoes.payload_hash",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:engmarq_private.onboarding_solicitacoes.estado",
+    "detail": {
+      "type": "text",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:engmarq_private.onboarding_solicitacoes.empresa_id",
+    "detail": {
+      "type": "uuid",
+      "default": null,
+      "nullable": true,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:engmarq_private.onboarding_solicitacoes.criado_em",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": "clock_timestamp()",
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "column:engmarq_private.onboarding_solicitacoes.expira_em",
+    "detail": {
+      "type": "timestamp with time zone",
+      "default": null,
+      "nullable": false,
+      "generated": ""
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.assinaturas_storage_insert",
+    "detail": {
+      "check": "((bucket_id = 'assinaturas'::text) AND ((get_user_role() = 'admin'::user_role) OR (((storage.foldername(name))[1] = (get_user_empresa_id())::text) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role])))))",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "policy:storage.objects.assinaturas_storage_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "((bucket_id = 'assinaturas'::text) AND ((get_user_role() = 'admin'::user_role) OR ((storage.foldername(name))[1] = (get_user_empresa_id())::text)))",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "policy:storage.objects.certificados_delete_guard",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "command": "DELETE",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.certificados_insert_guard",
+    "detail": {
+      "check": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text) OR engmarq_private.can_access_certificado(name, true))",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.certificados_select_guard",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text) OR engmarq_private.can_access_certificado(name))",
+      "command": "SELECT",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.certificados_update_guard",
+    "detail": {
+      "check": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "roles": "{authenticated}",
+      "using": "((bucket_id <> 'documentos'::text) OR (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "command": "UPDATE",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.documentos_storage_delete",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.documentos_storage_insert",
+    "detail": {
+      "check": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name, true))",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.documentos_storage_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name))",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.documentos_storage_update",
+    "detail": {
+      "check": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "roles": "{authenticated}",
+      "using": "((bucket_id = 'documentos'::text) AND engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text))",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.documentos_tenant_delete_guard",
+    "detail": {
+      "check": null,
+      "roles": "{public}",
+      "using": "((bucket_id <> 'documentos'::text) OR (engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text)))",
+      "command": "DELETE",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.documentos_tenant_insert_guard",
+    "detail": {
+      "check": "((bucket_id <> 'documentos'::text) OR engmarq_private.can_access_documento(name, true))",
+      "roles": "{public}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.documentos_tenant_select_guard",
+    "detail": {
+      "check": null,
+      "roles": "{public}",
+      "using": "((bucket_id <> 'documentos'::text) OR engmarq_private.can_access_documento(name))",
+      "command": "SELECT",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.documentos_tenant_update_guard",
+    "detail": {
+      "check": "((bucket_id <> 'documentos'::text) OR (engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text)))",
+      "roles": "{public}",
+      "using": "((bucket_id <> 'documentos'::text) OR (engmarq_private.can_access_documento(name, true) AND (split_part(name, '/'::text, 2) <> 'certificados'::text)))",
+      "command": "UPDATE",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.logos_storage_insert",
+    "detail": {
+      "check": "((bucket_id = 'logos'::text) AND engmarq_private.can_access_logo(name, 'insert'::text, metadata))",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.logos_storage_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "((bucket_id = 'logos'::text) AND engmarq_private.can_access_logo(name, 'read'::text))",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.logos_storage_update",
+    "detail": {
+      "check": "((bucket_id = 'logos'::text) AND engmarq_private.can_access_logo(name, 'update'::text, metadata) AND engmarq_private.logo_update_identity(id, bucket_id, name))",
+      "roles": "{authenticated}",
+      "using": "((bucket_id = 'logos'::text) AND engmarq_private.can_access_logo(name, 'update'::text))",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.logos_tenant_delete_guard",
+    "detail": {
+      "check": null,
+      "roles": "{public}",
+      "using": "(bucket_id <> 'logos'::text)",
+      "command": "DELETE",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.logos_tenant_insert_guard",
+    "detail": {
+      "check": "((bucket_id <> 'logos'::text) OR engmarq_private.can_access_logo(name, 'insert'::text, metadata))",
+      "roles": "{public}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.logos_tenant_select_guard",
+    "detail": {
+      "check": null,
+      "roles": "{public}",
+      "using": "((bucket_id <> 'logos'::text) OR engmarq_private.can_access_logo(name, 'read'::text))",
+      "command": "SELECT",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:storage.objects.logos_tenant_update_guard",
+    "detail": {
+      "check": "(((bucket_id <> 'logos'::text) OR engmarq_private.can_access_logo(name, 'update'::text, metadata)) AND engmarq_private.logo_update_identity(id, bucket_id, name))",
+      "roles": "{public}",
+      "using": "((bucket_id <> 'logos'::text) OR engmarq_private.can_access_logo(name, 'update'::text))",
+      "command": "UPDATE",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresas.empresas_insert",
+    "detail": {
+      "check": "engmarq_private.can_access_empresa(id, true, true)",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresas.empresas_row_guard",
+    "detail": {
+      "check": "engmarq_private.can_access_empresa(id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_empresa(id)",
+      "command": "ALL",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresas.empresas_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_empresa(id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresas.empresas_update",
+    "detail": {
+      "check": "engmarq_private.can_access_empresa(id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_empresa(id, true)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.user_profiles.profiles_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "((id = auth.uid()) OR engmarq_private.can_manage_profile(empresa_id))",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.user_profiles.profiles_update_managers",
+    "detail": {
+      "check": "((id <> auth.uid()) AND engmarq_private.can_manage_profile(empresa_id, role))",
+      "roles": "{authenticated}",
+      "using": "((id <> auth.uid()) AND engmarq_private.can_manage_profile(empresa_id, role))",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.setores.setores_insert",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.setores.setores_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.setores.setores_update",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.funcoes.funcoes_insert",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.funcoes.funcoes_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.funcoes.funcoes_update",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.ambientes.ambientes_insert",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.ambientes.ambientes_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.ambientes.ambientes_update",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.colaboradores.colaboradores_insert",
+    "detail": {
+      "check": "engmarq_private.can_access_colaboradores(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.colaboradores.colaboradores_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_colaboradores(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.colaboradores.colaboradores_update",
+    "detail": {
+      "check": "engmarq_private.can_access_colaboradores(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_colaboradores(empresa_id, true)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.documento_tipos.documento_tipos_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "true",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.documentos.documentos_delete",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_documento_row(empresa_id, true)",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.documentos.documentos_insert",
+    "detail": {
+      "check": "engmarq_private.can_access_documento_row(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.documentos.documentos_row_guard",
+    "detail": {
+      "check": "engmarq_private.can_access_documento_row(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_documento_row(empresa_id)",
+      "command": "ALL",
+      "permissive": "RESTRICTIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.documentos.documentos_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_documento_row(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.documentos.documentos_update",
+    "detail": {
+      "check": "engmarq_private.can_access_documento_row(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_documento_row(empresa_id, true)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.treinamento_tipos.treinamento_tipos_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(get_user_empresa_id())",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.matriz_treinamentos.matriz_delete",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.matriz_treinamentos.matriz_insert",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.matriz_treinamentos.matriz_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.matriz_treinamentos.matriz_update",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.treinamentos.treinamentos_insert",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.treinamentos.treinamentos_select",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.treinamentos.treinamentos_update",
+    "detail": {
+      "check": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_access_catalogos(empresa_id, true)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.exames_catalogo.exames_catalogo_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_read_exames_catalogo()",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.fichas_epi.fichas_epi_select",
+    "detail": {
+      "check": null,
+      "roles": "{public}",
+      "using": "((get_user_role() = 'admin'::user_role) OR (empresa_id = get_user_empresa_id()))",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "policy:public.fichas_epi.fichas_epi_write",
+    "detail": {
+      "check": "((get_user_role() = 'admin'::user_role) OR ((empresa_id = get_user_empresa_id()) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role]))))",
+      "roles": "{public}",
+      "using": "((get_user_role() = 'admin'::user_role) OR ((empresa_id = get_user_empresa_id()) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role]))))",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "policy:public.fichas_epi_itens.fichas_epi_itens_select",
+    "detail": {
+      "check": null,
+      "roles": "{public}",
+      "using": "((get_user_role() = 'admin'::user_role) OR (empresa_id = get_user_empresa_id()))",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "policy:public.fichas_epi_itens.fichas_epi_itens_write",
+    "detail": {
+      "check": "((get_user_role() = 'admin'::user_role) OR ((empresa_id = get_user_empresa_id()) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role]))))",
+      "roles": "{public}",
+      "using": "((get_user_role() = 'admin'::user_role) OR ((empresa_id = get_user_empresa_id()) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role]))))",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "policy:public.features.features_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_read_foundation(get_user_empresa_id())",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_comercial.commercial_insert",
+    "detail": {
+      "check": "engmarq_private.is_commercial_admin()",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_comercial.commercial_update",
+    "detail": {
+      "check": "engmarq_private.is_commercial_admin()",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.is_commercial_admin()",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_comercial.empresa_comercial_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_read_foundation(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_features.commercial_insert",
+    "detail": {
+      "check": "engmarq_private.is_commercial_admin()",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_features.commercial_update",
+    "detail": {
+      "check": "engmarq_private.is_commercial_admin()",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.is_commercial_admin()",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_features.empresa_features_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_read_foundation(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_limites.commercial_insert",
+    "detail": {
+      "check": "engmarq_private.is_commercial_admin()",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_limites.commercial_update",
+    "detail": {
+      "check": "engmarq_private.is_commercial_admin()",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.is_commercial_admin()",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_limites.empresa_limites_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_read_foundation(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_uso.empresa_uso_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_read_foundation(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_diagnostico_sst.diagnostico_insert",
+    "detail": {
+      "check": "(engmarq_private.can_manage_profile(empresa_id) AND (informado_por = auth.uid()))",
+      "roles": "{authenticated}",
+      "using": null,
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_diagnostico_sst.diagnostico_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_read_foundation(empresa_id)",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.empresa_diagnostico_sst.diagnostico_update",
+    "detail": {
+      "check": "(engmarq_private.can_manage_profile(empresa_id) AND (informado_por = auth.uid()))",
+      "roles": "{authenticated}",
+      "using": "engmarq_private.can_manage_profile(empresa_id)",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "policy:public.auditoria_comercial.auditoria_read",
+    "detail": {
+      "check": null,
+      "roles": "{authenticated}",
+      "using": "engmarq_private.is_commercial_admin()",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:update_documento_status()",
+    "detail": {
+      "anon": true,
+      "hash": "7f5e1d41bef332f72655ac4a456abb83",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": null,
+      "definer": false,
+      "service": true,
+      "volatility": "v",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:update_treinamento_status()",
+    "detail": {
+      "anon": true,
+      "hash": "bfd19b6019c1c51aaad84c3c3d4bc3da",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": null,
+      "definer": false,
+      "service": true,
+      "volatility": "v",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:update_ficha_epi_item_status()",
+    "detail": {
+      "anon": true,
+      "hash": "e83377708c4693d8beeb04448d465f97",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": null,
+      "definer": false,
+      "service": true,
+      "volatility": "v",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "function:get_user_empresa_id()",
+    "detail": {
+      "anon": false,
+      "hash": "66d821dfc1345440414082c2ac9c24d6",
+      "type": "uuid",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:get_user_role()",
+    "detail": {
+      "anon": false,
+      "hash": "aa0803c9b3d199342fc942828d77a793",
+      "type": "user_role",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.is_commercial_admin()",
+    "detail": {
+      "anon": false,
+      "hash": "5dec5c4cf0d5df4ea2d181795108fb91",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_read_foundation(uuid)",
+    "detail": {
+      "anon": false,
+      "hash": "c86c488e897212637d39e14317acf19e",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_access_documento_row(uuid,boolean)",
+    "detail": {
+      "anon": false,
+      "hash": "da9931f372128801950764253468435f",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_profile_update()",
+    "detail": {
+      "anon": false,
+      "hash": "5332dfa20dc5ad8f8b8a33f31102478c",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_manage_profile(uuid,user_role)",
+    "detail": {
+      "anon": false,
+      "hash": "4536fbb1e37b2407a080dafd59284ac0",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_access_colaboradores(uuid,boolean)",
+    "detail": {
+      "anon": false,
+      "hash": "bbcffb334e82a68dd20f4152ecbbd8c0",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_colaborador_write()",
+    "detail": {
+      "anon": false,
+      "hash": "a862c10375d409c1e99baffdacfbb365",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_access_catalogos(uuid,boolean)",
+    "detail": {
+      "anon": false,
+      "hash": "bbcffb334e82a68dd20f4152ecbbd8c0",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_catalogo_write()",
+    "detail": {
+      "anon": false,
+      "hash": "8a436da33724bd544fb94ddb7a4f860f",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.documento_legacy_path(text,uuid,text)",
+    "detail": {
+      "anon": false,
+      "hash": "9a407fe29995c76622243d6689288b3e",
+      "type": "text",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": false,
+      "service": false,
+      "volatility": "i",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_access_documento(text,boolean)",
+    "detail": {
+      "anon": true,
+      "hash": "6d5ca74fe93623469f3318b51685be1a",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_documento_reference()",
+    "detail": {
+      "anon": false,
+      "hash": "f5d02cdb06330847d16d51eea1ffb154",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_treinamento_write()",
+    "detail": {
+      "anon": false,
+      "hash": "a06a89d86e16860c5ba89ebc7883c1e2",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_access_certificado(text,boolean)",
+    "detail": {
+      "anon": false,
+      "hash": "2ee21fd9560700308d84eac4422e444f",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_access_empresa(uuid,boolean,boolean)",
+    "detail": {
+      "anon": false,
+      "hash": "630923493a95aaf8f6c33a6cf8d2cfd9",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_empresa_write()",
+    "detail": {
+      "anon": false,
+      "hash": "f131403a7d4a9ae82444b5ceb7c612b5",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_documento_metadata()",
+    "detail": {
+      "anon": false,
+      "hash": "3ae962f81d252f13e91f22314a58c4a6",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.logo_update_identity(uuid,text,text)",
+    "detail": {
+      "anon": true,
+      "hash": "928ef86c18f5def4f9ad6aa2632736ae",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.cnpj_valido(text)",
+    "detail": {
+      "anon": false,
+      "hash": "1671dcea499ca01ae811a80c12ebd035",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": false,
+      "service": true,
+      "volatility": "i",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_access_logo(text,text,jsonb)",
+    "detail": {
+      "anon": true,
+      "hash": "caa03ead77e4f7dde459d656f4905be8",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_aso_write()",
+    "detail": {
+      "anon": false,
+      "hash": "e4f3c879afc8daa56f8e52fda70e6a8a",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.can_read_exames_catalogo()",
+    "detail": {
+      "anon": false,
+      "hash": "6b7b03a71c5db04ff26dbf4436d5f226",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.cnpj_canonico(text)",
+    "detail": {
+      "anon": false,
+      "hash": "dda4e85fe77d983b7b113e91d9fb184f",
+      "type": "text",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": false,
+      "service": true,
+      "volatility": "i",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.has_empresa_feature(uuid,text)",
+    "detail": {
+      "anon": false,
+      "hash": "3ccc6390314dbf9ca995c06d808e7d54",
+      "type": "boolean",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "s",
+      "authenticated": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_commercial_write()",
+    "detail": {
+      "anon": false,
+      "hash": "d9d7a1cc5153159199d9eae5f12bbd9e",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.guard_diagnostico_write()",
+    "detail": {
+      "anon": false,
+      "hash": "9345a7eaa20cb42a6e05f34b4b178235",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.deny_audit_mutation()",
+    "detail": {
+      "anon": false,
+      "hash": "92ad4053ea27c693c429a094261bc399",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": false,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "function:engmarq_private.audit_commercial_write()",
+    "detail": {
+      "anon": false,
+      "hash": "9b6f07a27920c2dffebadb74eed49971",
+      "type": "trigger",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "service": false,
+      "volatility": "v",
+      "authenticated": false,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.user_profiles.guard_profile_update",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_profile_update BEFORE UPDATE ON public.user_profiles FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_profile_update()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.funcoes.guard_catalogo_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_catalogo_write BEFORE INSERT OR UPDATE ON public.funcoes FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_catalogo_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.colaboradores.guard_colaborador_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_colaborador_write BEFORE INSERT OR UPDATE ON public.colaboradores FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_colaborador_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.documentos.guard_aso_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_aso_write BEFORE INSERT OR UPDATE ON public.documentos FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_aso_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.documentos.guard_documento_metadata",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_documento_metadata BEFORE INSERT OR DELETE OR UPDATE ON public.documentos FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_documento_metadata()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.documentos.guard_documento_reference",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_documento_reference BEFORE INSERT OR UPDATE ON public.documentos FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_documento_reference()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.documentos.trg_documento_status",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER trg_documento_status BEFORE INSERT OR UPDATE ON public.documentos FOR EACH ROW EXECUTE FUNCTION update_documento_status()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.matriz_treinamentos.guard_treinamento_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_treinamento_write BEFORE INSERT OR DELETE OR UPDATE ON public.matriz_treinamentos FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_treinamento_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.ambientes.guard_catalogo_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_catalogo_write BEFORE INSERT OR UPDATE ON public.ambientes FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_catalogo_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.fichas_epi_itens.trg_ficha_epi_item_status",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER trg_ficha_epi_item_status BEFORE INSERT OR UPDATE ON public.fichas_epi_itens FOR EACH ROW EXECUTE FUNCTION update_ficha_epi_item_status()"
+    },
+    "optional": true
+  },
+  {
+    "identity": "trigger:public.setores.guard_catalogo_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_catalogo_write BEFORE INSERT OR UPDATE ON public.setores FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_catalogo_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.treinamentos.guard_treinamento_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_treinamento_write BEFORE INSERT OR DELETE OR UPDATE ON public.treinamentos FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_treinamento_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.treinamentos.trg_treinamento_status",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER trg_treinamento_status BEFORE INSERT OR UPDATE ON public.treinamentos FOR EACH ROW EXECUTE FUNCTION update_treinamento_status()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresas.audit_company_status",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER audit_company_status AFTER UPDATE ON public.empresas FOR EACH ROW EXECUTE FUNCTION engmarq_private.audit_commercial_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresas.guard_empresa_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_empresa_write BEFORE INSERT OR UPDATE ON public.empresas FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_empresa_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresa_comercial.audit_commercial_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER audit_commercial_write AFTER INSERT OR UPDATE ON public.empresa_comercial FOR EACH ROW EXECUTE FUNCTION engmarq_private.audit_commercial_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresa_comercial.guard_commercial_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_commercial_write BEFORE INSERT OR UPDATE ON public.empresa_comercial FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_commercial_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresa_features.audit_commercial_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER audit_commercial_write AFTER INSERT OR UPDATE ON public.empresa_features FOR EACH ROW EXECUTE FUNCTION engmarq_private.audit_commercial_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresa_features.guard_commercial_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_commercial_write BEFORE INSERT OR UPDATE ON public.empresa_features FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_commercial_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresa_limites.audit_commercial_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER audit_commercial_write AFTER INSERT OR UPDATE ON public.empresa_limites FOR EACH ROW EXECUTE FUNCTION engmarq_private.audit_commercial_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresa_limites.guard_commercial_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_commercial_write BEFORE INSERT OR UPDATE ON public.empresa_limites FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_commercial_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.empresa_diagnostico_sst.guard_diagnostico_write",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER guard_diagnostico_write BEFORE INSERT OR UPDATE ON public.empresa_diagnostico_sst FOR EACH ROW EXECUTE FUNCTION engmarq_private.guard_diagnostico_write()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.auditoria_comercial.deny_audit_mutation",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER deny_audit_mutation BEFORE DELETE OR UPDATE ON public.auditoria_comercial FOR EACH ROW EXECUTE FUNCTION engmarq_private.deny_audit_mutation()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "trigger:public.auditoria_comercial.deny_audit_truncate",
+    "detail": {
+      "enabled": "O",
+      "definition": "CREATE TRIGGER deny_audit_truncate BEFORE TRUNCATE ON public.auditoria_comercial FOR EACH STATEMENT EXECUTE FUNCTION engmarq_private.deny_audit_mutation()"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documento_tipos.documento_tipos_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documento_tipos.documento_tipos_nome_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.treinamento_tipos.treinamento_tipos_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.treinamento_tipos.treinamento_tipos_nome_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.user_profiles.user_profiles_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.user_profiles.user_profiles_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.user_profiles.user_profiles_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.funcoes.funcoes_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.funcoes.funcoes_empresa_id_nome_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.funcoes.funcoes_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.funcoes.funcoes_empresa_id_id_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.colaboradores.colaboradores_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.colaboradores.colaboradores_empresa_id_cpf_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, cpf)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.colaboradores.colaboradores_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.colaboradores.colaboradores_funcao_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id, funcao_id) REFERENCES funcoes(empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.colaboradores.colaboradores_setor_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id, setor_id) REFERENCES setores(empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.colaboradores.colaboradores_ambiente_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id, ambiente_id) REFERENCES ambientes(empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.colaboradores.colaboradores_empresa_id_id_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documentos.documentos_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documentos.documentos_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documentos.documentos_tipo_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (tipo_id) REFERENCES documento_tipos(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documentos.documentos_subtipo_exame_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (((subtipo_exame = ANY (ARRAY['admissional'::text, 'periodico'::text, 'mudanca_risco'::text, 'retorno_trabalho'::text, 'demissional'::text])) OR (subtipo_exame IS NULL)))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documentos.documentos_arquivo_path_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (((arquivo_path IS NULL) OR (arquivo_path ~ (('^'::text || (empresa_id)::text) || '/(certificados/)?[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$'::text))))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documentos.documentos_colaborador_tenant_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id, colaborador_id) REFERENCES colaboradores(empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.documentos.documentos_resultado_aso_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (((resultado_aso IS NULL) OR (resultado_aso = ANY (ARRAY['apto'::text, 'apto_com_restricao'::text, 'inapto'::text]))))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.matriz_treinamentos.matriz_treinamentos_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.matriz_treinamentos.matriz_treinamentos_empresa_id_funcao_id_treinamento_tipo_i_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, funcao_id, treinamento_tipo_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.matriz_treinamentos.matriz_treinamentos_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.matriz_treinamentos.matriz_treinamentos_treinamento_tipo_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (treinamento_tipo_id) REFERENCES treinamento_tipos(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.matriz_treinamentos.matriz_treinamentos_funcao_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id, funcao_id) REFERENCES funcoes(empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.ambientes.ambientes_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.ambientes.ambientes_empresa_id_nome_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.ambientes.ambientes_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.ambientes.ambientes_empresa_id_id_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.exames_catalogo.exames_catalogo_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.exames_catalogo.exames_catalogo_nome_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.fichas_epi.fichas_epi_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": true
+  },
+  {
+    "identity": "constraint:public.fichas_epi.fichas_epi_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "constraint:public.fichas_epi.fichas_epi_colaborador_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id) ON DELETE CASCADE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "constraint:public.fichas_epi.fichas_epi_assinado_por_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (assinado_por) REFERENCES user_profiles(id) ON DELETE SET NULL"
+    },
+    "optional": true
+  },
+  {
+    "identity": "constraint:public.fichas_epi_itens.fichas_epi_itens_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": true
+  },
+  {
+    "identity": "constraint:public.fichas_epi_itens.fichas_epi_itens_ficha_epi_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (ficha_epi_id) REFERENCES fichas_epi(id) ON DELETE CASCADE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "constraint:public.fichas_epi_itens.fichas_epi_itens_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE"
+    },
+    "optional": true
+  },
+  {
+    "identity": "constraint:public.setores.setores_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.setores.setores_empresa_id_nome_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.setores.setores_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.setores.setores_empresa_id_id_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.treinamentos.treinamentos_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.treinamentos.treinamentos_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.treinamentos.treinamentos_treinamento_tipo_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (treinamento_tipo_id) REFERENCES treinamento_tipos(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.treinamentos.treinamentos_modalidade_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((modalidade = ANY (ARRAY['presencial'::text, 'online'::text, 'semipresencial'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.treinamentos.treinamentos_colaborador_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id, colaborador_id) REFERENCES colaboradores(empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.treinamentos.treinamentos_certificado_path_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (((certificado_url IS NULL) OR (certificado_url ~ (('^'::text || (empresa_id)::text) || '/certificados/[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$'::text))))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresas.empresas_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresas.empresas_cnpj_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (cnpj)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresas.empresas_status_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((status = ANY (ARRAY['ativa'::text, 'pendente'::text, 'suspensa'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresas.empresas_cnpj_canonico_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (cnpj_canonico)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresas.empresas_cnpj_valido_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (engmarq_private.cnpj_valido(cnpj))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.features.features_feature_key_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((feature_key ~ '^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$'::text))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.features.features_descricao_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (((length(descricao) >= 1) AND (length(descricao) <= 500)))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.features.features_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (feature_key)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_comercial.empresa_comercial_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_comercial.empresa_comercial_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_comercial.empresa_comercial_verificado_por_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (verificado_por) REFERENCES user_profiles(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_comercial.empresa_comercial_origem_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((origem = ANY (ARRAY['autocadastro'::text, 'administrativo'::text, 'legado'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_comercial.empresa_comercial_titularidade_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((titularidade = ANY (ARRAY['autodeclarado'::text, 'verificado'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_comercial.empresa_comercial_verificacao_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((((titularidade = 'verificado'::text) AND (verificado_por IS NOT NULL) AND (verificado_em IS NOT NULL)) OR ((titularidade IS DISTINCT FROM 'verificado'::text) AND (verificado_por IS NULL) AND (verificado_em IS NULL))))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_features.empresa_features_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (empresa_id, feature_key)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_features.empresa_features_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_features.empresa_features_feature_key_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (feature_key) REFERENCES features(feature_key)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_limites.empresa_limites_max_colaboradores_ativos_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((max_colaboradores_ativos > 0))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_limites.empresa_limites_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (((ilimitado AND (max_colaboradores_ativos IS NULL)) OR ((NOT ilimitado) AND (max_colaboradores_ativos IS NOT NULL))))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_limites.empresa_limites_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_limites.empresa_limites_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_uso.empresa_uso_colaboradores_ativos_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((colaboradores_ativos >= 0))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_uso.empresa_uso_no_future_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (isfinite(apurado_em))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_uso.empresa_uso_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_uso.empresa_uso_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_possui_pgr_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((possui_pgr = ANY (ARRAY['sim'::text, 'nao'::text, 'nao_sei'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_possui_pcmso_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((possui_pcmso = ANY (ARRAY['sim'::text, 'nao'::text, 'nao_sei'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_possui_treinamentos_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((possui_treinamentos = ANY (ARRAY['sim'::text, 'nao'::text, 'nao_sei'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_programas_documentos_em_dia_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((programas_documentos_em_dia = ANY (ARRAY['sim'::text, 'nao'::text, 'nao_sei'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_treinamentos_em_dia_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((treinamentos_em_dia = ANY (ARRAY['sim'::text, 'nao'::text, 'nao_sei'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_quantidade_aproximada_colaborador_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((quantidade_aproximada_colaboradores >= 0))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_schema_version_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((schema_version = 1))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_informado_em_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (isfinite(informado_em))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_grau_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((((conhece_grau_risco IS TRUE) AND (grau_risco_informado IS NOT NULL) AND ((grau_risco_informado >= 1) AND (grau_risco_informado <= 4))) OR ((conhece_grau_risco IS NOT TRUE) AND (grau_risco_informado IS NULL))))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.empresa_diagnostico_sst.empresa_diagnostico_sst_informado_por_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (informado_por) REFERENCES user_profiles(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.auditoria_comercial.auditoria_comercial_objeto_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((objeto = ANY (ARRAY['empresa_comercial'::text, 'empresa_features'::text, 'empresa_limites'::text, 'empresa_status'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.auditoria_comercial.auditoria_comercial_operacao_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((operacao = ANY (ARRAY['INSERT'::text, 'UPDATE'::text, 'DELETE'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.auditoria_comercial.auditoria_comercial_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.auditoria_comercial.auditoria_comercial_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:public.auditoria_comercial.auditoria_comercial_ator_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (ator_id) REFERENCES auth.users(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_payload_hash_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((payload_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_estado_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((estado = ANY (ARRAY['pending_email'::text, 'onboarding'::text, 'completed'::text, 'expired'::text, 'failed_retryable'::text])))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_expira_em_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK (isfinite(expira_em))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_check",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((expira_em > criado_em))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_check1",
+    "detail": {
+      "validated": true,
+      "definition": "CHECK ((((estado = 'completed'::text) AND (empresa_id IS NOT NULL)) OR ((estado <> 'completed'::text) AND (empresa_id IS NULL))))"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_pkey",
+    "detail": {
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_auth_user_id_chave_idempotencia_key",
+    "detail": {
+      "validated": true,
+      "definition": "UNIQUE (auth_user_id, chave_idempotencia)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_auth_user_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (auth_user_id) REFERENCES auth.users(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "constraint:engmarq_private.onboarding_solicitacoes.onboarding_solicitacoes_empresa_id_fkey",
+    "detail": {
+      "validated": true,
+      "definition": "FOREIGN KEY (empresa_id) REFERENCES empresas(id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.empresas_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX empresas_pkey ON public.empresas USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.empresas_cnpj_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX empresas_cnpj_key ON public.empresas USING btree (cnpj)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.empresas_cnpj_canonico_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX empresas_cnpj_canonico_key ON public.empresas USING btree (cnpj_canonico)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.user_profiles_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX user_profiles_pkey ON public.user_profiles USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_user_profiles_empresa",
+    "detail": {
+      "definition": "CREATE INDEX idx_user_profiles_empresa ON public.user_profiles USING btree (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.setores_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX setores_pkey ON public.setores USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.setores_empresa_id_nome_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX setores_empresa_id_nome_key ON public.setores USING btree (empresa_id, nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.setores_empresa_id_id_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX setores_empresa_id_id_key ON public.setores USING btree (empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.funcoes_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX funcoes_pkey ON public.funcoes USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.funcoes_empresa_id_nome_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX funcoes_empresa_id_nome_key ON public.funcoes USING btree (empresa_id, nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.funcoes_empresa_id_id_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX funcoes_empresa_id_id_key ON public.funcoes USING btree (empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.ambientes_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX ambientes_pkey ON public.ambientes USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.ambientes_empresa_id_nome_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX ambientes_empresa_id_nome_key ON public.ambientes USING btree (empresa_id, nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.ambientes_empresa_id_id_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX ambientes_empresa_id_id_key ON public.ambientes USING btree (empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.colaboradores_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX colaboradores_pkey ON public.colaboradores USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.colaboradores_empresa_id_cpf_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX colaboradores_empresa_id_cpf_key ON public.colaboradores USING btree (empresa_id, cpf)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_colaboradores_empresa",
+    "detail": {
+      "definition": "CREATE INDEX idx_colaboradores_empresa ON public.colaboradores USING btree (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_colaboradores_funcao",
+    "detail": {
+      "definition": "CREATE INDEX idx_colaboradores_funcao ON public.colaboradores USING btree (funcao_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.colaboradores_empresa_id_id_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX colaboradores_empresa_id_id_key ON public.colaboradores USING btree (empresa_id, id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.documento_tipos_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX documento_tipos_pkey ON public.documento_tipos USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.documento_tipos_nome_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX documento_tipos_nome_key ON public.documento_tipos USING btree (nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.documentos_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX documentos_pkey ON public.documentos USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_documentos_empresa",
+    "detail": {
+      "definition": "CREATE INDEX idx_documentos_empresa ON public.documentos USING btree (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_documentos_vencimento",
+    "detail": {
+      "definition": "CREATE INDEX idx_documentos_vencimento ON public.documentos USING btree (vencimento)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_documentos_colaborador_id",
+    "detail": {
+      "definition": "CREATE INDEX idx_documentos_colaborador_id ON public.documentos USING btree (colaborador_id) WHERE (colaborador_id IS NOT NULL)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_documentos_aso_tenant_tipo_colaborador",
+    "detail": {
+      "definition": "CREATE INDEX idx_documentos_aso_tenant_tipo_colaborador ON public.documentos USING btree (empresa_id, tipo_id, colaborador_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.treinamento_tipos_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX treinamento_tipos_pkey ON public.treinamento_tipos USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.treinamento_tipos_nome_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX treinamento_tipos_nome_key ON public.treinamento_tipos USING btree (nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.matriz_treinamentos_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX matriz_treinamentos_pkey ON public.matriz_treinamentos USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.matriz_treinamentos_empresa_id_funcao_id_treinamento_tipo_i_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX matriz_treinamentos_empresa_id_funcao_id_treinamento_tipo_i_key ON public.matriz_treinamentos USING btree (empresa_id, funcao_id, treinamento_tipo_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.treinamentos_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX treinamentos_pkey ON public.treinamentos USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_treinamentos_colaborador",
+    "detail": {
+      "definition": "CREATE INDEX idx_treinamentos_colaborador ON public.treinamentos USING btree (colaborador_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.idx_treinamentos_vencimento",
+    "detail": {
+      "definition": "CREATE INDEX idx_treinamentos_vencimento ON public.treinamentos USING btree (data_vencimento)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.exames_catalogo_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX exames_catalogo_pkey ON public.exames_catalogo USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.exames_catalogo_nome_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX exames_catalogo_nome_key ON public.exames_catalogo USING btree (nome)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.fichas_epi_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX fichas_epi_pkey ON public.fichas_epi USING btree (id)"
+    },
+    "optional": true
+  },
+  {
+    "identity": "index:public.idx_fichas_epi_empresa_id",
+    "detail": {
+      "definition": "CREATE INDEX idx_fichas_epi_empresa_id ON public.fichas_epi USING btree (empresa_id)"
+    },
+    "optional": true
+  },
+  {
+    "identity": "index:public.idx_fichas_epi_colaborador_id",
+    "detail": {
+      "definition": "CREATE INDEX idx_fichas_epi_colaborador_id ON public.fichas_epi USING btree (colaborador_id)"
+    },
+    "optional": true
+  },
+  {
+    "identity": "index:public.fichas_epi_itens_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX fichas_epi_itens_pkey ON public.fichas_epi_itens USING btree (id)"
+    },
+    "optional": true
+  },
+  {
+    "identity": "index:public.idx_fichas_epi_itens_ficha_epi_id",
+    "detail": {
+      "definition": "CREATE INDEX idx_fichas_epi_itens_ficha_epi_id ON public.fichas_epi_itens USING btree (ficha_epi_id)"
+    },
+    "optional": true
+  },
+  {
+    "identity": "index:public.idx_fichas_epi_itens_empresa_id",
+    "detail": {
+      "definition": "CREATE INDEX idx_fichas_epi_itens_empresa_id ON public.fichas_epi_itens USING btree (empresa_id)"
+    },
+    "optional": true
+  },
+  {
+    "identity": "index:public.features_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX features_pkey ON public.features USING btree (feature_key)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.empresa_comercial_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX empresa_comercial_pkey ON public.empresa_comercial USING btree (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.empresa_features_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX empresa_features_pkey ON public.empresa_features USING btree (empresa_id, feature_key)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.empresa_limites_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX empresa_limites_pkey ON public.empresa_limites USING btree (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.empresa_uso_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX empresa_uso_pkey ON public.empresa_uso USING btree (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.empresa_diagnostico_sst_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX empresa_diagnostico_sst_pkey ON public.empresa_diagnostico_sst USING btree (empresa_id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.auditoria_comercial_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX auditoria_comercial_pkey ON public.auditoria_comercial USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:public.auditoria_comercial_empresa_data_idx",
+    "detail": {
+      "definition": "CREATE INDEX auditoria_comercial_empresa_data_idx ON public.auditoria_comercial USING btree (empresa_id, registrado_em)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:engmarq_private.onboarding_solicitacoes_pkey",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX onboarding_solicitacoes_pkey ON engmarq_private.onboarding_solicitacoes USING btree (id)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:engmarq_private.onboarding_solicitacoes_auth_user_id_chave_idempotencia_key",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX onboarding_solicitacoes_auth_user_id_chave_idempotencia_key ON engmarq_private.onboarding_solicitacoes USING btree (auth_user_id, chave_idempotencia)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "index:engmarq_private.onboarding_um_resultado_por_usuario",
+    "detail": {
+      "definition": "CREATE UNIQUE INDEX onboarding_um_resultado_por_usuario ON engmarq_private.onboarding_solicitacoes USING btree (auth_user_id) WHERE (estado = 'completed'::text)"
+    },
+    "optional": false
+  },
+  {
+    "identity": "view:public.vw_dashboard_documentos",
+    "detail": {
+      "definition": " SELECT d.empresa_id,\n    dt.nome AS tipo_nome,\n    d.titulo,\n    d.vencimento,\n        CASE\n            WHEN (d.vencimento IS NULL) THEN 'vigente'::text\n            WHEN (d.vencimento <\n            CASE\n                WHEN (lower(btrim(dt.nome)) = 'aso'::text) THEN ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'::text))::date\n                ELSE CURRENT_DATE\n            END) THEN 'vencido'::text\n            WHEN (d.vencimento <= (\n            CASE\n                WHEN (lower(btrim(dt.nome)) = 'aso'::text) THEN ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'::text))::date\n                ELSE CURRENT_DATE\n            END +\n            CASE\n                WHEN (lower(btrim(dt.nome)) = 'aso'::text) THEN 30\n                ELSE 60\n            END)) THEN 'vencendo'::text\n            ELSE 'vigente'::text\n        END AS status_calculado,\n    (d.vencimento -\n        CASE\n            WHEN (lower(btrim(dt.nome)) = 'aso'::text) THEN ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'::text))::date\n            ELSE CURRENT_DATE\n        END) AS dias_restantes\n   FROM (documentos d\n     JOIN documento_tipos dt ON ((dt.id = d.tipo_id)));"
+    },
+    "optional": false
+  },
+  {
+    "identity": "view:public.vw_dashboard_treinamentos",
+    "detail": {
+      "definition": " SELECT t.empresa_id,\n    t.colaborador_id,\n    c.nome AS colaborador_nome,\n    tt.nome AS treinamento_nome,\n    t.data_realizacao,\n    t.data_vencimento,\n        CASE\n            WHEN (t.data_vencimento IS NULL) THEN 'em_dia'::text\n            WHEN (t.data_vencimento < CURRENT_DATE) THEN 'vencido'::text\n            WHEN (t.data_vencimento <= (CURRENT_DATE + '30 days'::interval)) THEN 'vencendo'::text\n            ELSE 'em_dia'::text\n        END AS status_calculado,\n    (t.data_vencimento - CURRENT_DATE) AS dias_restantes\n   FROM ((treinamentos t\n     JOIN colaboradores c ON ((c.id = t.colaborador_id)))\n     JOIN treinamento_tipos tt ON ((tt.id = t.treinamento_tipo_id)));"
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.documento_tipos.anon",
+    "detail": {
+      "table": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ],
+      "columns": [
+        "descricao:INSERT",
+        "descricao:REFERENCES",
+        "descricao:SELECT",
+        "descricao:UPDATE",
+        "id:INSERT",
+        "id:REFERENCES",
+        "id:SELECT",
+        "id:UPDATE",
+        "nome:INSERT",
+        "nome:REFERENCES",
+        "nome:SELECT",
+        "nome:UPDATE",
+        "validade_meses:INSERT",
+        "validade_meses:REFERENCES",
+        "validade_meses:SELECT",
+        "validade_meses:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.documento_tipos.authenticated",
+    "detail": {
+      "table": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ],
+      "columns": [
+        "descricao:INSERT",
+        "descricao:REFERENCES",
+        "descricao:SELECT",
+        "descricao:UPDATE",
+        "id:INSERT",
+        "id:REFERENCES",
+        "id:SELECT",
+        "id:UPDATE",
+        "nome:INSERT",
+        "nome:REFERENCES",
+        "nome:SELECT",
+        "nome:UPDATE",
+        "validade_meses:INSERT",
+        "validade_meses:REFERENCES",
+        "validade_meses:SELECT",
+        "validade_meses:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.treinamento_tipos.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.treinamento_tipos.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "descricao:SELECT",
+        "id:SELECT",
+        "nome:SELECT",
+        "nr_referencia:SELECT",
+        "validade_meses:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.vw_dashboard_documentos.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.vw_dashboard_documentos.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "dias_restantes:SELECT",
+        "empresa_id:SELECT",
+        "status_calculado:SELECT",
+        "tipo_nome:SELECT",
+        "titulo:SELECT",
+        "vencimento:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.user_profiles.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.user_profiles.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "active:SELECT",
+        "active:UPDATE",
+        "created_at:SELECT",
+        "email:SELECT",
+        "empresa_id:SELECT",
+        "full_name:SELECT",
+        "id:SELECT",
+        "role:SELECT",
+        "role:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.funcoes.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.funcoes.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "active:INSERT",
+        "active:SELECT",
+        "active:UPDATE",
+        "descricao:INSERT",
+        "descricao:SELECT",
+        "descricao:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "id:SELECT",
+        "nome:INSERT",
+        "nome:SELECT",
+        "nome:UPDATE",
+        "riscos:INSERT",
+        "riscos:SELECT",
+        "riscos:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.colaboradores.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.colaboradores.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "active:INSERT",
+        "active:SELECT",
+        "active:UPDATE",
+        "ambiente_id:INSERT",
+        "ambiente_id:SELECT",
+        "ambiente_id:UPDATE",
+        "cpf:INSERT",
+        "cpf:SELECT",
+        "created_at:SELECT",
+        "data_admissao:INSERT",
+        "data_admissao:SELECT",
+        "data_demissao:SELECT",
+        "data_demissao:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "funcao_id:INSERT",
+        "funcao_id:SELECT",
+        "funcao_id:UPDATE",
+        "id:SELECT",
+        "matricula:INSERT",
+        "matricula:SELECT",
+        "matricula:UPDATE",
+        "nome:INSERT",
+        "nome:SELECT",
+        "nome:UPDATE",
+        "setor_id:INSERT",
+        "setor_id:SELECT",
+        "setor_id:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.documentos.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.documentos.authenticated",
+    "detail": {
+      "table": [
+        "DELETE",
+        "SELECT"
+      ],
+      "columns": [
+        "arquivo_path:INSERT",
+        "arquivo_path:SELECT",
+        "arquivo_path:UPDATE",
+        "arquivo_url:SELECT",
+        "colaborador_id:INSERT",
+        "colaborador_id:SELECT",
+        "colaborador_id:UPDATE",
+        "created_at:SELECT",
+        "emissao:INSERT",
+        "emissao:SELECT",
+        "emissao:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "exames_realizados:INSERT",
+        "exames_realizados:SELECT",
+        "exames_realizados:UPDATE",
+        "id:SELECT",
+        "numero:INSERT",
+        "numero:SELECT",
+        "numero:UPDATE",
+        "observacoes:INSERT",
+        "observacoes:SELECT",
+        "observacoes:UPDATE",
+        "resultado_aso:INSERT",
+        "resultado_aso:SELECT",
+        "resultado_aso:UPDATE",
+        "status:SELECT",
+        "subtipo_exame:INSERT",
+        "subtipo_exame:SELECT",
+        "subtipo_exame:UPDATE",
+        "tipo_id:INSERT",
+        "tipo_id:SELECT",
+        "tipo_id:UPDATE",
+        "titulo:INSERT",
+        "titulo:SELECT",
+        "titulo:UPDATE",
+        "vencimento:INSERT",
+        "vencimento:SELECT",
+        "vencimento:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.matriz_treinamentos.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.matriz_treinamentos.authenticated",
+    "detail": {
+      "table": [
+        "DELETE",
+        "SELECT"
+      ],
+      "columns": [
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "funcao_id:INSERT",
+        "funcao_id:SELECT",
+        "id:SELECT",
+        "obrigatorio:INSERT",
+        "obrigatorio:SELECT",
+        "obrigatorio:UPDATE",
+        "treinamento_tipo_id:INSERT",
+        "treinamento_tipo_id:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.ambientes.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.ambientes.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "active:INSERT",
+        "active:SELECT",
+        "active:UPDATE",
+        "descricao:INSERT",
+        "descricao:SELECT",
+        "descricao:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "id:SELECT",
+        "nome:INSERT",
+        "nome:SELECT",
+        "nome:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.fichas_epi_pkey.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.fichas_epi_pkey.authenticated",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.idx_fichas_epi_empresa_id.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.idx_fichas_epi_empresa_id.authenticated",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.idx_fichas_epi_colaborador_id.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.idx_fichas_epi_colaborador_id.authenticated",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.exames_catalogo.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.exames_catalogo.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "id:SELECT",
+        "nome:SELECT",
+        "ordem:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.fichas_epi_itens_pkey.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.fichas_epi_itens_pkey.authenticated",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.idx_fichas_epi_itens_ficha_epi_id.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.idx_fichas_epi_itens_ficha_epi_id.authenticated",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.idx_fichas_epi_itens_empresa_id.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.idx_fichas_epi_itens_empresa_id.authenticated",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.fichas_epi.anon",
+    "detail": {
+      "table": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ],
+      "columns": [
+        "assinado_em:INSERT",
+        "assinado_em:REFERENCES",
+        "assinado_em:SELECT",
+        "assinado_em:UPDATE",
+        "assinado_por:INSERT",
+        "assinado_por:REFERENCES",
+        "assinado_por:SELECT",
+        "assinado_por:UPDATE",
+        "colaborador_id:INSERT",
+        "colaborador_id:REFERENCES",
+        "colaborador_id:SELECT",
+        "colaborador_id:UPDATE",
+        "created_at:INSERT",
+        "created_at:REFERENCES",
+        "created_at:SELECT",
+        "created_at:UPDATE",
+        "data_entrega:INSERT",
+        "data_entrega:REFERENCES",
+        "data_entrega:SELECT",
+        "data_entrega:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:REFERENCES",
+        "empresa_id:SELECT",
+        "empresa_id:UPDATE",
+        "foto_assinatura_url:INSERT",
+        "foto_assinatura_url:REFERENCES",
+        "foto_assinatura_url:SELECT",
+        "foto_assinatura_url:UPDATE",
+        "id:INSERT",
+        "id:REFERENCES",
+        "id:SELECT",
+        "id:UPDATE",
+        "observacoes:INSERT",
+        "observacoes:REFERENCES",
+        "observacoes:SELECT",
+        "observacoes:UPDATE"
+      ]
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.fichas_epi.authenticated",
+    "detail": {
+      "table": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ],
+      "columns": [
+        "assinado_em:INSERT",
+        "assinado_em:REFERENCES",
+        "assinado_em:SELECT",
+        "assinado_em:UPDATE",
+        "assinado_por:INSERT",
+        "assinado_por:REFERENCES",
+        "assinado_por:SELECT",
+        "assinado_por:UPDATE",
+        "colaborador_id:INSERT",
+        "colaborador_id:REFERENCES",
+        "colaborador_id:SELECT",
+        "colaborador_id:UPDATE",
+        "created_at:INSERT",
+        "created_at:REFERENCES",
+        "created_at:SELECT",
+        "created_at:UPDATE",
+        "data_entrega:INSERT",
+        "data_entrega:REFERENCES",
+        "data_entrega:SELECT",
+        "data_entrega:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:REFERENCES",
+        "empresa_id:SELECT",
+        "empresa_id:UPDATE",
+        "foto_assinatura_url:INSERT",
+        "foto_assinatura_url:REFERENCES",
+        "foto_assinatura_url:SELECT",
+        "foto_assinatura_url:UPDATE",
+        "id:INSERT",
+        "id:REFERENCES",
+        "id:SELECT",
+        "id:UPDATE",
+        "observacoes:INSERT",
+        "observacoes:REFERENCES",
+        "observacoes:SELECT",
+        "observacoes:UPDATE"
+      ]
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.fichas_epi_itens.anon",
+    "detail": {
+      "table": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ],
+      "columns": [
+        "ca:INSERT",
+        "ca:REFERENCES",
+        "ca:SELECT",
+        "ca:UPDATE",
+        "created_at:INSERT",
+        "created_at:REFERENCES",
+        "created_at:SELECT",
+        "created_at:UPDATE",
+        "data_validade:INSERT",
+        "data_validade:REFERENCES",
+        "data_validade:SELECT",
+        "data_validade:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:REFERENCES",
+        "empresa_id:SELECT",
+        "empresa_id:UPDATE",
+        "equipamento:INSERT",
+        "equipamento:REFERENCES",
+        "equipamento:SELECT",
+        "equipamento:UPDATE",
+        "ficha_epi_id:INSERT",
+        "ficha_epi_id:REFERENCES",
+        "ficha_epi_id:SELECT",
+        "ficha_epi_id:UPDATE",
+        "id:INSERT",
+        "id:REFERENCES",
+        "id:SELECT",
+        "id:UPDATE",
+        "status:INSERT",
+        "status:REFERENCES",
+        "status:SELECT",
+        "status:UPDATE"
+      ]
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.fichas_epi_itens.authenticated",
+    "detail": {
+      "table": [
+        "DELETE",
+        "INSERT",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ],
+      "columns": [
+        "ca:INSERT",
+        "ca:REFERENCES",
+        "ca:SELECT",
+        "ca:UPDATE",
+        "created_at:INSERT",
+        "created_at:REFERENCES",
+        "created_at:SELECT",
+        "created_at:UPDATE",
+        "data_validade:INSERT",
+        "data_validade:REFERENCES",
+        "data_validade:SELECT",
+        "data_validade:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:REFERENCES",
+        "empresa_id:SELECT",
+        "empresa_id:UPDATE",
+        "equipamento:INSERT",
+        "equipamento:REFERENCES",
+        "equipamento:SELECT",
+        "equipamento:UPDATE",
+        "ficha_epi_id:INSERT",
+        "ficha_epi_id:REFERENCES",
+        "ficha_epi_id:SELECT",
+        "ficha_epi_id:UPDATE",
+        "id:INSERT",
+        "id:REFERENCES",
+        "id:SELECT",
+        "id:UPDATE",
+        "status:INSERT",
+        "status:REFERENCES",
+        "status:SELECT",
+        "status:UPDATE"
+      ]
+    },
+    "optional": true
+  },
+  {
+    "identity": "grant:public.setores.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.setores.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "active:INSERT",
+        "active:SELECT",
+        "active:UPDATE",
+        "descricao:INSERT",
+        "descricao:SELECT",
+        "descricao:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "id:SELECT",
+        "nome:INSERT",
+        "nome:SELECT",
+        "nome:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.treinamentos.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.treinamentos.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "carga_horaria:INSERT",
+        "carga_horaria:SELECT",
+        "carga_horaria:UPDATE",
+        "certificado_url:INSERT",
+        "certificado_url:SELECT",
+        "certificado_url:UPDATE",
+        "colaborador_id:INSERT",
+        "colaborador_id:SELECT",
+        "colaborador_id:UPDATE",
+        "created_at:SELECT",
+        "data_realizacao:INSERT",
+        "data_realizacao:SELECT",
+        "data_realizacao:UPDATE",
+        "data_vencimento:INSERT",
+        "data_vencimento:SELECT",
+        "data_vencimento:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "id:SELECT",
+        "instrutor:INSERT",
+        "instrutor:SELECT",
+        "instrutor:UPDATE",
+        "modalidade:INSERT",
+        "modalidade:SELECT",
+        "modalidade:UPDATE",
+        "status:SELECT",
+        "treinamento_tipo_id:INSERT",
+        "treinamento_tipo_id:SELECT",
+        "treinamento_tipo_id:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.vw_dashboard_treinamentos.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.vw_dashboard_treinamentos.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "colaborador_id:SELECT",
+        "colaborador_nome:SELECT",
+        "data_realizacao:SELECT",
+        "data_vencimento:SELECT",
+        "dias_restantes:SELECT",
+        "empresa_id:SELECT",
+        "status_calculado:SELECT",
+        "treinamento_nome:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresas.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresas.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "bairro:INSERT",
+        "bairro:SELECT",
+        "bairro:UPDATE",
+        "cep:INSERT",
+        "cep:SELECT",
+        "cep:UPDATE",
+        "cidade:INSERT",
+        "cidade:SELECT",
+        "cidade:UPDATE",
+        "cnpj:INSERT",
+        "cnpj:SELECT",
+        "cnpj:UPDATE",
+        "cnpj_canonico:SELECT",
+        "complemento:INSERT",
+        "complemento:SELECT",
+        "complemento:UPDATE",
+        "created_at:SELECT",
+        "email:INSERT",
+        "email:SELECT",
+        "email:UPDATE",
+        "id:SELECT",
+        "logo_url:INSERT",
+        "logo_url:SELECT",
+        "logo_url:UPDATE",
+        "logradouro:INSERT",
+        "logradouro:SELECT",
+        "logradouro:UPDATE",
+        "numero:INSERT",
+        "numero:SELECT",
+        "numero:UPDATE",
+        "razao_social:INSERT",
+        "razao_social:SELECT",
+        "razao_social:UPDATE",
+        "responsavel:INSERT",
+        "responsavel:SELECT",
+        "responsavel:UPDATE",
+        "setor:INSERT",
+        "setor:SELECT",
+        "setor:UPDATE",
+        "status:INSERT",
+        "status:SELECT",
+        "status:UPDATE",
+        "telefone:INSERT",
+        "telefone:SELECT",
+        "telefone:UPDATE",
+        "uf:INSERT",
+        "uf:SELECT",
+        "uf:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.features.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.features.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "descricao:SELECT",
+        "feature_key:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_comercial.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_comercial.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "origem:INSERT",
+        "origem:SELECT",
+        "plano_comercial_id:INSERT",
+        "plano_comercial_id:SELECT",
+        "plano_comercial_id:UPDATE",
+        "titularidade:INSERT",
+        "titularidade:SELECT",
+        "titularidade:UPDATE",
+        "verificado_em:INSERT",
+        "verificado_em:SELECT",
+        "verificado_em:UPDATE",
+        "verificado_por:INSERT",
+        "verificado_por:SELECT",
+        "verificado_por:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_features.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_features.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "enabled:INSERT",
+        "enabled:SELECT",
+        "enabled:UPDATE",
+        "feature_key:INSERT",
+        "feature_key:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_limites.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_limites.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "ilimitado:INSERT",
+        "ilimitado:SELECT",
+        "ilimitado:UPDATE",
+        "max_colaboradores_ativos:INSERT",
+        "max_colaboradores_ativos:SELECT",
+        "max_colaboradores_ativos:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_uso.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_uso.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "apurado_em:SELECT",
+        "colaboradores_ativos:SELECT",
+        "empresa_id:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_diagnostico_sst.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.empresa_diagnostico_sst.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "conhece_grau_risco:INSERT",
+        "conhece_grau_risco:SELECT",
+        "conhece_grau_risco:UPDATE",
+        "empresa_id:INSERT",
+        "empresa_id:SELECT",
+        "grau_risco_informado:INSERT",
+        "grau_risco_informado:SELECT",
+        "grau_risco_informado:UPDATE",
+        "informado_em:SELECT",
+        "informado_por:INSERT",
+        "informado_por:SELECT",
+        "informado_por:UPDATE",
+        "possui_pcmso:INSERT",
+        "possui_pcmso:SELECT",
+        "possui_pcmso:UPDATE",
+        "possui_pgr:INSERT",
+        "possui_pgr:SELECT",
+        "possui_pgr:UPDATE",
+        "possui_treinamentos:INSERT",
+        "possui_treinamentos:SELECT",
+        "possui_treinamentos:UPDATE",
+        "programas_documentos_em_dia:INSERT",
+        "programas_documentos_em_dia:SELECT",
+        "programas_documentos_em_dia:UPDATE",
+        "quantidade_aproximada_colaboradores:INSERT",
+        "quantidade_aproximada_colaboradores:SELECT",
+        "quantidade_aproximada_colaboradores:UPDATE",
+        "schema_version:INSERT",
+        "schema_version:SELECT",
+        "schema_version:UPDATE",
+        "treinamentos_em_dia:INSERT",
+        "treinamentos_em_dia:SELECT",
+        "treinamentos_em_dia:UPDATE"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.auditoria_comercial.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:public.auditoria_comercial.authenticated",
+    "detail": {
+      "table": [
+        "SELECT"
+      ],
+      "columns": [
+        "anterior:SELECT",
+        "ator_id:SELECT",
+        "empresa_id:SELECT",
+        "executor:SELECT",
+        "feature_key:SELECT",
+        "id:SELECT",
+        "novo:SELECT",
+        "objeto:SELECT",
+        "operacao:SELECT",
+        "registrado_em:SELECT"
+      ]
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:engmarq_private.onboarding_solicitacoes.anon",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "grant:engmarq_private.onboarding_solicitacoes.authenticated",
+    "detail": {
+      "table": [],
+      "columns": []
+    },
+    "optional": false
+  },
+  {
+    "identity": "schema:engmarq_private",
+    "detail": {
+      "auth_usage": true,
+      "anon_create": false,
+      "auth_create": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "storage:objects_rls",
+    "detail": {
+      "rls": true,
+      "client_owner_member": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "bucket:documentos",
+    "detail": {
+      "mime": [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image/jpeg",
+        "image/png"
+      ],
+      "size": 10485760,
+      "public": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "bucket:assinaturas",
+    "detail": {
+      "mime": [
+        "image/jpeg",
+        "image/png"
+      ],
+      "size": 2097152,
+      "public": false
+    },
+    "optional": true
+  },
+  {
+    "identity": "bucket:logos",
+    "detail": {
+      "mime": [
+        "image/png",
+        "image/jpeg",
+        "image/webp"
+      ],
+      "size": 2097152,
+      "public": false
+    },
+    "optional": false
+  },
+  {
+    "identity": "optional-presence:public.fichas_epi",
+    "detail": {
+      "present": true
+    },
+    "optional": true
+  },
+  {
+    "identity": "optional-presence:public.fichas_epi_itens",
+    "detail": {
+      "present": true
+    },
+    "optional": true
+  }
+]

@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test user_profiles.test.mjs colaboradores.test.mjs catalogos.test.mjs treinamentos.test.mjs documentos_storage.test.mjs remediation.test.mjs logos_diagnosis.test.mjs logos_storage.test.mjs 023_exames_aso_inventory.test.mjs exames.test.mjs"
+    "test": "node --test user_profiles.test.mjs colaboradores.test.mjs catalogos.test.mjs treinamentos.test.mjs documentos_storage.test.mjs remediation.test.mjs logos_diagnosis.test.mjs logos_storage.test.mjs 023_exames_aso_inventory.test.mjs exames.test.mjs fundacao_024.test.mjs fundacao_024_concurrency.test.mjs fundacao_024_consolidado.test.mjs",
+    "test:preflight024": "node --test fundacao_024_consolidado.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.14"

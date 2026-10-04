@@ -1,0 +1,1716 @@
+{
+  "date": "2026-10-03",
+  "environment": "local synthetic PGlite; no remote execution",
+  "stages": {
+    "preflight": {
+      "results": 434,
+      "blocks": 0,
+      "warnings": [
+        {
+          "check": "bucket:assinaturas",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.assinado_em",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.assinado_por",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.colaborador_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.created_at",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.data_entrega",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.foto_assinatura_url",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.observacoes",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.ca",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.created_at",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.data_validade",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.equipamento",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.ficha_epi_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.status",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens_pkey.id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_pkey.id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_colaborador_id.colaborador_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_empresa_id.empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_itens_empresa_id.empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_itens_ficha_epi_id.ficha_epi_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_assinado_por_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_colaborador_id_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_empresa_id_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_empresa_id_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_ficha_epi_id_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "function:update_ficha_epi_item_status()",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens_pkey.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens_pkey.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_pkey.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_pkey.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_colaborador_id.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_colaborador_id.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_empresa_id.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_empresa_id.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_empresa_id.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_empresa_id.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.fichas_epi_itens_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.fichas_epi_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_colaborador_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_itens_empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_itens_ficha_epi_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "optional-presence:public.fichas_epi",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "optional-presence:public.fichas_epi_itens",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:public.fichas_epi.fichas_epi_select",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:public.fichas_epi.fichas_epi_write",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:public.fichas_epi_itens.fichas_epi_itens_select",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:public.fichas_epi_itens.fichas_epi_itens_write",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:storage.objects.assinaturas_storage_insert",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:storage.objects.assinaturas_storage_select",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.fichas_epi",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.fichas_epi_itens",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.fichas_epi_itens_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.fichas_epi_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_colaborador_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_itens_empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_itens_ficha_epi_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "trigger:public.fichas_epi_itens.trg_ficha_epi_item_status",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "Auth sem perfil (inventário técnico)",
+          "result": "0"
+        },
+        {
+          "check": "Ledger de migrations: conferir 015–023 separadamente",
+          "result": "não disponível"
+        },
+        {
+          "check": "EPI/assinaturas: bloqueador do rollout público na 025",
+          "result": "Policies legadas preservadas; 024 não remedia Admin global nem gates operacionais"
+        },
+        {
+          "check": "Signup e exposição de schemas: configuração fora do catálogo SQL",
+          "result": "Confirmar dashboard Auth e engmarq_private não exposto; nenhum bootstrap criado na 024"
+        },
+        {
+          "check": "Concessões/limites legados não aprovados para backfill nesta migration",
+          "result": "Revisão comercial explícita posterior; nenhum legado recebe Free"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "Preservação: empresas",
+          "result": "a6b0cbfea5d3211d4fefa428a593e20a"
+        },
+        {
+          "check": "Preservação: user_profiles",
+          "result": "10c2aa9372015baf21d48ab070bfd7c6"
+        },
+        {
+          "check": "Preservação: colaboradores",
+          "result": "b968fdb9b05833331f3aac336443a70b"
+        },
+        {
+          "check": "Preservação: documentos",
+          "result": "daf4aca421c01a3e6eb58b08c523764b"
+        },
+        {
+          "check": "Preservação: treinamentos",
+          "result": "d751713988987e9331980363e24189ce"
+        },
+        {
+          "check": "Preservação: funcoes",
+          "result": "9b3f3babcdbb6f31b0a9c04d7efd4c85"
+        },
+        {
+          "check": "Preservação: setores",
+          "result": "6dcf3f2911991658b06b783328318ea3"
+        },
+        {
+          "check": "Preservação: ambientes",
+          "result": "6dcf3f2911991658b06b783328318ea3"
+        },
+        {
+          "check": "Preservação: matriz_treinamentos",
+          "result": "d751713988987e9331980363e24189ce"
+        },
+        {
+          "check": "Preservação: documento_tipos",
+          "result": "e7c27eb80f5b75ec7eb7e772244d9e83"
+        },
+        {
+          "check": "Preservação: treinamento_tipos",
+          "result": "a815a3d26e74274d248bdde018b4dd71"
+        },
+        {
+          "check": "Preservação: exames_catalogo",
+          "result": "3e6e977778712fe976d3c999990e726a"
+        },
+        {
+          "check": "Preservação: storage.objects",
+          "result": "351d936d5caf757accfe0b65dcd65ef2"
+        },
+        {
+          "check": "Preservação: storage.buckets",
+          "result": "a349b8cd5851269cb0bb7757d5f126f5"
+        },
+        {
+          "check": "Preservação: fichas_epi",
+          "result": "ab1fcb600818e203addaa10d1bb6edb8"
+        },
+        {
+          "check": "Preservação: fichas_epi_itens",
+          "result": "0490de958727990d617506a5dadabd2b"
+        },
+        {
+          "check": "Preservação: catálogo opcional EPI/Assinaturas",
+          "result": "33602da7129a01b59b3403546cc0451c"
+        }
+      ]
+    },
+    "postflight": {
+      "results": 608,
+      "blocks": 0,
+      "warnings": [
+        {
+          "check": "bucket:assinaturas",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.assinado_em",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.assinado_por",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.colaborador_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.created_at",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.data_entrega",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.foto_assinatura_url",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi.observacoes",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.ca",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.created_at",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.data_validade",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.equipamento",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.ficha_epi_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.status",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_itens_pkey.id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.fichas_epi_pkey.id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_colaborador_id.colaborador_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_empresa_id.empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_itens_empresa_id.empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_itens_ficha_epi_id.ficha_epi_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_assinado_por_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_colaborador_id_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_empresa_id_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_empresa_id_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_ficha_epi_id_fkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "function:update_ficha_epi_item_status()",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens_pkey.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens_pkey.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_pkey.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi_pkey.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_colaborador_id.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_colaborador_id.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_empresa_id.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_empresa_id.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_empresa_id.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_empresa_id.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.anon",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.authenticated",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.fichas_epi_itens_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.fichas_epi_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_colaborador_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_itens_empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_itens_ficha_epi_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "optional-presence:public.fichas_epi",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "optional-presence:public.fichas_epi_itens",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:public.fichas_epi.fichas_epi_select",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:public.fichas_epi.fichas_epi_write",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:public.fichas_epi_itens.fichas_epi_itens_select",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:public.fichas_epi_itens.fichas_epi_itens_write",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:storage.objects.assinaturas_storage_insert",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "policy:storage.objects.assinaturas_storage_select",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.fichas_epi",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.fichas_epi_itens",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.fichas_epi_itens_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.fichas_epi_pkey",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_colaborador_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_itens_empresa_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_itens_ficha_epi_id",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "trigger:public.fichas_epi_itens.trg_ficha_epi_item_status",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "Auth sem perfil (inventário técnico)",
+          "result": "0"
+        },
+        {
+          "check": "Ledger de migrations: conferir 015–023 separadamente",
+          "result": "não disponível"
+        },
+        {
+          "check": "EPI/assinaturas: bloqueador do rollout público na 025",
+          "result": "Policies legadas preservadas; 024 não remedia Admin global nem gates operacionais"
+        },
+        {
+          "check": "Signup e exposição de schemas: configuração fora do catálogo SQL",
+          "result": "Confirmar dashboard Auth e engmarq_private não exposto; nenhum bootstrap criado na 024"
+        },
+        {
+          "check": "Concessões/limites legados não aprovados para backfill nesta migration",
+          "result": "Revisão comercial explícita posterior; nenhum legado recebe Free"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "Preservação: empresas",
+          "result": "a6b0cbfea5d3211d4fefa428a593e20a"
+        },
+        {
+          "check": "Preservação: user_profiles",
+          "result": "10c2aa9372015baf21d48ab070bfd7c6"
+        },
+        {
+          "check": "Preservação: colaboradores",
+          "result": "b968fdb9b05833331f3aac336443a70b"
+        },
+        {
+          "check": "Preservação: documentos",
+          "result": "daf4aca421c01a3e6eb58b08c523764b"
+        },
+        {
+          "check": "Preservação: treinamentos",
+          "result": "d751713988987e9331980363e24189ce"
+        },
+        {
+          "check": "Preservação: funcoes",
+          "result": "9b3f3babcdbb6f31b0a9c04d7efd4c85"
+        },
+        {
+          "check": "Preservação: setores",
+          "result": "6dcf3f2911991658b06b783328318ea3"
+        },
+        {
+          "check": "Preservação: ambientes",
+          "result": "6dcf3f2911991658b06b783328318ea3"
+        },
+        {
+          "check": "Preservação: matriz_treinamentos",
+          "result": "d751713988987e9331980363e24189ce"
+        },
+        {
+          "check": "Preservação: documento_tipos",
+          "result": "e7c27eb80f5b75ec7eb7e772244d9e83"
+        },
+        {
+          "check": "Preservação: treinamento_tipos",
+          "result": "a815a3d26e74274d248bdde018b4dd71"
+        },
+        {
+          "check": "Preservação: exames_catalogo",
+          "result": "3e6e977778712fe976d3c999990e726a"
+        },
+        {
+          "check": "Preservação: storage.objects",
+          "result": "351d936d5caf757accfe0b65dcd65ef2"
+        },
+        {
+          "check": "Preservação: storage.buckets",
+          "result": "a349b8cd5851269cb0bb7757d5f126f5"
+        },
+        {
+          "check": "Preservação: fichas_epi",
+          "result": "ab1fcb600818e203addaa10d1bb6edb8"
+        },
+        {
+          "check": "Preservação: fichas_epi_itens",
+          "result": "0490de958727990d617506a5dadabd2b"
+        },
+        {
+          "check": "Preservação: catálogo opcional EPI/Assinaturas",
+          "result": "33602da7129a01b59b3403546cc0451c"
+        }
+      ]
+    }
+  },
+  "negative_cases": {
+    "invalid": {
+      "blocks": 1
+    },
+    "unexpected": {
+      "blocks": 1
+    },
+    "collision": {
+      "blocks": 1
+    }
+  },
+  "preservation_fingerprints_equal": true,
+  "existing_company_assignments": {
+    "empresa_comercial": 0,
+    "empresa_features": 0,
+    "empresa_limites": 0,
+    "empresa_uso": 0,
+    "empresa_diagnostico_sst": 0,
+    "auditoria_comercial": 0,
+    "engmarq_private.onboarding_solicitacoes": 0
+  },
+  "optional_epi_absent": {
+    "preflight": {
+      "results": 433,
+      "blocks": 0,
+      "warnings": [
+        {
+          "check": "bucket:assinaturas",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.assinado_em",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.assinado_por",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.colaborador_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.created_at",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.data_entrega",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.foto_assinatura_url",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.observacoes",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.ca",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.created_at",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.data_validade",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.equipamento",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.ficha_epi_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.status",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens_pkey.id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_pkey.id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_colaborador_id.colaborador_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_empresa_id.empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_itens_empresa_id.empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_itens_ficha_epi_id.ficha_epi_id",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_assinado_por_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_colaborador_id_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_empresa_id_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_empresa_id_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_ficha_epi_id_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "function:update_ficha_epi_item_status()",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens_pkey.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens_pkey.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_pkey.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_pkey.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_colaborador_id.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_colaborador_id.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_empresa_id.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_empresa_id.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_empresa_id.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_empresa_id.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.fichas_epi_itens_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.fichas_epi_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_colaborador_id",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_itens_empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_itens_ficha_epi_id",
+          "result": "ausente"
+        },
+        {
+          "check": "optional-presence:public.fichas_epi",
+          "result": "contrato divergente"
+        },
+        {
+          "check": "optional-presence:public.fichas_epi_itens",
+          "result": "contrato divergente"
+        },
+        {
+          "check": "policy:public.fichas_epi.fichas_epi_select",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:public.fichas_epi.fichas_epi_write",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:public.fichas_epi_itens.fichas_epi_itens_select",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:public.fichas_epi_itens.fichas_epi_itens_write",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:storage.objects.assinaturas_storage_insert",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:storage.objects.assinaturas_storage_select",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.fichas_epi",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.fichas_epi_itens",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.fichas_epi_itens_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.fichas_epi_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_colaborador_id",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_itens_empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_itens_ficha_epi_id",
+          "result": "ausente"
+        },
+        {
+          "check": "trigger:public.fichas_epi_itens.trg_ficha_epi_item_status",
+          "result": "ausente"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "Auth sem perfil (inventário técnico)",
+          "result": "0"
+        },
+        {
+          "check": "Ledger de migrations: conferir 015–023 separadamente",
+          "result": "não disponível"
+        },
+        {
+          "check": "EPI/assinaturas: bloqueador do rollout público na 025",
+          "result": "Policies legadas preservadas; 024 não remedia Admin global nem gates operacionais"
+        },
+        {
+          "check": "Signup e exposição de schemas: configuração fora do catálogo SQL",
+          "result": "Confirmar dashboard Auth e engmarq_private não exposto; nenhum bootstrap criado na 024"
+        },
+        {
+          "check": "Concessões/limites legados não aprovados para backfill nesta migration",
+          "result": "Revisão comercial explícita posterior; nenhum legado recebe Free"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "Preservação: empresas",
+          "result": "087ef17a0f8937ac89e4dd24905266b9"
+        },
+        {
+          "check": "Preservação: user_profiles",
+          "result": "45aea8a74fa0ea9648f5d4777475d65e"
+        },
+        {
+          "check": "Preservação: colaboradores",
+          "result": "db93dc55df91079f6ad481613560c24c"
+        },
+        {
+          "check": "Preservação: documentos",
+          "result": "aa4ae37bb53626a2b2d5939953844249"
+        },
+        {
+          "check": "Preservação: treinamentos",
+          "result": "d751713988987e9331980363e24189ce"
+        },
+        {
+          "check": "Preservação: funcoes",
+          "result": "9b3f3babcdbb6f31b0a9c04d7efd4c85"
+        },
+        {
+          "check": "Preservação: setores",
+          "result": "6dcf3f2911991658b06b783328318ea3"
+        },
+        {
+          "check": "Preservação: ambientes",
+          "result": "6dcf3f2911991658b06b783328318ea3"
+        },
+        {
+          "check": "Preservação: matriz_treinamentos",
+          "result": "d751713988987e9331980363e24189ce"
+        },
+        {
+          "check": "Preservação: documento_tipos",
+          "result": "5b0949a9715fc75d2d97a8883b1b2ef1"
+        },
+        {
+          "check": "Preservação: treinamento_tipos",
+          "result": "9f1ecca58bc09e531bb04ed6cbdb1743"
+        },
+        {
+          "check": "Preservação: exames_catalogo",
+          "result": "3e6e977778712fe976d3c999990e726a"
+        },
+        {
+          "check": "Preservação: storage.objects",
+          "result": "15dd3bd61f3853ee28680fe8dfc65c39"
+        },
+        {
+          "check": "Preservação: storage.buckets",
+          "result": "58e83484361ce05ce02b0b43aad63e43"
+        },
+        {
+          "check": "Preservação: fichas_epi",
+          "result": "relation ausente no remoto; módulo EPI/Assinaturas fora do escopo da 024; tratar na 025"
+        },
+        {
+          "check": "Preservação: fichas_epi_itens",
+          "result": "relation ausente no remoto; módulo EPI/Assinaturas fora do escopo da 024; tratar na 025"
+        },
+        {
+          "check": "Preservação: catálogo opcional EPI/Assinaturas",
+          "result": "512094934caa60de073c10273838c4ae"
+        }
+      ]
+    },
+    "postflight": {
+      "results": 607,
+      "blocks": 0,
+      "warnings": [
+        {
+          "check": "bucket:assinaturas",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.assinado_em",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.assinado_por",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.colaborador_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.created_at",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.data_entrega",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.foto_assinatura_url",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi.observacoes",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.ca",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.created_at",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.data_validade",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.equipamento",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.ficha_epi_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens.status",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_itens_pkey.id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.fichas_epi_pkey.id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_colaborador_id.colaborador_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_empresa_id.empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_itens_empresa_id.empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "column:public.idx_fichas_epi_itens_ficha_epi_id.ficha_epi_id",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_assinado_por_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_colaborador_id_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_empresa_id_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi.fichas_epi_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_empresa_id_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_ficha_epi_id_fkey",
+          "result": "ausente"
+        },
+        {
+          "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "function:update_ficha_epi_item_status()",
+          "result": "contrato conferido"
+        },
+        {
+          "check": "grant:public.fichas_epi.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens_pkey.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_itens_pkey.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_pkey.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.fichas_epi_pkey.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_colaborador_id.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_colaborador_id.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_empresa_id.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_empresa_id.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_empresa_id.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_empresa_id.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.anon",
+          "result": "ausente"
+        },
+        {
+          "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.authenticated",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.fichas_epi_itens_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.fichas_epi_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_colaborador_id",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_itens_empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "index:public.idx_fichas_epi_itens_ficha_epi_id",
+          "result": "ausente"
+        },
+        {
+          "check": "optional-presence:public.fichas_epi",
+          "result": "contrato divergente"
+        },
+        {
+          "check": "optional-presence:public.fichas_epi_itens",
+          "result": "contrato divergente"
+        },
+        {
+          "check": "policy:public.fichas_epi.fichas_epi_select",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:public.fichas_epi.fichas_epi_write",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:public.fichas_epi_itens.fichas_epi_itens_select",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:public.fichas_epi_itens.fichas_epi_itens_write",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:storage.objects.assinaturas_storage_insert",
+          "result": "ausente"
+        },
+        {
+          "check": "policy:storage.objects.assinaturas_storage_select",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.fichas_epi",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.fichas_epi_itens",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.fichas_epi_itens_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.fichas_epi_pkey",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_colaborador_id",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_itens_empresa_id",
+          "result": "ausente"
+        },
+        {
+          "check": "relation:public.idx_fichas_epi_itens_ficha_epi_id",
+          "result": "ausente"
+        },
+        {
+          "check": "trigger:public.fichas_epi_itens.trg_ficha_epi_item_status",
+          "result": "ausente"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "Auth sem perfil (inventário técnico)",
+          "result": "0"
+        },
+        {
+          "check": "Ledger de migrations: conferir 015–023 separadamente",
+          "result": "não disponível"
+        },
+        {
+          "check": "EPI/assinaturas: bloqueador do rollout público na 025",
+          "result": "Policies legadas preservadas; 024 não remedia Admin global nem gates operacionais"
+        },
+        {
+          "check": "Signup e exposição de schemas: configuração fora do catálogo SQL",
+          "result": "Confirmar dashboard Auth e engmarq_private não exposto; nenhum bootstrap criado na 024"
+        },
+        {
+          "check": "Concessões/limites legados não aprovados para backfill nesta migration",
+          "result": "Revisão comercial explícita posterior; nenhum legado recebe Free"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "aggregate company/bucket inventory",
+          "result": "aggregate inventory only"
+        },
+        {
+          "check": "Preservação: empresas",
+          "result": "087ef17a0f8937ac89e4dd24905266b9"
+        },
+        {
+          "check": "Preservação: user_profiles",
+          "result": "45aea8a74fa0ea9648f5d4777475d65e"
+        },
+        {
+          "check": "Preservação: colaboradores",
+          "result": "db93dc55df91079f6ad481613560c24c"
+        },
+        {
+          "check": "Preservação: documentos",
+          "result": "aa4ae37bb53626a2b2d5939953844249"
+        },
+        {
+          "check": "Preservação: treinamentos",
+          "result": "d751713988987e9331980363e24189ce"
+        },
+        {
+          "check": "Preservação: funcoes",
+          "result": "9b3f3babcdbb6f31b0a9c04d7efd4c85"
+        },
+        {
+          "check": "Preservação: setores",
+          "result": "6dcf3f2911991658b06b783328318ea3"
+        },
+        {
+          "check": "Preservação: ambientes",
+          "result": "6dcf3f2911991658b06b783328318ea3"
+        },
+        {
+          "check": "Preservação: matriz_treinamentos",
+          "result": "d751713988987e9331980363e24189ce"
+        },
+        {
+          "check": "Preservação: documento_tipos",
+          "result": "5b0949a9715fc75d2d97a8883b1b2ef1"
+        },
+        {
+          "check": "Preservação: treinamento_tipos",
+          "result": "9f1ecca58bc09e531bb04ed6cbdb1743"
+        },
+        {
+          "check": "Preservação: exames_catalogo",
+          "result": "3e6e977778712fe976d3c999990e726a"
+        },
+        {
+          "check": "Preservação: storage.objects",
+          "result": "15dd3bd61f3853ee28680fe8dfc65c39"
+        },
+        {
+          "check": "Preservação: storage.buckets",
+          "result": "58e83484361ce05ce02b0b43aad63e43"
+        },
+        {
+          "check": "Preservação: fichas_epi",
+          "result": "relation ausente no remoto; módulo EPI/Assinaturas fora do escopo da 024; tratar na 025"
+        },
+        {
+          "check": "Preservação: fichas_epi_itens",
+          "result": "relation ausente no remoto; módulo EPI/Assinaturas fora do escopo da 024; tratar na 025"
+        },
+        {
+          "check": "Preservação: catálogo opcional EPI/Assinaturas",
+          "result": "512094934caa60de073c10273838c4ae"
+        }
+      ]
+    },
+    "comparison": [
+      {
+        "CHECK": "Preservação: ambientes",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: catálogo opcional EPI/Assinaturas",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: colaboradores",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: documento_tipos",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: documentos",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: empresas",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: exames_catalogo",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: fichas_epi",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: fichas_epi_itens",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: funcoes",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: matriz_treinamentos",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: setores",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: storage.buckets",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: storage.objects",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: treinamento_tipos",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: treinamentos",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      },
+      {
+        "CHECK": "Preservação: user_profiles",
+        "RESULTADO": "preservado (inclui ausente → ausente)",
+        "STATUS": "OK"
+      }
+    ]
+  }
+}

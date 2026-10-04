@@ -1,0 +1,75 @@
+{
+  "environment": "local synthetic only; no 024 or postflight execution",
+  "variants": {
+    "epi_present": {
+      "operational_result_sets": 1,
+      "rows": 439,
+      "summary": {
+        "TOTAL_OK": "336",
+        "TOTAL_ATENCOES": "99",
+        "TOTAL_BLOQUEIOS": "0",
+        "RESULTADO_FINAL": "APROVADO PARA REVISÃO"
+      },
+      "categories": [
+        "AUDITOR",
+        "AUTH",
+        "BACKFILL_FREE",
+        "CNPJ",
+        "COLISOES_CNPJ",
+        "CONFIGURACAO_AUTH",
+        "CONSTRAINTS",
+        "CONTRATO",
+        "EMPRESAS_COLABORADORES",
+        "EPI_ASSINATURAS",
+        "FUNCTIONS",
+        "GRANTS",
+        "INDICES",
+        "INTEGRIDADE_TENANT",
+        "MIGRATIONS",
+        "PAPEIS",
+        "POLICIES",
+        "PRESERVACAO",
+        "RESUMO",
+        "SCHEMA",
+        "STORAGE",
+        "TRIGGERS",
+        "VIEWS"
+      ]
+    },
+    "epi_absent": {
+      "operational_result_sets": 1,
+      "rows": 438,
+      "summary": {
+        "TOTAL_OK": "336",
+        "TOTAL_ATENCOES": "98",
+        "TOTAL_BLOQUEIOS": "0",
+        "RESULTADO_FINAL": "APROVADO PARA REVISÃO"
+      },
+      "categories": [
+        "AUDITOR",
+        "AUTH",
+        "BACKFILL_FREE",
+        "CNPJ",
+        "COLISOES_CNPJ",
+        "CONFIGURACAO_AUTH",
+        "CONSTRAINTS",
+        "CONTRATO",
+        "EMPRESAS_COLABORADORES",
+        "EPI_ASSINATURAS",
+        "FUNCTIONS",
+        "GRANTS",
+        "INDICES",
+        "INTEGRIDADE_TENANT",
+        "MIGRATIONS",
+        "PAPEIS",
+        "POLICIES",
+        "PRESERVACAO",
+        "RESUMO",
+        "SCHEMA",
+        "STORAGE",
+        "TRIGGERS",
+        "VIEWS"
+      ]
+    }
+  }
+}
