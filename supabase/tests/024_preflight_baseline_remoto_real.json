@@ -1,0 +1,70 @@
+[
+  {
+    "CHECK": "Preservação: ambientes",
+    "RESULTADO": "076077b9f47dea05dbba8b10fbbf57bd"
+  },
+  {
+    "CHECK": "Preservação: colaboradores",
+    "RESULTADO": "5cd1ffc78af14743c9e4b465f721c090"
+  },
+  {
+    "CHECK": "Preservação: documento_tipos",
+    "RESULTADO": "e710fd7436ddddfe8461c9fb27d1a4be"
+  },
+  {
+    "CHECK": "Preservação: documentos",
+    "RESULTADO": "028e3402020ac72646466e0c6f3cf2ea"
+  },
+  {
+    "CHECK": "Preservação: empresas",
+    "RESULTADO": "ee6670f64ee9baa92d8f0c673ba9fc32"
+  },
+  {
+    "CHECK": "Preservação: exames_catalogo",
+    "RESULTADO": "3e6e977778712fe976d3c999990e726a"
+  },
+  {
+    "CHECK": "Preservação: funcoes",
+    "RESULTADO": "720070ff2a82288d6b741949c53f22d0"
+  },
+  {
+    "CHECK": "Preservação: matriz_treinamentos",
+    "RESULTADO": "d751713988987e9331980363e24189ce"
+  },
+  {
+    "CHECK": "Preservação: setores",
+    "RESULTADO": "eae17479afa27dd41692fc4f01ad3784"
+  },
+  {
+    "CHECK": "Preservação: storage.buckets",
+    "RESULTADO": "e08cc4cbbeae6512078000e7a552f9d6"
+  },
+  {
+    "CHECK": "Preservação: storage.objects",
+    "RESULTADO": "d979e7d33a8b107966c07f78250b4108"
+  },
+  {
+    "CHECK": "Preservação: treinamento_tipos",
+    "RESULTADO": "7a8836354d471e157a540bf9e33cda47"
+  },
+  {
+    "CHECK": "Preservação: treinamentos",
+    "RESULTADO": "1edd2f9a1e7ccb6586d48e7d6b62098a"
+  },
+  {
+    "CHECK": "Preservação: user_profiles",
+    "RESULTADO": "9376ba1f4aa698b41abaabea510bb22b"
+  },
+  {
+    "CHECK": "Preservação: fichas_epi",
+    "RESULTADO": "relation ausente no remoto; módulo EPI/Assinaturas fora do escopo da 024; tratar na 025"
+  },
+  {
+    "CHECK": "Preservação: fichas_epi_itens",
+    "RESULTADO": "relation ausente no remoto; módulo EPI/Assinaturas fora do escopo da 024; tratar na 025"
+  },
+  {
+    "CHECK": "Preservação: catálogo opcional EPI/Assinaturas",
+    "RESULTADO": "0619a14c6ee95f0544d4c70ef517eff0"
+  }
+]

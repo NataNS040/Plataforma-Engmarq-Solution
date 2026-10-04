@@ -6,6 +6,27 @@ import {splitSql} from './024_consolidado_generate.mjs'
 import {withBaseline} from './024_postflight_baseline.mjs'
 import {requiredPreservationChecks} from './024_compare_preservation.mjs'
 const file='024_fundacao_postflight_readonly.sql'
+test('remote manual artifact: exact supplied baseline, complete and read-only',async()=>{
+ const rows=JSON.parse(await load('024_preflight_baseline_remoto_real.json'))
+ assert.equal(rows.length,requiredPreservationChecks.length)
+ for(const check of requiredPreservationChecks){
+  const entries=rows.filter(r=>r.CHECK===check)
+  assert.equal(entries.length,1,check)
+  assert.ok(['Preservação: fichas_epi','Preservação: fichas_epi_itens'].includes(check)
+   ?entries[0].RESULTADO==='relation ausente no remoto; módulo EPI/Assinaturas fora do escopo da 024; tratar na 025'
+   :/^[0-9a-f]{32}$/.test(entries[0].RESULTADO),check)
+ }
+ const sql=await load('024_fundacao_postflight_remoto_com_baseline.sql')
+ assert.equal(sql,withBaseline(await load(file),rows))
+ const embedded=sql.match(/-- BEGIN PREFLIGHT BASELINE JSON\s*'([\s\S]*?)'::jsonb\s*-- END PREFLIGHT BASELINE JSON/)
+ assert.deepEqual(JSON.parse(embedded[1].replaceAll("''","'")),rows)
+ const statements=splitSql(sql)
+ assert.equal(statements.length,3)
+ assert.match(statements[0],/BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY$/)
+ assert.match(statements[1],/^WITH /)
+ assert.equal(statements[2],'COMMIT')
+ assert.doesNotMatch(sql.replace(/'(?:''|[^'])*'/g,"''").replace(/--[^\n]*/g,''),/\b(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE|GRANT|REVOKE|CALL|DO|COPY|SET|LOCK)\b/i)
+})
 async function run(db,sql) {
  const output=(await db.exec(sql)).filter(r=>r.fields?.length)
  assert.equal(output.length,1)
