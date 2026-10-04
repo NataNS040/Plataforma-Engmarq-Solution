@@ -3,6 +3,7 @@ import {readFile,writeFile} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
 import {fundacaoFixture,migrate} from './fundacao-fixture.mjs'
 import {catalog,cnpjCTE,optionalIdentity,optionalPreservation} from './024-catalog.mjs'
+import {consolidatePostflight} from './024_postflight_consolidate.mjs'
 const migrationURL=new URL('../migrations/024_fundacao_comercial.sql',import.meta.url)
 const db=await fundacaoFixture()
 const manifestSQL=rows=>JSON.stringify(rows).replaceAll("'","''")
@@ -85,7 +86,7 @@ SELECT 'Derivação CNPJ consistente' AS "CHECK",count(*)::text AS "RESULTADO",
  CASE WHEN count(*)=0 THEN 'OK' ELSE 'BLOQUEIO' END AS "STATUS" FROM public.empresas
  WHERE cnpj_canonico IS DISTINCT FROM engmarq_private.cnpj_canonico(cnpj);
 `:''
-  await writeFile(new URL(`024_fundacao_${stage}_readonly.sql`,import.meta.url),`-- 024 ${stage}: execute COMPLETE file as trusted SQL Editor auditor.
+  const readonlySQL=`-- 024 ${stage}: execute COMPLETE file as trusted SQL Editor auditor.
 -- Save ALL result sets; any BLOQUEIO prohibits application. ATENÇÃO requires explicit review.
 -- No corrections or operational content. Postflight is immediate, before commercial writes.
 -- Expected catalog generated locally from committed 015–023 (including known EPI legacy)${post?' + 024':''}.
@@ -96,7 +97,8 @@ ${empties}
 ${preservation};
 ${optionalPreservation}
 COMMIT;
-`)
+`
+  await writeFile(new URL(`024_fundacao_${stage}_readonly.sql`,import.meta.url),post?consolidatePostflight(readonlySQL):readonlySQL)
   await writeFile(new URL(`../../docs/audits/2026-10-03/expected-024-${stage}-catalog.json`,import.meta.url),JSON.stringify(expected,null,2)+'\n')
  }
  const hashes={}

@@ -1,0 +1,500 @@
+{
+  "environment": "LOCAL SYNTHETIC ONLY; not remote inventory",
+  "contract_diff": [
+    {
+      "stage": "preflight",
+      "identity": "function:get_user_empresa_id()",
+      "only_change": "service: false -> true"
+    },
+    {
+      "stage": "preflight",
+      "identity": "function:get_user_role()",
+      "only_change": "service: false -> true"
+    },
+    {
+      "stage": "postflight",
+      "identity": "function:get_user_empresa_id()",
+      "only_change": "service: false -> true"
+    },
+    {
+      "stage": "postflight",
+      "identity": "function:get_user_role()",
+      "only_change": "service: false -> true"
+    }
+  ],
+  "migrations_015_023_hashes_verified": true,
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "fichas_epi",
+      "policyname": "fichas_epi_select",
+      "qual": "((get_user_role() = 'admin'::user_role) OR (empresa_id = get_user_empresa_id()))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fichas_epi",
+      "policyname": "fichas_epi_write",
+      "qual": "((get_user_role() = 'admin'::user_role) OR ((empresa_id = get_user_empresa_id()) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role]))))",
+      "with_check": "((get_user_role() = 'admin'::user_role) OR ((empresa_id = get_user_empresa_id()) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role]))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fichas_epi_itens",
+      "policyname": "fichas_epi_itens_select",
+      "qual": "((get_user_role() = 'admin'::user_role) OR (empresa_id = get_user_empresa_id()))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fichas_epi_itens",
+      "policyname": "fichas_epi_itens_write",
+      "qual": "((get_user_role() = 'admin'::user_role) OR ((empresa_id = get_user_empresa_id()) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role]))))",
+      "with_check": "((get_user_role() = 'admin'::user_role) OR ((empresa_id = get_user_empresa_id()) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role]))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "treinamento_tipos",
+      "policyname": "treinamento_tipos_read",
+      "qual": "engmarq_private.can_access_catalogos(get_user_empresa_id())",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "assinaturas_storage_insert",
+      "qual": null,
+      "with_check": "((bucket_id = 'assinaturas'::text) AND ((get_user_role() = 'admin'::user_role) OR (((storage.foldername(name))[1] = (get_user_empresa_id())::text) AND (get_user_role() = ANY (ARRAY['gestor'::user_role, 'empresa'::user_role])))))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "assinaturas_storage_select",
+      "qual": "((bucket_id = 'assinaturas'::text) AND ((get_user_role() = 'admin'::user_role) OR ((storage.foldername(name))[1] = (get_user_empresa_id())::text)))",
+      "with_check": null
+    }
+  ],
+  "functionConsumers": [],
+  "local_warning_groups": {
+    "AUTH": 1,
+    "BACKFILL_FREE": 1,
+    "CONFIGURACAO_AUTH": 1,
+    "CONSTRAINTS": 7,
+    "CONTRATO": 8,
+    "EMPRESAS_COLABORADORES": 3,
+    "EPI_ASSINATURAS": 6,
+    "FUNCTIONS": 1,
+    "GRANTS": 16,
+    "INDICES": 6,
+    "MIGRATIONS": 1,
+    "POLICIES": 6,
+    "PRESERVACAO": 14,
+    "SCHEMA": 23,
+    "STORAGE": 4,
+    "TRIGGERS": 1
+  },
+  "local_warnings": [
+    {
+      "category": "STORAGE",
+      "check": "bucket:assinaturas"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.assinado_em"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.assinado_por"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.colaborador_id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.created_at"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.data_entrega"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.empresa_id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.foto_assinatura_url"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi.observacoes"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens.ca"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens.created_at"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens.data_validade"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens.empresa_id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens.equipamento"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens.ficha_epi_id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens.id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens.status"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_itens_pkey.id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.fichas_epi_pkey.id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.idx_fichas_epi_colaborador_id.colaborador_id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.idx_fichas_epi_empresa_id.empresa_id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.idx_fichas_epi_itens_empresa_id.empresa_id"
+    },
+    {
+      "category": "SCHEMA",
+      "check": "column:public.idx_fichas_epi_itens_ficha_epi_id.ficha_epi_id"
+    },
+    {
+      "category": "CONSTRAINTS",
+      "check": "constraint:public.fichas_epi.fichas_epi_assinado_por_fkey"
+    },
+    {
+      "category": "CONSTRAINTS",
+      "check": "constraint:public.fichas_epi.fichas_epi_colaborador_id_fkey"
+    },
+    {
+      "category": "CONSTRAINTS",
+      "check": "constraint:public.fichas_epi.fichas_epi_empresa_id_fkey"
+    },
+    {
+      "category": "CONSTRAINTS",
+      "check": "constraint:public.fichas_epi.fichas_epi_pkey"
+    },
+    {
+      "category": "CONSTRAINTS",
+      "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_empresa_id_fkey"
+    },
+    {
+      "category": "CONSTRAINTS",
+      "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_ficha_epi_id_fkey"
+    },
+    {
+      "category": "CONSTRAINTS",
+      "check": "constraint:public.fichas_epi_itens.fichas_epi_itens_pkey"
+    },
+    {
+      "category": "FUNCTIONS",
+      "check": "function:update_ficha_epi_item_status()"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.fichas_epi.anon"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.fichas_epi.authenticated"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.fichas_epi_itens.anon"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.fichas_epi_itens.authenticated"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.fichas_epi_itens_pkey.anon"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.fichas_epi_itens_pkey.authenticated"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.fichas_epi_pkey.anon"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.fichas_epi_pkey.authenticated"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.idx_fichas_epi_colaborador_id.anon"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.idx_fichas_epi_colaborador_id.authenticated"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.idx_fichas_epi_empresa_id.anon"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.idx_fichas_epi_empresa_id.authenticated"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.idx_fichas_epi_itens_empresa_id.anon"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.idx_fichas_epi_itens_empresa_id.authenticated"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.anon"
+    },
+    {
+      "category": "GRANTS",
+      "check": "grant:public.idx_fichas_epi_itens_ficha_epi_id.authenticated"
+    },
+    {
+      "category": "INDICES",
+      "check": "index:public.fichas_epi_itens_pkey"
+    },
+    {
+      "category": "INDICES",
+      "check": "index:public.fichas_epi_pkey"
+    },
+    {
+      "category": "INDICES",
+      "check": "index:public.idx_fichas_epi_colaborador_id"
+    },
+    {
+      "category": "INDICES",
+      "check": "index:public.idx_fichas_epi_empresa_id"
+    },
+    {
+      "category": "INDICES",
+      "check": "index:public.idx_fichas_epi_itens_empresa_id"
+    },
+    {
+      "category": "INDICES",
+      "check": "index:public.idx_fichas_epi_itens_ficha_epi_id"
+    },
+    {
+      "category": "EPI_ASSINATURAS",
+      "check": "optional-presence:public.fichas_epi"
+    },
+    {
+      "category": "EPI_ASSINATURAS",
+      "check": "optional-presence:public.fichas_epi_itens"
+    },
+    {
+      "category": "POLICIES",
+      "check": "policy:public.fichas_epi.fichas_epi_select"
+    },
+    {
+      "category": "POLICIES",
+      "check": "policy:public.fichas_epi.fichas_epi_write"
+    },
+    {
+      "category": "POLICIES",
+      "check": "policy:public.fichas_epi_itens.fichas_epi_itens_select"
+    },
+    {
+      "category": "POLICIES",
+      "check": "policy:public.fichas_epi_itens.fichas_epi_itens_write"
+    },
+    {
+      "category": "POLICIES",
+      "check": "policy:storage.objects.assinaturas_storage_insert"
+    },
+    {
+      "category": "POLICIES",
+      "check": "policy:storage.objects.assinaturas_storage_select"
+    },
+    {
+      "category": "CONTRATO",
+      "check": "relation:public.fichas_epi"
+    },
+    {
+      "category": "CONTRATO",
+      "check": "relation:public.fichas_epi_itens"
+    },
+    {
+      "category": "CONTRATO",
+      "check": "relation:public.fichas_epi_itens_pkey"
+    },
+    {
+      "category": "CONTRATO",
+      "check": "relation:public.fichas_epi_pkey"
+    },
+    {
+      "category": "CONTRATO",
+      "check": "relation:public.idx_fichas_epi_colaborador_id"
+    },
+    {
+      "category": "CONTRATO",
+      "check": "relation:public.idx_fichas_epi_empresa_id"
+    },
+    {
+      "category": "CONTRATO",
+      "check": "relation:public.idx_fichas_epi_itens_empresa_id"
+    },
+    {
+      "category": "CONTRATO",
+      "check": "relation:public.idx_fichas_epi_itens_ficha_epi_id"
+    },
+    {
+      "category": "TRIGGERS",
+      "check": "trigger:public.fichas_epi_itens.trg_ficha_epi_item_status"
+    },
+    {
+      "category": "EMPRESAS_COLABORADORES",
+      "check": "Empresa: 00000000-0000-4000-8000-000000000101"
+    },
+    {
+      "category": "EMPRESAS_COLABORADORES",
+      "check": "Empresa: 00000000-0000-4000-8000-000000000102"
+    },
+    {
+      "category": "EMPRESAS_COLABORADORES",
+      "check": "Empresa: 00000000-0000-4000-8000-000000000103"
+    },
+    {
+      "category": "AUTH",
+      "check": "Auth sem perfil (inventário técnico)"
+    },
+    {
+      "category": "MIGRATIONS",
+      "check": "Ledger de migrations: conferir 015–023 separadamente"
+    },
+    {
+      "category": "EPI_ASSINATURAS",
+      "check": "EPI/assinaturas: bloqueador do rollout público na 025"
+    },
+    {
+      "category": "CONFIGURACAO_AUTH",
+      "check": "Signup e exposição de schemas: configuração fora do catálogo SQL"
+    },
+    {
+      "category": "BACKFILL_FREE",
+      "check": "Concessões/limites legados não aprovados para backfill nesta migration"
+    },
+    {
+      "category": "STORAGE",
+      "check": "Bucket: assinaturas"
+    },
+    {
+      "category": "STORAGE",
+      "check": "Bucket: documentos"
+    },
+    {
+      "category": "STORAGE",
+      "check": "Bucket: logos"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: ambientes"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: colaboradores"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: documento_tipos"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: documentos"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: empresas"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: exames_catalogo"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: funcoes"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: matriz_treinamentos"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: setores"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: storage.buckets"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: storage.objects"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: treinamento_tipos"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: treinamentos"
+    },
+    {
+      "category": "PRESERVACAO",
+      "check": "Preservação: user_profiles"
+    },
+    {
+      "category": "EPI_ASSINATURAS",
+      "check": "Preservação: fichas_epi"
+    },
+    {
+      "category": "EPI_ASSINATURAS",
+      "check": "Preservação: fichas_epi_itens"
+    },
+    {
+      "category": "EPI_ASSINATURAS",
+      "check": "Preservação: catálogo opcional EPI/Assinaturas"
+    }
+  ],
+  "remote_totals_user_reported": {
+    "ok": 333,
+    "warnings": 98,
+    "blocks": 3
+  },
+  "remote_warning_rows_available": false
+}

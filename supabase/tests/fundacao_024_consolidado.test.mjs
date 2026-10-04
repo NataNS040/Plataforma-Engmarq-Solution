@@ -87,3 +87,49 @@ test('consolidated is READ ONLY with three statements, no DDL/DML and source has
  assert.doesNotMatch(code,/\b(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE|GRANT|REVOKE|CALL|DO|COPY|SET|LOCK)\b/i)
  assert.doesNotMatch(code,/FROM\s+public\.(fichas_epi|fichas_epi_itens|assinaturas)\b/i)
 })
+
+test('024 preserves legacy service EXECUTE; loss of grant and body drift still block',async()=>{
+ const db=await fundacaoFixture()
+ try {
+  const baseline=await run(db)
+  for(const helper of ['get_user_empresa_id','get_user_role']) {
+   const row=baseline.find(r=>r.CHECK===`function:${helper}()`)
+   assert.equal(row.STATUS,'OK')
+   assert.equal(row.DETALHES.REMOTO.service,true)
+   assert.equal(row.DETALHES.ESPERADO.service,true)
+   assert.equal(row.DETALHES.REMOTO.anon,false)
+   assert.equal(row.DETALHES.REMOTO.authenticated,true)
+  }
+  await db.exec('REVOKE EXECUTE ON FUNCTION public.get_user_role() FROM service_role')
+  let rows=await run(db)
+  assert.equal(rows.find(r=>r.CHECK==='function:get_user_role()').STATUS,'BLOQUEIO')
+  await db.exec(`GRANT EXECUTE ON FUNCTION public.get_user_role() TO service_role;
+   CREATE OR REPLACE FUNCTION public.get_user_empresa_id() RETURNS uuid
+   LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$ SELECT NULL::uuid $$;`)
+  rows=await run(db)
+  assert.equal(rows.find(r=>r.CHECK==='function:get_user_empresa_id()').STATUS,'BLOQUEIO')
+ }finally{await db.close()}
+})
+
+test('pre-remediation inventory is read-only and discovers tenant and indirect FK rows',async()=>{
+ const db=await fundacaoFixture()
+ try {
+  // Auth fixture deliberately has only id; provide synthetic email for evidence flags.
+  await db.exec('ALTER TABLE auth.users ADD COLUMN email text')
+  await db.exec(`CREATE TABLE public.inventory_indirect(id uuid PRIMARY KEY,
+   documento_id uuid REFERENCES public.documentos(id));
+   INSERT INTO inventory_indirect SELECT id,id FROM public.documentos LIMIT 1`)
+  const before=await dataSnapshot(db)
+  const sql=(await load('024_pre_remediation_empresa_readonly.sql'))
+   .replaceAll('5c114b79-bbd1-4829-b6ac-42da9f7362c0',id(101))
+  const results=(await db.exec(sql)).filter(r=>r.fields?.length)
+  assert.equal(results.length,1)
+  const rows=results[0].rows
+  assert.ok(rows.some(r=>r.CATEGORIA==='TABELAS_EMPRESA_ID'&&r.DETALHES.tabela==='documentos'&&Number(r.RESULTADO)>0))
+  assert.ok(rows.some(r=>r.CATEGORIA==='REFERENCIAS_FK'&&r.CHECK.includes('inventory_indirect')&&Number(r.RESULTADO)===1))
+  assert.ok(rows.some(r=>r.CATEGORIA==='REFERENCIAS_FK'&&r.CHECK.includes('fichas_epi_itens')&&Number(r.RESULTADO)>0))
+  assert.deepEqual(await dataSnapshot(db),before)
+  const output=JSON.stringify(rows)
+  assert.ok(!output.includes('12345678901'));assert.ok(!output.includes('Synthetic employee'))
+ }finally{await db.close()}
+})

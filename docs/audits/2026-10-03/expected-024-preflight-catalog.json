@@ -2254,7 +2254,7 @@
         "search_path=\"\""
       ],
       "definer": true,
-      "service": false,
+      "service": true,
       "volatility": "s",
       "authenticated": true,
       "client_owner_member": false
@@ -2272,7 +2272,7 @@
         "search_path=\"\""
       ],
       "definer": true,
-      "service": false,
+      "service": true,
       "volatility": "s",
       "authenticated": true,
       "client_owner_member": false
