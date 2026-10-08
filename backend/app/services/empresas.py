@@ -1,6 +1,7 @@
 import re
 from uuid import UUID
 
+from app.core.entitlements import require_feature
 from app.core.errors import AppError
 from app.repositories.empresas import EmpresasRepository
 from app.schemas.empresas import EmpresaCreate, EmpresaResponse, EmpresaUpdate, EmpresaWithCount
@@ -47,6 +48,8 @@ class EmpresasService:
         self._require_scope(empresa_id)
         if self.actor.role not in {"admin", "gestor", "empresa"}:
             raise AppError(403, "access_denied", "Você não tem permissão para editar empresas.")
+        if self.actor.role != 'admin':
+            require_feature(self.repository.client, self.actor, 'empresa.cadastro')
         if "status" in data.model_fields_set:
             self._require_admin()
         if "logo_url" in data.model_fields_set:

@@ -6,6 +6,7 @@ import httpx
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from app.core.entitlements import database_error
 from app.core.errors import AppError
 
 FIELDS = (
@@ -25,6 +26,7 @@ class ColaboradoresRepository:
         try:
             return operation().data
         except APIError as exc:
+            database_error(exc)
             errors = {
                 "23505": (409, "colaborador_conflict", "Já existe um colaborador com este CPF na empresa."),
                 "23503": (422, "invalid_catalog", "Função, setor ou ambiente inválido para esta empresa."),

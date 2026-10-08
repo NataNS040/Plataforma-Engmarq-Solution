@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from app.core.entitlements import require_feature
 from app.core.errors import AppError
 from app.repositories.colaboradores import ColaboradoresRepository
 from app.schemas.colaboradores import ColaboradorCreate, ColaboradorResponse, ColaboradorUpdate
@@ -15,6 +16,7 @@ class ColaboradoresService:
         roles = {"empresa", "gestor"} if write else {"empresa", "gestor", "operacional"}
         if not self.actor.active or self.actor.role not in roles:
             raise AppError(403, "access_denied", "Sem permissão para acessar colaboradores.")
+        require_feature(self.repository.client, self.actor, 'colaboradores.gestao')
         return self.actor.empresa_id
 
     def _response(self, row: dict | None) -> ColaboradorResponse:

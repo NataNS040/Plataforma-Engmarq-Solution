@@ -1,0 +1,27 @@
+{
+  "scope": "LOCAL_REVIEW_ONLY_NOT_REMOTE_EXECUTION",
+  "sql_file": "supabase/tests/025_fundacao_preflight_readonly.sql",
+  "sql_sha256": "3aefb6248e02e57e75256d593a0d41487c6bac268d00f659a76308888da1f3e1",
+  "top_level_statements": 3,
+  "transaction": "REPEATABLE READ READ ONLY",
+  "effective_write_tokens": [],
+  "static_select_fingerprint_queries": 18,
+  "remote_user_function_requiring_metadata_verification": "engmarq_private.cnpj_valido(text)",
+  "expected_local_function": {
+    "anon": false,
+    "hash": "1671dcea499ca01ae811a80c12ebd035",
+    "type": "boolean",
+    "owner": "postgres",
+    "config": [
+      "search_path=\"\""
+    ],
+    "definer": false,
+    "service": true,
+    "volatility": "i",
+    "authenticated": true,
+    "client_owner_member": false
+  },
+  "remote_executed": false,
+  "baseline_real_created": false,
+  "blocking_access": "No SQL administrative connector/DSN, psql or usable browser session. REST credentials do not provide arbitrary SQL access."
+}

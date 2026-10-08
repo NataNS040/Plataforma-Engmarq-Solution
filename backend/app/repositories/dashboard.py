@@ -1,5 +1,6 @@
 import httpx
 from postgrest.exceptions import APIError
+from app.core.entitlements import database_error
 from app.core.errors import AppError
 
 
@@ -13,6 +14,7 @@ class DashboardRepository:
         try:
             return query.execute()
         except APIError as exc:
+            database_error(exc)
             status = {'42501': 403, 'PGRST301': 401}.get(exc.code, 503)
             raise AppError(status, 'dashboard_unavailable', 'Não foi possível carregar o dashboard.') from None
         except httpx.HTTPError:

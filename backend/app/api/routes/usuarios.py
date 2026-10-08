@@ -19,9 +19,10 @@ def create(
     actor: CurrentProfile,
     settings: Annotated[Settings, Depends(get_settings)],
     response: Response,
+    client: Annotated[Client, Depends(get_supabase_client)],
 ) -> UsuarioResponse:
     response.headers["Cache-Control"] = "no-store"
-    return create_usuario(data, actor, settings)
+    return create_usuario(data, actor, settings, client)
 
 
 def get_service(

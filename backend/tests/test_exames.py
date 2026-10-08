@@ -166,6 +166,18 @@ def test_invalid_upload(client,exames,mime,content,expected):
 def test_upload_compensation_never_deletes_uncertain_or_referenced_objects(status,referenced,removed):
     class Repo:
         deleted=[]
+        @property
+        def client(self): return self
+        def table(self, *args): return self
+        def select(self, *args): return self
+        def eq(self, *args): return self
+        def limit(self, *args): return self
+        def rpc(self, *args): self.reserving=True; return self
+        def execute(self, query=None):
+            if query is not None: return query.execute().data
+            result = COMPANY+'/reserved-test.pdf' if getattr(self,'reserving',False) else [{'enabled':True}]
+            self.reserving=False
+            return SimpleNamespace(data=result)
         def get(self,*args): return {'id':CATALOG,'vencimento':None}
         def storage(self): return self
         def upload(self,*args): pass

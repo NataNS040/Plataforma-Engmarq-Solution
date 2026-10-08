@@ -1,8 +1,8 @@
 import re
 from datetime import date, timedelta, datetime
 from zoneinfo import ZoneInfo
-from uuid import uuid4
 from urllib.parse import urlsplit
+from app.core.entitlements import require_feature
 from app.core.errors import AppError
 
 def aso_status(expiry, today=None):
@@ -21,6 +21,7 @@ class ExamesService:
         roles = {'empresa', 'gestor'} if write else {'empresa', 'gestor', 'operacional'}
         if not self.actor.active or self.actor.role not in roles:
             raise AppError(403, 'access_denied', 'Sem acesso aos ASOs.')
+        require_feature(self.repository.client, self.actor, 'exames')
         return self.actor.empresa_id
 
     def response(self, row):
@@ -108,7 +109,9 @@ class ExamesService:
         self.get(item)
         if mime != 'application/pdf' or not content.startswith(b'%PDF-') or not content or len(content) > 10485760:
             raise AppError(422, 'invalid_file', 'Envie PDF válido de até 10 MB.')
-        path = f'{company}/{uuid4()}.pdf'
+        path = self.repository.execute(self.repository.client.rpc('reservar_arquivo_sst', {
+            'feature': 'exames', 'extension': 'pdf',
+        }))
         uploaded = False
         try:
             self.repository.storage().upload(path, content, {'content-type': 'application/pdf', 'upsert': 'false'})

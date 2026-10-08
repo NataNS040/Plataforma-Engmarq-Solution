@@ -4,9 +4,9 @@ import { seedTenantBase } from './tenant-fixture.mjs'
 export const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 export const load=async name=>(await readFile(new URL(name,import.meta.url),'utf8')).replace(/^\uFEFF/,'')
 export const migrate=async(db,name)=>db.exec(await load(`../migrations/${name}`))
-export async function fixture({legacyEpi=false}={}) {
+export async function fixture({legacyEpi=false,legacySequenceDefaults=false}={}) {
  const db=new PGlite()
- await seedTenantBase(db,name=>migrate(db,name),id)
+ await seedTenantBase(db,name=>migrate(db,name),id,{legacySequenceDefaults})
  await migrate(db,'017_catalogos_tenant_security.sql')
  await db.exec(`ALTER TABLE storage.objects ADD COLUMN metadata jsonb;
   ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;

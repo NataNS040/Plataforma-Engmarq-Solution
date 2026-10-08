@@ -40,8 +40,8 @@ class ColaboradorUpdate(BaseModel):
             if name in fields and getattr(self, name) is None:
                 raise ValueError("Campo obrigatório não pode ser nulo.")
         if fields & {"active", "data_demissao"}:
-            if not {"active", "data_demissao"} <= fields or self.active is not False or self.data_demissao is None:
-                raise ValueError("Desativação exige active=false e data_demissao juntos.")
+            if not {"active", "data_demissao"} <= fields or self.active is None or (self.active and self.data_demissao is not None) or (not self.active and self.data_demissao is None):
+                raise ValueError("Transição exige active e data_demissao juntos; reativação exige data nula.")
         return self
 
 

@@ -1,5 +1,6 @@
 import re
 
+from app.core.entitlements import require_feature
 from app.core.errors import AppError
 
 
@@ -12,6 +13,7 @@ class TreinamentosService:
         roles = {"empresa", "gestor"} if write else {"empresa", "gestor", "operacional"}
         if not self.actor.active or self.actor.role not in roles:
             raise AppError(403, "access_denied", "Sem acesso aos treinamentos.")
+        require_feature(self.repository.client, self.actor, 'treinamentos')
         return self.actor.empresa_id
 
     def validate_relations(self, payload, company):

@@ -1,0 +1,593 @@
+Estamos na Fundação 025-A da Plataforma EngMarq Solution.
+
+O novo preflight remoto manual foi executado no Supabase SQL Editor e retornou:
+
+TOTAL_OK = 937
+TOTAL_ATENCOES = 182
+TOTAL_BLOQUEIOS = 4
+RESULTADO_FINAL = REPROVADO — NÃO APLICAR 025
+
+A migration 025 NÃO foi aplicada.
+
+OBJETIVO DESTA ETAPA
+
+Reconciliar tecnicamente os 4 bloqueios encontrados no estado remoto pré-025, corrigindo localmente o contrato/auditor/migration SOMENTE quando houver evidência suficiente.
+
+Não quero “zerar bloqueios a qualquer custo”.
+
+Quero descobrir, para cada divergência:
+
+1. se é estado legítimo anterior à 025 que o contrato não representava;
+2. se é comportamento/default legítimo do Supabase/PostgreSQL;
+3. se é drift remoto inseguro que a 025 deve endurecer;
+4. ou se é vulnerabilidade real que exige remediação separada.
+
+REGRA ABSOLUTA
+
+NÃO execute nenhuma alteração no Supabase remoto nesta etapa.
+
+PROIBIDO:
+
+- aplicar migration 025;
+- executar REVOKE/GRANT remoto;
+- DROP/ALTER remoto;
+- modificar policies remotas;
+- modificar functions/event triggers remotos;
+- alterar Storage remoto;
+- alterar dados;
+- executar postflight;
+- iniciar 025-B;
+- commit;
+- push.
+
+Pode usar somente evidência já coletada pelo preflight remoto e análise local do repositório/migrations.
+
+==================================================
+1. BLOQUEIOS REMOTOS CONFIRMADOS
+==================================================
+
+BLOQUEIO 1
+
+CHECK:
+function:rls_auto_enable()
+
+Estado remoto:
+
+- schema: public
+- função: rls_auto_enable()
+- RETURNS event_trigger
+- language: plpgsql
+- SECURITY DEFINER
+- owner: postgres
+- volatility: volatile
+- search_path = pg_catalog
+
+ACL:
+
+PUBLIC = EXECUTE
+anon = EXECUTE
+authenticated = EXECUTE
+service_role = EXECUTE
+
+Event trigger associado:
+
+name = ensure_rls
+event = ddl_command_end
+tags:
+- CREATE TABLE
+- CREATE TABLE AS
+- SELECT INTO
+
+enabled = O
+
+Corpo coletado pelo preflight:
+
+CREATE OR REPLACE FUNCTION public.rls_auto_enable()
+RETURNS event_trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'pg_catalog'
+AS $function$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+    IF cmd.schema_name IS NOT NULL
+       AND cmd.schema_name IN ('public')
+       AND cmd.schema_name NOT IN ('pg_catalog','information_schema')
+       AND cmd.schema_name NOT LIKE 'pg_toast%'
+       AND cmd.schema_name NOT LIKE 'pg_temp%'
+    THEN
+      BEGIN
+        EXECUTE format(
+          'alter table if exists %s enable row level security',
+          cmd.object_identity
+        );
+
+        RAISE LOG
+          'rls_auto_enable: enabled RLS on %',
+          cmd.object_identity;
+
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG
+            'rls_auto_enable: failed to enable RLS on %',
+            cmd.object_identity;
+      END;
+    ELSE
+      RAISE LOG
+        'rls_auto_enable: skip % (either system schema or not in enforced list: %.)',
+        cmd.object_identity,
+        cmd.schema_name;
+    END IF;
+  END LOOP;
+END;
+$function$;
+
+O contrato esperado da 025 atualmente não contém esse objeto.
+
+IMPORTANTE:
+
+Não assuma que isso é vulnerabilidade só porque PUBLIC/anon/authenticated possuem EXECUTE.
+
+É uma função RETURNS event_trigger.
+
+Analise corretamente se ela é ou não diretamente invocável como RPC/função SQL comum e qual o efeito real desses ACLs.
+
+Também não assuma que devemos removê-la.
+
+Investigue:
+
+- histórico Git;
+- migrations 001–024;
+- fixtures;
+- documentação/auditor existente;
+- event triggers;
+- se o objeto é compatível com mecanismo/configuração criada pelo Supabase;
+- se o corpo é defensivo;
+- se o search_path é seguro;
+- se existe SQL injection possível via cmd.object_identity;
+- se o SECURITY DEFINER introduz risco;
+- se PUBLIC EXECUTE é efetivamente explorável neste tipo de função;
+- se a 025 precisa preservar esse objeto;
+- se ele deve apenas entrar no baseline/contrato esperado;
+- ou se precisa de hardening versionado.
+
+Não remova o event trigger apenas para satisfazer o auditor.
+
+==================================================
+2. BLOQUEIOS 2, 3 E 4
+==================================================
+
+Objeto:
+
+public.exames_catalogo_id_seq
+
+É a sequence criada pelo SERIAL de exames_catalogo na migration 006.
+
+ACL remoto real:
+
+postgres:
+- SELECT
+- UPDATE
+- USAGE
+
+anon:
+- SELECT
+- UPDATE
+- USAGE
+
+authenticated:
+- SELECT
+- UPDATE
+- USAGE
+
+service_role:
+- SELECT
+- UPDATE
+- USAGE
+
+Default privileges coletados mostram padrão equivalente para sequences no schema public, tanto para creator postgres quanto supabase_admin.
+
+O auditor anterior estava incorreto porque tratava sequence como tabela/pseudocolunas e não representava USAGE.
+
+Isso já foi corrigido no auditor.
+
+Entretanto, o contrato esperado continua esperando:
+
+anon = []
+authenticated = []
+service_role = []
+
+Por isso temos três BLOQUEIOS:
+
+grant:public.exames_catalogo_id_seq.anon
+
+grant:public.exames_catalogo_id_seq.authenticated
+
+grant:public.exames_catalogo_id_seq.service_role
+
+Investigue:
+
+- migration 006;
+- criação SERIAL;
+- ownership da sequence;
+- default privileges Supabase/PostgreSQL;
+- migrations 007–024;
+- grants explícitos;
+- ALTER DEFAULT PRIVILEGES;
+- políticas/grants atuais da tabela exames_catalogo;
+- comportamento do PostgREST;
+- se INSERT direto na tabela é permitido ou negado;
+- se possuir USAGE/UPDATE da sequence isoladamente cria capacidade operacional relevante;
+- possibilidade real de nextval/currval/setval via API/RPC/SQL exposto;
+- impacto de UPDATE da sequence;
+- necessidade técnica de service_role;
+- se anon/authenticated precisam disso;
+- se os privilégios são simplesmente estado histórico/default anterior à 025;
+- se a 025 deve preservar ou endurecer.
+
+IMPORTANTE:
+
+Não presuma que "default privilege do Supabase" significa automaticamente "seguro".
+
+Mas também NÃO faça REVOKE simplesmente porque o contrato esperava vazio.
+
+Precisamos de decisão baseada no modelo de ameaça real.
+
+==================================================
+3. CLASSIFICAÇÃO OBRIGATÓRIA
+==================================================
+
+Para cada um dos 4 bloqueios, classifique como EXATAMENTE UMA destas categorias:
+
+A — FALSO POSITIVO DO CONTRATO
+Estado remoto legítimo e compatível com nossa arquitetura.
+Corrigir contrato/auditor/baseline local.
+
+B — HARDENING NECESSÁRIO NA 025
+Estado histórico legítimo ou tolerado até agora, mas incompatível com o modelo de segurança da 025.
+A própria migration 025 deve corrigir de forma versionada e testada.
+
+C — REMEDIAÇÃO PRÉ-025 SEPARADA
+Risco real que não deve ser silenciosamente incorporado à 025.
+Exige migration/remediação própria antes da 025.
+
+D — BLOQUEIO NÃO RESOLVIDO
+Evidência insuficiente para decisão segura.
+
+Não aceite justificativas vagas.
+
+Para cada decisão apresente evidência concreta.
+
+==================================================
+4. REVISAR A SEMÂNTICA DO CONTRATO
+==================================================
+
+Existe uma questão conceitual importante:
+
+O contrato pré-025 deve representar o estado REAL legítimo das migrations 001–024.
+
+Ele NÃO deve exigir antecipadamente o estado que a migration 025 pretende produzir.
+
+Portanto revise se os grants da sequence foram classificados incorretamente porque o catálogo esperado misturou:
+
+PRE-025 esperado
+
+com
+
+POST-025 desejado.
+
+Se a 025 pretende revogar algum privilégio, o preflight deve:
+
+- aceitar/documentar o estado pré-025 conhecido;
+- validar que ele é exatamente o estado esperado;
+- deixar o postflight exigir o estado endurecido.
+
+Não devemos reprovar um preflight simplesmente porque ele encontrou exatamente algo que a migration foi criada para corrigir.
+
+Faça a mesma análise para rls_auto_enable().
+
+==================================================
+5. SEGURANÇA DA SEQUENCE
+==================================================
+
+Quero análise específica dos privilégios:
+
+USAGE
+SELECT
+UPDATE
+
+Explique tecnicamente o que cada um permite em PostgreSQL sequences.
+
+Depois determine:
+
+anon:
+- deveria manter?
+- deveria perder?
+- qual privilégio exatamente?
+
+authenticated:
+- deveria manter?
+- deveria perder?
+- qual privilégio exatamente?
+
+service_role:
+- deveria manter?
+- deveria perder?
+- qual privilégio exatamente?
+
+Não use uma regra genérica para os três roles.
+
+Se decidir endurecer na 025:
+
+- faça o menor privilégio possível;
+- preserve funcionalidades necessárias;
+- crie testes de regressão;
+- teste acesso direto;
+- teste que inserts legítimos continuam funcionando pela arquitetura prevista.
+
+==================================================
+6. RLS_AUTO_ENABLE
+==================================================
+
+Faça análise específica do event trigger.
+
+Precisamos saber:
+
+- se o objeto é anterior à 025;
+- se está fora do Git;
+- se é infraestrutura do Supabase;
+- se devemos tratá-lo como objeto externo conhecido;
+- se sua presença deve ser ATENÇÃO ou OK no preflight;
+- se ausência futura dele deveria ser relevante;
+- se o hash/corpo deve entrar no baseline;
+- se devemos permitir somente essa assinatura/hash conhecida;
+- se qualquer alteração futura deve voltar a BLOQUEIO.
+
+Minha preferência de segurança:
+
+Se for comprovadamente legítimo e desejável, não faça simplesmente:
+
+"ignorar qualquer rls_auto_enable".
+
+Em vez disso, considere allowlist estrita baseada em propriedades importantes:
+
+- schema;
+- nome;
+- return type event_trigger;
+- SECURITY DEFINER;
+- owner;
+- search_path;
+- event trigger associado;
+- tags;
+- corpo/hash conhecido.
+
+Drift futuro deve continuar detectável.
+
+==================================================
+7. NÃO PERDER O BASELINE REAL
+==================================================
+
+Preserve integralmente o baseline remoto pré-025 já coletado.
+
+Dados conhecidos incluem:
+
+- 47 colaboradores ativos;
+- 0 colaboradores inativos;
+- buckets documentos e logos privados;
+- documentos com objetos existentes;
+- fingerprints operacionais;
+- empresas;
+- profiles;
+- catálogos;
+- treinamentos;
+- documentos;
+- Storage;
+- decisões comerciais.
+
+Não regenere um baseline artificial.
+
+Não substitua fingerprint real por fixture local.
+
+O postflight futuro precisa comparar contra o PRE-025 REAL.
+
+==================================================
+8. CORREÇÕES LOCAIS
+==================================================
+
+Após concluir a classificação:
+
+Se categoria A:
+
+corrija localmente:
+- catálogo esperado;
+- auditor;
+- fixture;
+- documentação;
+- testes.
+
+Se categoria B:
+
+corrija localmente:
+- migration 025;
+- postflight;
+- contratos;
+- testes;
+- documentação.
+
+O PREFLIGHT deve continuar aceitando o estado pré-025 conhecido.
+
+O POSTFLIGHT deve exigir o novo estado desejado.
+
+Se categoria C ou D:
+
+NÃO deixe o preflight artificialmente verde.
+
+Pare e explique.
+
+==================================================
+9. TESTES
+==================================================
+
+Rode:
+
+- testes completos de banco/RLS/contracts;
+- testes adversariais da 025;
+- testes específicos de sequence;
+- testes específicos de rls_auto_enable/event trigger;
+- backend relacionado a entitlements;
+- parser/read-only do preflight;
+- geração dos auditors.
+
+Não é necessário rodar frontend se nenhum arquivo frontend for alterado.
+
+A concorrência PostgreSQL REAL continua:
+
+DEFERIDA / NÃO HOMOLOGADA
+
+Não transforme skip em pass.
+
+==================================================
+10. REGENERAR PREFLIGHT
+==================================================
+
+Somente se os quatro bloqueios forem classificados como A ou B com evidência suficiente:
+
+regenere:
+
+supabase/tests/025_preflight_remoto_manual.sql
+
+Requisitos permanecem:
+
+- exatamente 3 statements;
+- BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;
+- um único result set operacional;
+- COMMIT;
+- sem DDL;
+- sem DML;
+- sem função mutável;
+- sem lock de escrita;
+- sem temp table;
+- sem sequence mutation;
+- sem RPC mutável;
+- sem credenciais.
+
+O preflight deve validar o estado PRE-025.
+
+Ele NÃO pode considerar como erro um estado pré-025 conhecido que a própria migration 025 corrigirá.
+
+==================================================
+11. NÃO EXECUTAR REMOTAMENTE
+==================================================
+
+Mesmo que o novo preflight local projete:
+
+TOTAL_BLOQUEIOS = 0
+
+NÃO execute no Supabase.
+
+Eu executarei manualmente depois.
+
+Também NÃO aplique a migration 025.
+
+==================================================
+12. RELATÓRIO FINAL
+==================================================
+
+Ao terminar responda exatamente com:
+
+A) CLASSIFICAÇÃO DOS 4 BLOQUEIOS
+
+Tabela:
+
+CHECK
+CATEGORIA A/B/C/D
+CAUSA RAIZ
+RISCO REAL
+DECISÃO
+EVIDÊNCIA
+
+B) RLS_AUTO_ENABLE
+
+- origem mais provável;
+- comportamento;
+- explorabilidade;
+- decisão;
+- tratamento no preflight;
+- tratamento no postflight.
+
+C) EXAMES_CATALOGO_ID_SEQ
+
+Para anon/authenticated/service_role:
+
+- privilégios atuais;
+- privilégios pré-025 aceitos;
+- privilégios pós-025 desejados;
+- justificativa.
+
+D) ALTERAÇÕES LOCAIS
+
+Lista exata dos arquivos alterados.
+
+E) MIGRATION 025
+
+Dizer explicitamente:
+
+- se foi alterada ou não;
+- quais mudanças;
+- por quê.
+
+F) TESTES
+
+Informar:
+- passes;
+- falhas;
+- skips;
+- concorrência real separadamente.
+
+G) NOVO PREFLIGHT
+
+Informar:
+- caminho exato;
+- quantidade de statements;
+- confirmação READ ONLY;
+- TOTAL_BLOQUEIOS esperado quando executado contra o estado remoto atual.
+
+H) RISCOS PENDENTES
+
+Especialmente:
+- concorrência PostgreSQL real;
+- Auth/PostgREST/Storage HTTP real;
+- qualquer hipótese ainda não homologada.
+
+I) GO / NO-GO
+
+Escolher somente:
+
+"GO PARA REPETIR PREFLIGHT REMOTO READ-ONLY"
+
+ou
+
+"NO-GO — BLOQUEIOS AINDA NÃO RESOLVIDOS"
+
+J) CONFIRMAÇÕES
+
+Confirmar explicitamente:
+
+- nenhuma alteração remota;
+- migration 025 não aplicada;
+- 025-B não iniciada;
+- migrations 001–024 intactas;
+- baseline pré-025 real preservado;
+- nenhum commit;
+- nenhum push.
+
+Pare aí.
+
+NÃO autorize aplicação da 025.

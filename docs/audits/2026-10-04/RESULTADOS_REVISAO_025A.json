@@ -1,0 +1,30 @@
+{
+  "backend": {
+    "pass": 458,
+    "fail": 0,
+    "skip": 0
+  },
+  "database_full": {
+    "pass": 574,
+    "fail": 0,
+    "skip": 12
+  },
+  "adversarial_new_subset": {
+    "pass": 30,
+    "fail": 0,
+    "skip": 0
+  },
+  "real_pg_025": {
+    "pass": 0,
+    "fail": 0,
+    "skip": 11
+  },
+  "total_unique": {
+    "pass": 1032,
+    "fail": 0,
+    "skip": 12
+  },
+  "frontend": "NA",
+  "remote_access": false,
+  "real_migration_applied": false
+}

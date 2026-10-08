@@ -1,5 +1,6 @@
 import httpx
 from postgrest.exceptions import APIError
+from app.core.entitlements import database_error
 from app.core.errors import AppError
 
 FIELDS = '*,tipo:documento_tipos(*),colaborador:colaboradores(id,nome)'
@@ -12,6 +13,7 @@ class ExamesRepository:
         try:
             return query.execute().data
         except APIError as exc:
+            database_error(exc)
             status = {'23503': 422, '23514': 422, '23505': 409, '42501': 403, 'PGRST301': 401}.get(exc.code, 503)
             raise AppError(status, 'exames_error', 'Não foi possível concluir a operação de ASO.') from None
         except httpx.HTTPError:

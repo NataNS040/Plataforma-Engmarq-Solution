@@ -55,6 +55,8 @@ def upstream(app):
              "auth_status": 200, "error": None, "empty": False, "requests": [], "operations": []}
 
     def handler(request):
+        if request.url.path == '/rest/v1/empresa_features':
+            return httpx.Response(200, json=[{'enabled': True}])
         state["requests"].append(request)
         # Includes both reads and writes: never service_role, even for admins.
         assert request.headers["authorization"] == "Bearer user-jwt"

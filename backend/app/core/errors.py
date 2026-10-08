@@ -15,13 +15,15 @@ class AppError(Exception):
     """Only pass messages that are safe to expose to API consumers."""
 
     def __init__(
-        self, status_code: int, code: str, message: str, *, headers: dict[str, str] | None = None
+        self, status_code: int, code: str, message: str, *, headers: dict[str, str] | None = None,
+        internal_code: str | None = None,
     ) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.code = code
         self.message = message
         self.headers = headers
+        self.internal_code = internal_code or code
 
 
 def error_response(

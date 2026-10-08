@@ -1,0 +1,37 @@
+{
+  "arquivo": "supabase\\tests\\025_preflight_remoto_manual.sql",
+  "statements": 3,
+  "read_only": true,
+  "sha256": "7966ee71f759074dc29105235874e9e6d383fd68cff32a1c167ff21ec394bf66",
+  "conexao_remota": false,
+  "migration_aplicada_remotamente": false,
+  "baseline_remoto_criado": false,
+  "testes": {
+    "preflight_manual_final": {
+      "aprovados": 3,
+      "falhas": 0
+    },
+    "contratos_security_adversarial_harness_025": {
+      "aprovados": 70,
+      "falhas": 0
+    },
+    "concorrencia_postgresql_real": {
+      "adiados": 11,
+      "motivo": "Docker daemon local indispon?vel"
+    },
+    "backend_test_entitlements_025": {
+      "aprovados": 28,
+      "falhas": 0,
+      "python": "backend/.venv/Scripts/python.exe"
+    }
+  },
+  "riscos_conhecidos": [
+    "Leitura integral e ordena??o/agrega??o para fingerprints podem consumir CPU/mem?ria e atingir timeout em bases grandes.",
+    "ACCESS SHARE de consultas pode aguardar ou atrasar DDL concorrente; nenhum lock de escrita solicitado."
+  ],
+  "evidencias": [
+    ".025-manual-validation.log",
+    ".025-manual-preflight-final.log"
+  ],
+  "comparacao_baseline": "Linhas Preserva??o mant?m protocolo do postflight existente; manifesto congela colunas operacionais; baseline comercial usa identidade e fingerprint por linha para preservar decis?es e distinguir inser??es previstas."
+}

@@ -1,6 +1,7 @@
 from postgrest.exceptions import APIError
 import httpx
 
+from app.core.entitlements import database_error
 from app.core.errors import AppError
 
 FIELDS = {
@@ -18,6 +19,7 @@ class TreinamentosRepository:
         try:
             return query.execute().data
         except APIError as exc:
+            database_error(exc)
             status = {"23505": 409, "23503": 422, "23514": 422, "42501": 403,
                       "PGRST301": 401, "40001": 409, "40P01": 409}.get(exc.code, 503)
             raise AppError(status, "treinamento_error", {

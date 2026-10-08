@@ -1,0 +1,218 @@
+[
+  {
+    "file": "supabase/migrations/001_base_schema.sql",
+    "identical": false,
+    "sha256": "4479325aeea6e4c80730af4b71a42654cf8352e7fe75c1b2c909839a53f1f2f3",
+    "same_except_crlf": true,
+    "head_blob": "5e9d9638aaa10297ae905b3d44958c0228ca478c",
+    "filtered_worktree_blob": "5e9d9638aaa10297ae905b3d44958c0228ca478c",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/002_empresas_extra.sql",
+    "identical": false,
+    "sha256": "90b1233bf9c9f165ec1e1e8cdec89bc02cdf6171bc15770475834b145375bf1b",
+    "same_except_crlf": true,
+    "head_blob": "ab1cdca55f6707901a9998cf67401c8f43aee625",
+    "filtered_worktree_blob": "ab1cdca55f6707901a9998cf67401c8f43aee625",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/003_asos.sql",
+    "identical": false,
+    "sha256": "61f0ecb92ced50e32f18c9f793819466fa9e1884b29602b30d56e5f174dd85c8",
+    "same_except_crlf": true,
+    "head_blob": "529e6768962b49a79f8e89c59b8545b4c4ff109d",
+    "filtered_worktree_blob": "529e6768962b49a79f8e89c59b8545b4c4ff109d",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/004_admin_rls_fix.sql",
+    "identical": false,
+    "sha256": "29bd5a544ccffe7a290caec9471e51a568ddbc813f76d18d4aac59ade2b5a8f6",
+    "same_except_crlf": true,
+    "head_blob": "fc771c9776080e6a407aef5a6f556cf423248918",
+    "filtered_worktree_blob": "fc771c9776080e6a407aef5a6f556cf423248918",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/005_empresa_role.sql",
+    "identical": false,
+    "sha256": "6ca050f89ab0f6c4bb1d4158eb565ac74863c9e4fe68d1fbc153f1a8975af762",
+    "same_except_crlf": true,
+    "head_blob": "12d318f85d947673e97407f8a610df130a44d303",
+    "filtered_worktree_blob": "12d318f85d947673e97407f8a610df130a44d303",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/006_exames_catalogo.sql",
+    "identical": false,
+    "sha256": "d592414e430fea3717ed7513d150410cf779ba75d54439deafe220195cf4352f",
+    "same_except_crlf": true,
+    "head_blob": "bdeacf935e7346e794c85a90b6f79d19b3cff85b",
+    "filtered_worktree_blob": "bdeacf935e7346e794c85a90b6f79d19b3cff85b",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/007_empresa_permissions_fix.sql",
+    "identical": false,
+    "sha256": "d020704b3b9e87f617443a5cfb4633f28d9feafb86ca607705e77121fa47c0b5",
+    "same_except_crlf": true,
+    "head_blob": "d1720a6e16dbc7d39f40293235aeccbeab933d0b",
+    "filtered_worktree_blob": "d1720a6e16dbc7d39f40293235aeccbeab933d0b",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/008_modalidade_e_catalogo.sql",
+    "identical": false,
+    "sha256": "2cfca4cfd74e22f8ca62a835573f387f79b650c4c8a008a38838a473bb2eddb0",
+    "same_except_crlf": true,
+    "head_blob": "59968ab95ef6f3681c0a90ca7352108d56d35c0c",
+    "filtered_worktree_blob": "59968ab95ef6f3681c0a90ca7352108d56d35c0c",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/009_storage_documentos.sql",
+    "identical": false,
+    "sha256": "0b80187e6f215ac701cfcc8d38bb7d26c7cbd23477b2b2504e9637b3425ce98c",
+    "same_except_crlf": true,
+    "head_blob": "8a7a6986b06665b5a1cd678f258352a780b50235",
+    "filtered_worktree_blob": "8a7a6986b06665b5a1cd678f258352a780b50235",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/010_documento_tipos_cert_epi.sql",
+    "identical": false,
+    "sha256": "c27c31a720b05f6e802c8b873ae831d02a9b438739529e3f31f7fceb854201f9",
+    "same_except_crlf": true,
+    "head_blob": "3521a86611a9f34dd96095714e12e4db1bfeb245",
+    "filtered_worktree_blob": "3521a86611a9f34dd96095714e12e4db1bfeb245",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/011_fichas_epi.sql",
+    "identical": false,
+    "sha256": "ba109c145090236dc03e57c75fd1995a0818c63e6dc5f24b07cbaa23f3fe031c",
+    "same_except_crlf": true,
+    "head_blob": "e7b0dc5b3fe30ef64e230aa735e609493e0a8d8b",
+    "filtered_worktree_blob": "e7b0dc5b3fe30ef64e230aa735e609493e0a8d8b",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/012_storage_assinaturas.sql",
+    "identical": false,
+    "sha256": "572397a0530bdd167cc84b7f299d16c3a1f644692ce0e05e7d6b45006e02c2ad",
+    "same_except_crlf": true,
+    "head_blob": "fec1e1753a7d1929ed479820bf1a7c73db0ee36f",
+    "filtered_worktree_blob": "fec1e1753a7d1929ed479820bf1a7c73db0ee36f",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/013_configuracoes_gaps.sql",
+    "identical": false,
+    "sha256": "b2d3b96246a0ce0cd74ee4bf8ba255bd8cdb9fd5e3038c1be938d1028c4818c9",
+    "same_except_crlf": true,
+    "head_blob": "1fb63704eaa0ae35c79a84be67e637e8fa0057f7",
+    "filtered_worktree_blob": "1fb63704eaa0ae35c79a84be67e637e8fa0057f7",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/014_fix_user_profiles_permissions.sql",
+    "identical": true,
+    "sha256": "c5e4a074de26e9c682a578be7274ba6088522bd84c88b7eb58640fba3cad8768",
+    "same_except_crlf": true,
+    "head_blob": "da44b960ebf3ec0c6d3851c6b96bd975ab7f0a86",
+    "filtered_worktree_blob": "da44b960ebf3ec0c6d3851c6b96bd975ab7f0a86",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/015_user_profiles_tenant_management.sql",
+    "identical": false,
+    "sha256": "7a3d6db8f1e694756287d931dcb831f2be676755e41f5348692a4c8079864e6b",
+    "same_except_crlf": true,
+    "head_blob": "feef82c2feb09b2ccb1b9ba4e6c888e7b6cadae8",
+    "filtered_worktree_blob": "feef82c2feb09b2ccb1b9ba4e6c888e7b6cadae8",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/016_colaboradores_tenant_security.sql",
+    "identical": true,
+    "sha256": "631cdae22348a47c0d095959b7a84504b0bc57cd755580ff702b8a8ebe85f9ad",
+    "same_except_crlf": true,
+    "head_blob": "8609ebd94d3f45a007e6e1cc00b80389e0d70350",
+    "filtered_worktree_blob": "8609ebd94d3f45a007e6e1cc00b80389e0d70350",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/017_catalogos_tenant_security.sql",
+    "identical": true,
+    "sha256": "1cc374788529cf92685f376589946f28d80086083f89922c4177c58a82455b70",
+    "same_except_crlf": true,
+    "head_blob": "d86ccd337a7f9dec83350f74f4f1e2e5dbeeb3d7",
+    "filtered_worktree_blob": "d86ccd337a7f9dec83350f74f4f1e2e5dbeeb3d7",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/018_treinamentos_tenant_security.sql",
+    "identical": true,
+    "sha256": "feca76ce34c57266acbe59a280f95276d4c1375984c5cefd086ca71342739a71",
+    "same_except_crlf": true,
+    "head_blob": "9537213c0d4cc74f194baf29fb9f0134f9e6a4ae",
+    "filtered_worktree_blob": "9537213c0d4cc74f194baf29fb9f0134f9e6a4ae",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/019_documentos_path_compat.sql",
+    "identical": true,
+    "sha256": "57a99089d3f684c57e6c3d15c95f446bff35992c9a7eaa3103ba329c744e8bf8",
+    "same_except_crlf": true,
+    "head_blob": "152732d4b6a232f19241383301606bdd4d685881",
+    "filtered_worktree_blob": "152732d4b6a232f19241383301606bdd4d685881",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/020_documentos_private_storage.sql",
+    "identical": true,
+    "sha256": "6aff35a817e0f65ba592b86e70e9e3d5cda134b9f2c4d24b79496e9533c86fb8",
+    "same_except_crlf": true,
+    "head_blob": "5a2af03686f756db337a8ff0e77eceae9f697575",
+    "filtered_worktree_blob": "5a2af03686f756db337a8ff0e77eceae9f697575",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/021_documentos_empresas_security.sql",
+    "identical": true,
+    "sha256": "5ee8bf5d93b3bbd80f4d71819d65e18d3882c3d4a821f36b05e6d821b04519f6",
+    "same_except_crlf": true,
+    "head_blob": "0c46c967a00e18497ff95bc89d554c1a1a8cf933",
+    "filtered_worktree_blob": "0c46c967a00e18497ff95bc89d554c1a1a8cf933",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/022_logos_tenant_storage.sql",
+    "identical": true,
+    "sha256": "9cfd539e820c126588e466c8240028b922788b7095c2f67612c8c294ff57bb82",
+    "same_except_crlf": true,
+    "head_blob": "939bc9f0332245b21b97939bcae255dc3997b752",
+    "filtered_worktree_blob": "939bc9f0332245b21b97939bcae255dc3997b752",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/023_exames_aso.sql",
+    "identical": true,
+    "sha256": "4ce3bfd1328fbac623120308985e49cd0902d9fc1a45ae9c2e4a000b71039b26",
+    "same_except_crlf": true,
+    "head_blob": "f95186511eb259fe67e17fcbecf77b40412c3307",
+    "filtered_worktree_blob": "f95186511eb259fe67e17fcbecf77b40412c3307",
+    "git_content_identical": true
+  },
+  {
+    "file": "supabase/migrations/024_fundacao_comercial.sql",
+    "identical": true,
+    "sha256": "d4e38b8c2aa1550351e5364a0e4c13a9e7bb6969bc21881f5844a7da6186e2d1",
+    "same_except_crlf": true,
+    "head_blob": "3a2d41e5f8131e98dc29f90d21a0532cb7d0b75e",
+    "filtered_worktree_blob": "3a2d41e5f8131e98dc29f90d21a0532cb7d0b75e",
+    "git_content_identical": true
+  }
+]

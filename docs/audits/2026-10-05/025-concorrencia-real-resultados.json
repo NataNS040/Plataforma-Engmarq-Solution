@@ -1,0 +1,3556 @@
+{
+  "verdict": "CONCORRÊNCIA 025-A HOMOLOGADA",
+  "environment": {
+    "version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+    "currentDatabase": "engmarq_025_disposable",
+    "container": "engmarq-025-disposable-c8dfbb55",
+    "containerId": "70d270be825e6d2b182680b25a8b4d3b09ae6ba5cf329fc99a50d2dc0ccada81",
+    "endpoint": "npipe:////./pipe/dockerDesktopLinuxEngine",
+    "network": "none",
+    "database": "engmarq_025_disposable",
+    "production": false,
+    "disposable": true
+  },
+  "bootstrap": {
+    "database": "engmarq_025_disposable",
+    "schema": "synthetic Auth/Storage bootstrap; unchanged repository migrations 001-025",
+    "migration025Loaded": true,
+    "critical": {
+      "tables": 5,
+      "functions": 8,
+      "quotaTriggers": 2,
+      "collaboratorTriggers": 6
+    },
+    "disposable": true
+  },
+  "summary": {
+    "tests": 20,
+    "pass": 20,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "duration_ms": 452047.8531
+  },
+  "passed_cases": [
+    "ok 1 - REAL PG 025 99: limit increase + insert",
+    "ok 2 - REAL PG 025 100: dismissal + insert",
+    "ok 3 - REAL PG 025 98: concurrent multi-row reactivation",
+    "ok 4 - REAL PG 025 99: two inserts",
+    "ok 5 - REAL PG 025 100: two inserts both rejected",
+    "ok 6 - REAL PG 025 99: two reactivations",
+    "ok 7 - REAL PG 025 99: insert + reactivation",
+    "ok 8 - REAL PG 025 100: dismissal + reactivation",
+    "ok 9 - REAL PG 025 99: reactivation + dismissal",
+    "ok 10 - REAL PG 025 100: decrease below usage + insert both rejected",
+    "ok 11 - REAL PG 025 99: over-quota single-statement batch + insert",
+    "ok 12 - REAL PG 025 98: two fitting atomic batches",
+    "ok 13 - REAL PG 025 99: limit decrease + insert",
+    "ok 14 - REAL PG 025 99: insert + limit decrease",
+    "ok 15 - REAL PG 025 rollback after acquired lock preserves counter and rows",
+    "ok 16 - REAL PG 025 different tenants do not serialize globally",
+    "ok 17 - REAL PG 025 retry after quota abort releases all locks and leaves no intermediate state",
+    "ok 18 - REAL PG 025 REPEATABLE READ serialization failure aborts safely without divergent counter",
+    "ok 19 - REAL PG 025 independent tenants allocate their own last slot concurrently; no global quota/lost update",
+    "ok 20 - REAL PG 025 trusted multi-tenant maintenance prelocks in deterministic UUID order despite reverse row order"
+  ],
+  "races": [
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 101,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 892,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresa_limites_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresa_limites",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1097"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 907,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1097"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            }
+          ],
+          "blockers": [
+            892
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 1708,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1217"
+            }
+          ],
+          "blockers": [
+            1688
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        },
+        {
+          "pid": 1688,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1217"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 98,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 98,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 2463,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1335"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 2484,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_id_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_funcao",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_cpf_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1335"
+            }
+          ],
+          "blockers": [
+            2463
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 3255,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1443"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 3277,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1443"
+            }
+          ],
+          "blockers": [
+            3255
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 4051,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1554"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 4072,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1554"
+            }
+          ],
+          "blockers": [
+            4051
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 4840,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1662"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 4862,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_id_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_funcao",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_cpf_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1662"
+            }
+          ],
+          "blockers": [
+            4840
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 5627,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1772"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 5648,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_id_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_funcao",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_cpf_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1772"
+            }
+          ],
+          "blockers": [
+            5627
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 6450,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_id_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_funcao",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_cpf_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1881"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            }
+          ],
+          "blockers": [
+            6430
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        },
+        {
+          "pid": 6430,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1881"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 7222,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "1989"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 7243,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_id_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_funcao",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_colaboradores_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_empresa_id_cpf_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "1989"
+            }
+          ],
+          "blockers": [
+            7222
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 8046,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "2100"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            }
+          ],
+          "blockers": [
+            8025
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        },
+        {
+          "pid": 8025,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresa_limites_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresa_limites",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2100"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 8815,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2208"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 8838,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "2208"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            }
+          ],
+          "blockers": [
+            8815
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 98,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 98,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 9608,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2317"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 9623,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "2317"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            }
+          ],
+          "blockers": [
+            9608
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 99,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 10416,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "2425"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            }
+          ],
+          "blockers": [
+            10396
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        },
+        {
+          "pid": 10396,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresa_limites_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresa_limites",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2425"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 11178,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2533"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 11193,
+          "locks": [
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresa_limites_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresa_limites",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "2533"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2534"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            }
+          ],
+          "blockers": [
+            11178
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "ROLLBACK"
+        },
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 11981,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2645"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 12003,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "2645"
+            }
+          ],
+          "blockers": [
+            11981
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "P2502"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 13549,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2862"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        },
+        {
+          "pid": 13571,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "2862"
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            }
+          ],
+          "blockers": [
+            13549
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        }
+      ]
+    },
+    {
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "transactions": [
+        {
+          "code": 0,
+          "sqlstates": [],
+          "completion": "COMMIT"
+        },
+        {
+          "code": 3,
+          "sqlstates": [
+            "40001"
+          ],
+          "completion": "COMMIT"
+        }
+      ],
+      "lockEvidence": [
+        {
+          "pid": 14396,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "idx_user_profiles_empresa",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "AccessShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "user_profiles",
+              "transactionid": null
+            },
+            {
+              "mode": "RowExclusiveLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "colaboradores",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "tuple",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ShareLock",
+              "type": "transactionid",
+              "granted": false,
+              "relation": null,
+              "transactionid": "2974"
+            }
+          ],
+          "blockers": [
+            14376
+          ],
+          "wait_type": "Lock",
+          "wait_event": "transactionid",
+          "application": "quota025_second"
+        },
+        {
+          "pid": 14376,
+          "locks": [
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_canonico_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_cnpj_key",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas_pkey",
+              "transactionid": null
+            },
+            {
+              "mode": "RowShareLock",
+              "type": "relation",
+              "granted": true,
+              "relation": "empresas",
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "virtualxid",
+              "granted": true,
+              "relation": null,
+              "transactionid": null
+            },
+            {
+              "mode": "ExclusiveLock",
+              "type": "transactionid",
+              "granted": true,
+              "relation": null,
+              "transactionid": "2974"
+            }
+          ],
+          "blockers": [],
+          "wait_type": "Timeout",
+          "wait_event": "PgSleep",
+          "application": "quota025_first"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "scenario": "99: limit increase + insert",
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 101,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 2,
+      "rejected": 0
+    },
+    {
+      "scenario": "100: dismissal + insert",
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 2,
+      "rejected": 0
+    },
+    {
+      "scenario": "98: concurrent multi-row reactivation",
+      "before": {
+        "limit": 100,
+        "actual": 98,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 98,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 2,
+      "rejected": 0
+    },
+    {
+      "scenario": "99: two inserts",
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 1,
+      "rejected": 1
+    },
+    {
+      "scenario": "100: two inserts both rejected",
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 0,
+      "rejected": 2
+    },
+    {
+      "scenario": "99: two reactivations",
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 1,
+      "rejected": 1
+    },
+    {
+      "scenario": "99: insert + reactivation",
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 1,
+      "rejected": 1
+    },
+    {
+      "scenario": "100: dismissal + reactivation",
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 2,
+      "rejected": 0
+    },
+    {
+      "scenario": "99: reactivation + dismissal",
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "accepted": 2,
+      "rejected": 0
+    },
+    {
+      "scenario": "100: decrease below usage + insert both rejected",
+      "before": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 0,
+      "rejected": 2
+    },
+    {
+      "scenario": "99: over-quota single-statement batch + insert",
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 1,
+      "rejected": 1
+    },
+    {
+      "scenario": "98: two fitting atomic batches",
+      "before": {
+        "limit": 100,
+        "actual": 98,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 98,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 1,
+      "rejected": 1
+    },
+    {
+      "scenario": "99: limit decrease + insert",
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 99,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "accepted": 1,
+      "rejected": 1
+    },
+    {
+      "scenario": "99: insert + limit decrease",
+      "before": {
+        "limit": 100,
+        "actual": 99,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 99,
+        "unlimited": false
+      },
+      "after": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "accepted": 1,
+      "rejected": 1
+    },
+    {
+      "tenant1": {
+        "limit": 100,
+        "actual": 100,
+        "company": "00000000-0000-4000-8000-000000000101",
+        "counter": 100,
+        "unlimited": false
+      },
+      "tenant2": {
+        "limit": 2,
+        "actual": 2,
+        "company": "00000000-0000-4000-8000-000000000102",
+        "counter": 2,
+        "unlimited": false
+      },
+      "transactionsAccepted": 2
+    },
+    {
+      "orderedCompanyIds": [
+        "00000000-0000-4000-8000-000000000101",
+        "00000000-0000-4000-8000-000000000102"
+      ],
+      "before": [
+        {
+          "limit": 100,
+          "actual": 99,
+          "company": "00000000-0000-4000-8000-000000000101",
+          "counter": 99,
+          "unlimited": false
+        },
+        {
+          "limit": 2,
+          "actual": 2,
+          "company": "00000000-0000-4000-8000-000000000102",
+          "counter": 2,
+          "unlimited": false
+        }
+      ],
+      "after": [
+        {
+          "limit": 100,
+          "actual": 99,
+          "company": "00000000-0000-4000-8000-000000000101",
+          "counter": 99,
+          "unlimited": false
+        },
+        {
+          "limit": 2,
+          "actual": 2,
+          "company": "00000000-0000-4000-8000-000000000102",
+          "counter": 2,
+          "unlimited": false
+        }
+      ],
+      "transactionsAccepted": 2
+    }
+  ],
+  "expected_errors": {
+    "40001": 1,
+    "P2502": 13
+  },
+  "unexpected_sqlstates": [],
+  "migration025_sha256": "6d4d696d14f74edec8d5f94f48e192208a9281d3479625a8043e17d781fbc1c5",
+  "preflight_sha256": "98ad6566523286e25c3eaf3a677d85786197c45edea803b2235436a455021d86",
+  "remote_actions": false,
+  "commit": false,
+  "push": false,
+  "phase025B_started": false,
+  "containers_removed": true,
+  "scope": "20 real scenarios; trusted multi-tenant maintenance uses documented UUID-ordered prelocks",
+  "intermediate_attempt": "Four infrastructure ReferenceError failures before concurrency, interrupted; variable renamed and all 20 rerun"
+}

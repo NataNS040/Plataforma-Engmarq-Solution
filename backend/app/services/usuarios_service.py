@@ -5,6 +5,7 @@ import httpx
 from supabase_auth.errors import AuthApiError
 
 from app.core.config import Settings
+from app.core.entitlements import require_feature
 from app.core.errors import AppError
 from app.integrations.supabase import create_admin_client
 from app.repositories.usuarios import UsuariosRepository, UsuariosRlsRepository
@@ -14,11 +15,13 @@ from app.schemas.usuarios import UsuarioCreate, UsuarioResponse, UsuarioDetail, 
 logger = logging.getLogger(__name__)
 
 
-def create_usuario(data: UsuarioCreate, actor: MeResponse, settings: Settings) -> UsuarioResponse:
+def create_usuario(data: UsuarioCreate, actor: MeResponse, settings: Settings, client) -> UsuarioResponse:
     if not actor.active or actor.role not in {"gestor", "empresa"}:
         raise AppError(403, "access_denied", "Sem permissão para criar usuários.")
     if data.role == "admin":
         raise AppError(403, "access_denied", "Não é possível atribuir um papel de administração global.")
+
+    require_feature(client, actor, 'usuarios.gestao')
 
     with httpx.Client(timeout=settings.supabase_timeout_seconds) as http_client:
         repository = UsuariosRepository(create_admin_client(settings, http_client))
@@ -35,7 +38,7 @@ def create_usuario(data: UsuarioCreate, actor: MeResponse, settings: Settings) -
             raise AppError(503, "user_creation_unavailable", "Não foi possível confirmar a criação. Verifique o Auth antes de tentar novamente.") from None
 
         try:
-            repository.create_profile(user_id, data, actor.empresa_id)
+            repository.create_profile(user_id, data, actor.id)
         except Exception:
             try:
                 repository.delete_auth(user_id)
@@ -55,6 +58,8 @@ class UsuariosService:
     def _authorize(self) -> None:
         if not self.actor.active or self.actor.role not in {"gestor", "empresa"}:
             raise AppError(403, "access_denied", "Sem permissão para administrar usuários.")
+
+        require_feature(self.repository.client, self.actor, 'usuarios.gestao')
 
     def _scope(self, empresa_id: UUID | None = None) -> UUID:
         self._authorize()

@@ -6,6 +6,7 @@ import httpx
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from app.core.entitlements import database_error
 from app.core.errors import AppError
 from app.schemas.usuarios import UsuarioCreate
 
@@ -26,11 +27,10 @@ class UsuariosRepository:
             raise RuntimeError("Auth returned no user")
         return UUID(str(result.user.id))
 
-    def create_profile(self, user_id: UUID, data: UsuarioCreate, empresa_id: UUID) -> None:
-        self.client.table("user_profiles").insert({
-            "id": str(user_id), "email": str(data.email),
-            "full_name": data.full_name, "role": data.role,
-            "empresa_id": str(empresa_id), "active": True,
+    def create_profile(self, user_id: UUID, data: UsuarioCreate, actor_id: UUID) -> None:
+        self.client.rpc("provisionar_perfil_interno", {
+            "actor_id": str(actor_id), "user_id": str(user_id),
+            "full_name": data.full_name, "user_role": data.role,
         }).execute()
 
     def delete_auth(self, user_id: UUID) -> None:
@@ -52,6 +52,7 @@ class UsuariosRlsRepository:
         try:
             return operation().data
         except APIError as exc:
+            database_error(exc)
             if exc.code == "42501":
                 raise AppError(403, "access_denied", "Sem permissão para alterar este usuário.") from None
             if exc.code in {"40P01", "40001"}:

@@ -1,8 +1,9 @@
 import {fixture,migrate,id,load,actor,dataSnapshot} from './remediation-fixture.mjs'
+import {reviewedRlsFixture} from './025-reviewed-infrastructure.mjs'
 export {migrate,id,load,actor,dataSnapshot}
 export const cnpjs=['11.222.333/0001-81','04.252.011/0001-10','00.000.000/E08G-12']
-export async function fundacaoFixture(post=false,{legacyEpi=true}={}) {
- const db=await fixture({legacyEpi})
+export async function fundacaoFixture(post=false,{legacyEpi=true,legacySequenceDefaults=true,reviewedEventTrigger=true}={}) {
+ const db=await fixture({legacyEpi,legacySequenceDefaults})
  // 024 remote baseline: 001 public helpers retain legacy service_role EXECUTE.
  // 021 CREATE OR REPLACE preserves ACLs and revokes only PUBLIC/anon.
  // Model these two existing grants only; do not broaden private-function ACLs.
@@ -19,5 +20,9 @@ export async function fundacaoFixture(post=false,{legacyEpi=true}={}) {
  await migrate(db,'023_exames_aso.sql')
  for(let n=0;n<3;n++)await db.query('UPDATE empresas SET cnpj=$1 WHERE id=$2',[cnpjs[n],id(101+n)])
  if(post)await migrate(db,'024_fundacao_comercial.sql')
+ // Model the user-confirmed PRE-025 infrastructure, without replacing any
+ // operational remote fingerprints with fixture values. Earlier fixtures keep
+ // their own original bootstrap. Installing here avoids affecting 001–024 DDL.
+ if(reviewedEventTrigger)await db.exec(reviewedRlsFixture)
  return db
 }

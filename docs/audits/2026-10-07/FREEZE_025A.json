@@ -1,0 +1,25 @@
+﻿{
+    "date":  "2026-10-07",
+    "file":  "supabase/migrations/025_entitlements_quota_hardening.sql",
+    "sha256":  "6d4d696d14f74edec8d5f94f48e192208a9281d3479625a8043e17d781fbc1c5",
+    "concurrency_hash_match":  true,
+    "concurrency_evidence":  "docs/audits/2026-10-05/025-concorrencia-real-resultados.json",
+    "concurrency_pass":  20,
+    "concurrency_fail":  0,
+    "concurrency_skip":  0,
+    "preflight_remote_confirmed_by_user":  {
+                                               "blocks":  0,
+                                               "ok":  941,
+                                               "warnings":  182
+                                           },
+    "complete_remote_pre025_export_present":  false,
+    "postflight_baseline_empty":  true,
+    "postflight_sha256":  "3dce302b8c73c994c065dcb4c2165dda807bc744b41e71da0969eebc721a79e3",
+    "migrations001_024_verified":  24,
+    "migrations001_024_changed":  0,
+    "migration_edited":  false,
+    "remote_executed":  false,
+    "commit":  false,
+    "push":  false,
+    "verdict":  "NO-GO — NÃO APLICAR 025-A"
+}

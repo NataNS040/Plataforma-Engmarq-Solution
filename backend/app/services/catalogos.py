@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from app.core.entitlements import require_feature
 from app.core.errors import AppError
 from app.repositories.catalogos import CatalogosRepository
 from app.schemas.catalogos import CatalogoCreate, CatalogoUpdate
@@ -15,6 +16,7 @@ class CatalogosService:
         roles = {"empresa", "gestor"} if write else {"empresa", "gestor", "operacional"}
         if not self.actor.active or self.actor.role not in roles:
             raise AppError(403, "access_denied", "Sem permissão para acessar catálogos.")
+        require_feature(self.repository.client, self.actor, 'colaboradores.gestao')
         return self.actor.empresa_id
 
     def list(self):

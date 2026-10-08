@@ -6,6 +6,7 @@ import httpx
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from app.core.entitlements import database_error
 from app.core.errors import AppError
 
 FIELDS = "id,razao_social,cnpj,setor,cidade,uf,responsavel,email,telefone,status,logo_url,created_at"
@@ -21,6 +22,7 @@ class EmpresasRepository:
         try:
             return operation().data
         except APIError as exc:
+            database_error(exc)
             errors = {
                 "23505": (409, "duplicate_empresa", "Já existe uma empresa com este CNPJ."),
                 "42501": (403, "access_denied", "Você não tem permissão para esta operação."),

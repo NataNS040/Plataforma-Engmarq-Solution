@@ -21,6 +21,8 @@ def upstream(app):
              'auth_status': 200, 'operations': [], 'null_count': False}
 
     def handler(request):
+        if request.url.path == '/rest/v1/empresa_features':
+            return httpx.Response(200, json=[{'enabled': True}])
         assert request.headers['authorization'] == 'Bearer user-jwt'
         assert request.headers['apikey'] == 'public-anon-key'
         if request.url.path == '/auth/v1/user':

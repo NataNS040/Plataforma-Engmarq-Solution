@@ -1,0 +1,30 @@
+﻿{
+    "scope":  "local-only",
+    "remote_executed":  false,
+    "migration025_edited":  false,
+    "remote_fifth_check_confirmed":  false,
+    "remote_fifth_candidate":  "EXECUTE: rls_auto_enable()",
+    "remote_blocks_expected":  null,
+    "remote_blocks_if_candidate_and_plpgsql_and_no_other_drift":  4,
+    "local_default_fixture_blocks":  0,
+    "local_legacy_sequence_defaults_blocks":  3,
+    "local_legacy_defaults_plus_unknown_plpgsql_event_trigger_blocks":  4,
+    "database_tests":  {
+                           "failed":  0,
+                           "skipped":  12,
+                           "total":  592,
+                           "passed":  580
+                       },
+    "backend_tests":  {
+                          "passed":  155,
+                          "failed":  0
+                      },
+    "migrations001_024_hashes":  {
+                                     "changed":  0,
+                                     "compared":  24
+                                 },
+    "migration025_sha256":  "caecd750b51002721b33eab81d31ef4eda073124b2ed2b9e625ec0ac0828749e",
+    "manual_preflight_sha256":  "8ac5ad3ba8cbf12ad62eb2b003d3d2e76aedcf06e76555598a409559030751b7",
+    "manual_preflight":  "supabase/tests/025_preflight_remoto_manual.sql",
+    "report":  "docs/audits/2026-10-04/INVESTIGACAO_BLOQUEIOS_PREFLIGHT_025.md"
+}

@@ -1,0 +1,282 @@
+﻿{
+    "preflight_manual_sha256":  "98ad6566523286e25c3eaf3a677d85786197c45edea803b2235436a455021d86",
+    "backend_tests":  {
+                          "passed":  155,
+                          "failed":  0
+                      },
+    "scope":  "local-only",
+    "migration025_sha256":  "6d4d696d14f74edec8d5f94f48e192208a9281d3479625a8043e17d781fbc1c5",
+    "complete_current_pre025_fingerprint_export_received":  false,
+    "remote_postflight_executed":  false,
+    "commit":  false,
+    "push":  false,
+    "existing_files_changed":  [
+                                   "docs\\audits\\2026-10-04\\expected-025-postflight-catalog.json",
+                                   "docs\\audits\\2026-10-04\\expected-025-preflight-catalog.json",
+                                   "supabase\\migrations\\025_entitlements_quota_hardening.sql",
+                                   "supabase\\tests\\025_contract_generate.mjs",
+                                   "supabase\\tests\\025_fundacao_postflight_readonly.sql",
+                                   "supabase\\tests\\025_fundacao_preflight_readonly.sql",
+                                   "supabase\\tests\\025_manual_generate.mjs",
+                                   "supabase\\tests\\025_manual_preflight.test.mjs",
+                                   "supabase\\tests\\025_preflight_origin.test.mjs",
+                                   "supabase\\tests\\025_preflight_remoto_manual.sql",
+                                   "supabase\\tests\\025-catalog.mjs",
+                                   "supabase\\tests\\fundacao-fixture.mjs",
+                                   "supabase\\tests\\package.json"
+                               ],
+    "remote_executed":  false,
+    "protected_files_changed":  0,
+    "preflight_statement_count":  3,
+    "protected_hashes":  [
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\025-investigacao-backend-tests.log",
+                                 "before":  "ab99b957b5beb519b218ee948bdfc824d53987c27ecd5651a2015f2d9cf7beb9",
+                                 "after":  "ab99b957b5beb519b218ee948bdfc824d53987c27ecd5651a2015f2d9cf7beb9"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\025-investigacao-resultados.json",
+                                 "before":  "4978a30afc2e3e4f26eb2a574e4e672aab87bc2a20de3b41ad1e8194b63b11f6",
+                                 "after":  "4978a30afc2e3e4f26eb2a574e4e672aab87bc2a20de3b41ad1e8194b63b11f6"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\025-investigacao-tests.log",
+                                 "before":  "ab92a3c7e61bbaf12d83104f2502bc76d843a689b867e8ecb0aca0aa1c6c484f",
+                                 "after":  "ab92a3c7e61bbaf12d83104f2502bc76d843a689b867e8ecb0aca0aa1c6c484f"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\025-investigacao-tests-inicial.log",
+                                 "before":  "91b65e8917695c178706a1fca4ada29ca6b99d768c4acadb64a5a0adf16dfc5b",
+                                 "after":  "91b65e8917695c178706a1fca4ada29ca6b99d768c4acadb64a5a0adf16dfc5b"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\025-revalidacao-2026-10-05-backend.log",
+                                 "before":  "877898ad941d40ec7af6e100a1bb2deb60a4228958252d027aa953a2f3c1189f",
+                                 "after":  "877898ad941d40ec7af6e100a1bb2deb60a4228958252d027aa953a2f3c1189f"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\025-revalidacao-2026-10-05-banco.log",
+                                 "before":  "9e857a6947fca966d98752bf1afd4d98418e3a421c2ff06373d82e6390991de5",
+                                 "after":  "9e857a6947fca966d98752bf1afd4d98418e3a421c2ff06373d82e6390991de5"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\CNPJ_REMEDIACAO_MANUAL.md",
+                                 "before":  "8dc966d9fdd4cc0dc84824438faf38dcd82a11d7c9ba7c5e3a3203a6950f6cac",
+                                 "after":  "8dc966d9fdd4cc0dc84824438faf38dcd82a11d7c9ba7c5e3a3203a6950f6cac"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\cnpj-remediation-tests.log",
+                                 "before":  "3fe412f279f38cf0ce7ac6babfc3ea7eecce78c62ff508227009f28d3e7e10a9",
+                                 "after":  "3fe412f279f38cf0ce7ac6babfc3ea7eecce78c62ff508227009f28d3e7e10a9"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\DIAGNOSTICO_FUNDACAO_025.md",
+                                 "before":  "519567f5e4a4bdb94bad92ceaca854029e6dec70b69e3247a70934e520a1fe33",
+                                 "after":  "519567f5e4a4bdb94bad92ceaca854029e6dec70b69e3247a70934e520a1fe33"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\INVENTARIO_SECURITY_DEFINER_025A.md",
+                                 "before":  "f997d2b58cc1d405c12eb23376e8d50438c3202cf9a9f4170291ded793c5d0fc",
+                                 "after":  "f997d2b58cc1d405c12eb23376e8d50438c3202cf9a9f4170291ded793c5d0fc"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\INVESTIGACAO_BLOQUEIOS_PREFLIGHT_025.md",
+                                 "before":  "82f86914368f4bedd26ee0febecd980e89fee727d096ac2cd5fcdb4f9b5f5e38",
+                                 "after":  "82f86914368f4bedd26ee0febecd980e89fee727d096ac2cd5fcdb4f9b5f5e38"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\pre-024-local-evidence.json",
+                                 "before":  "a79c01ac619af42eb0ca2abc1623f9c84b09a21131403861706e5243ed0c22c9",
+                                 "after":  "a79c01ac619af42eb0ca2abc1623f9c84b09a21131403861706e5243ed0c22c9"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\pre-024-tests.log",
+                                 "before":  "cce87872d77bf4cbb66dc5cba187b447cc9dff7fdadefd827679a619a9ab0a67",
+                                 "after":  "cce87872d77bf4cbb66dc5cba187b447cc9dff7fdadefd827679a619a9ab0a67"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\PRESERVACAO_001_024_025A.json",
+                                 "before":  "d6426ec0f3452cbe6366c405ae091c0f4cecddc68753778e1366f2eed9b1fb67",
+                                 "after":  "d6426ec0f3452cbe6366c405ae091c0f4cecddc68753778e1366f2eed9b1fb67"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\RELATORIO_IMPLEMENTACAO_025A.md",
+                                 "before":  "4bb9172735248786c5456784ab826c45bc061f8173511a8f1c892f01102fb113",
+                                 "after":  "4bb9172735248786c5456784ab826c45bc061f8173511a8f1c892f01102fb113"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\RELATORIO_PREFLIGHT_REMOTO_025A.md",
+                                 "before":  "f291b63bb5697b7df3f84e8c2fec31c0810a3d46dd6e4ce3e56b58688ba0565c",
+                                 "after":  "f291b63bb5697b7df3f84e8c2fec31c0810a3d46dd6e4ce3e56b58688ba0565c"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\REMEDIACAO_PRE_024.md",
+                                 "before":  "b384ea8a6e10e53d5a215530fd52386ed3396ca9af95c831ea2f966d65eb4d7a",
+                                 "after":  "b384ea8a6e10e53d5a215530fd52386ed3396ca9af95c831ea2f966d65eb4d7a"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\RESULTADOS_REVISAO_025A.json",
+                                 "before":  "90f644c594b12b80af4b5eae96b076736b60e4c6d90c18862034d7053a78bb2f",
+                                 "after":  "90f644c594b12b80af4b5eae96b076736b60e4c6d90c18862034d7053a78bb2f"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\REVALIDACAO_BLOQUEIOS_025_2026-10-05.md",
+                                 "before":  "c446589ecd1903d1705be4f7409856aa7bedfe54fa6eaef9830fb9f6c4e8090f",
+                                 "after":  "c446589ecd1903d1705be4f7409856aa7bedfe54fa6eaef9830fb9f6c4e8090f"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\REVISAO_READONLY_PREFLIGHT_025.json",
+                                 "before":  "dbde075e84e3c3198bd24b004d17f0ccd98c788ec51d96b7a7efcbb5a6070293",
+                                 "after":  "dbde075e84e3c3198bd24b004d17f0ccd98c788ec51d96b7a7efcbb5a6070293"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\docs\\audits\\2026-10-04\\VALIDACAO_PREFLIGHT_MANUAL_025A.json",
+                                 "before":  "dfd0be80744cf24d6e41e60c219ed8dfa12a228f783c5f8a280f647b216473ea",
+                                 "after":  "dfd0be80744cf24d6e41e60c219ed8dfa12a228f783c5f8a280f647b216473ea"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\001_base_schema.sql",
+                                 "before":  "4479325aeea6e4c80730af4b71a42654cf8352e7fe75c1b2c909839a53f1f2f3",
+                                 "after":  "4479325aeea6e4c80730af4b71a42654cf8352e7fe75c1b2c909839a53f1f2f3"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\002_empresas_extra.sql",
+                                 "before":  "90b1233bf9c9f165ec1e1e8cdec89bc02cdf6171bc15770475834b145375bf1b",
+                                 "after":  "90b1233bf9c9f165ec1e1e8cdec89bc02cdf6171bc15770475834b145375bf1b"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\003_asos.sql",
+                                 "before":  "61f0ecb92ced50e32f18c9f793819466fa9e1884b29602b30d56e5f174dd85c8",
+                                 "after":  "61f0ecb92ced50e32f18c9f793819466fa9e1884b29602b30d56e5f174dd85c8"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\004_admin_rls_fix.sql",
+                                 "before":  "29bd5a544ccffe7a290caec9471e51a568ddbc813f76d18d4aac59ade2b5a8f6",
+                                 "after":  "29bd5a544ccffe7a290caec9471e51a568ddbc813f76d18d4aac59ade2b5a8f6"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\005_empresa_role.sql",
+                                 "before":  "6ca050f89ab0f6c4bb1d4158eb565ac74863c9e4fe68d1fbc153f1a8975af762",
+                                 "after":  "6ca050f89ab0f6c4bb1d4158eb565ac74863c9e4fe68d1fbc153f1a8975af762"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\006_exames_catalogo.sql",
+                                 "before":  "d592414e430fea3717ed7513d150410cf779ba75d54439deafe220195cf4352f",
+                                 "after":  "d592414e430fea3717ed7513d150410cf779ba75d54439deafe220195cf4352f"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\007_empresa_permissions_fix.sql",
+                                 "before":  "d020704b3b9e87f617443a5cfb4633f28d9feafb86ca607705e77121fa47c0b5",
+                                 "after":  "d020704b3b9e87f617443a5cfb4633f28d9feafb86ca607705e77121fa47c0b5"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\008_modalidade_e_catalogo.sql",
+                                 "before":  "2cfca4cfd74e22f8ca62a835573f387f79b650c4c8a008a38838a473bb2eddb0",
+                                 "after":  "2cfca4cfd74e22f8ca62a835573f387f79b650c4c8a008a38838a473bb2eddb0"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\009_storage_documentos.sql",
+                                 "before":  "0b80187e6f215ac701cfcc8d38bb7d26c7cbd23477b2b2504e9637b3425ce98c",
+                                 "after":  "0b80187e6f215ac701cfcc8d38bb7d26c7cbd23477b2b2504e9637b3425ce98c"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\010_documento_tipos_cert_epi.sql",
+                                 "before":  "c27c31a720b05f6e802c8b873ae831d02a9b438739529e3f31f7fceb854201f9",
+                                 "after":  "c27c31a720b05f6e802c8b873ae831d02a9b438739529e3f31f7fceb854201f9"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\011_fichas_epi.sql",
+                                 "before":  "ba109c145090236dc03e57c75fd1995a0818c63e6dc5f24b07cbaa23f3fe031c",
+                                 "after":  "ba109c145090236dc03e57c75fd1995a0818c63e6dc5f24b07cbaa23f3fe031c"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\012_storage_assinaturas.sql",
+                                 "before":  "572397a0530bdd167cc84b7f299d16c3a1f644692ce0e05e7d6b45006e02c2ad",
+                                 "after":  "572397a0530bdd167cc84b7f299d16c3a1f644692ce0e05e7d6b45006e02c2ad"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\013_configuracoes_gaps.sql",
+                                 "before":  "b2d3b96246a0ce0cd74ee4bf8ba255bd8cdb9fd5e3038c1be938d1028c4818c9",
+                                 "after":  "b2d3b96246a0ce0cd74ee4bf8ba255bd8cdb9fd5e3038c1be938d1028c4818c9"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\014_fix_user_profiles_permissions.sql",
+                                 "before":  "c5e4a074de26e9c682a578be7274ba6088522bd84c88b7eb58640fba3cad8768",
+                                 "after":  "c5e4a074de26e9c682a578be7274ba6088522bd84c88b7eb58640fba3cad8768"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\015_user_profiles_tenant_management.sql",
+                                 "before":  "7a3d6db8f1e694756287d931dcb831f2be676755e41f5348692a4c8079864e6b",
+                                 "after":  "7a3d6db8f1e694756287d931dcb831f2be676755e41f5348692a4c8079864e6b"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\016_colaboradores_tenant_security.sql",
+                                 "before":  "631cdae22348a47c0d095959b7a84504b0bc57cd755580ff702b8a8ebe85f9ad",
+                                 "after":  "631cdae22348a47c0d095959b7a84504b0bc57cd755580ff702b8a8ebe85f9ad"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\017_catalogos_tenant_security.sql",
+                                 "before":  "1cc374788529cf92685f376589946f28d80086083f89922c4177c58a82455b70",
+                                 "after":  "1cc374788529cf92685f376589946f28d80086083f89922c4177c58a82455b70"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\018_treinamentos_tenant_security.sql",
+                                 "before":  "feca76ce34c57266acbe59a280f95276d4c1375984c5cefd086ca71342739a71",
+                                 "after":  "feca76ce34c57266acbe59a280f95276d4c1375984c5cefd086ca71342739a71"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\019_documentos_path_compat.sql",
+                                 "before":  "57a99089d3f684c57e6c3d15c95f446bff35992c9a7eaa3103ba329c744e8bf8",
+                                 "after":  "57a99089d3f684c57e6c3d15c95f446bff35992c9a7eaa3103ba329c744e8bf8"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\020_documentos_private_storage.sql",
+                                 "before":  "6aff35a817e0f65ba592b86e70e9e3d5cda134b9f2c4d24b79496e9533c86fb8",
+                                 "after":  "6aff35a817e0f65ba592b86e70e9e3d5cda134b9f2c4d24b79496e9533c86fb8"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\021_documentos_empresas_security.sql",
+                                 "before":  "5ee8bf5d93b3bbd80f4d71819d65e18d3882c3d4a821f36b05e6d821b04519f6",
+                                 "after":  "5ee8bf5d93b3bbd80f4d71819d65e18d3882c3d4a821f36b05e6d821b04519f6"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\022_logos_tenant_storage.sql",
+                                 "before":  "9cfd539e820c126588e466c8240028b922788b7095c2f67612c8c294ff57bb82",
+                                 "after":  "9cfd539e820c126588e466c8240028b922788b7095c2f67612c8c294ff57bb82"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\023_exames_aso.sql",
+                                 "before":  "4ce3bfd1328fbac623120308985e49cd0902d9fc1a45ae9c2e4a000b71039b26",
+                                 "after":  "4ce3bfd1328fbac623120308985e49cd0902d9fc1a45ae9c2e4a000b71039b26"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\migrations\\024_fundacao_comercial.sql",
+                                 "before":  "d4e38b8c2aa1550351e5364a0e4c13a9e7bb6969bc21881f5844a7da6186e2d1",
+                                 "after":  "d4e38b8c2aa1550351e5364a0e4c13a9e7bb6969bc21881f5844a7da6186e2d1"
+                             },
+                             {
+                                 "path":  "C:\\Users\\natap\\OneDrive\\Documentos\\GitHub Pessoal e testes\\Plataforma Engmarq\\supabase\\tests\\024_preflight_baseline_remoto_real.json",
+                                 "before":  "3f214afeb3bf30840dafda5a2496bf3ee7d3b60dd9ff561fba48db933752b75d",
+                                 "after":  "3f214afeb3bf30840dafda5a2496bf3ee7d3b60dd9ff561fba48db933752b75d"
+                             }
+                         ],
+    "preflight_blocks_expected":  0,
+    "preflight_readonly":  true,
+    "preflight_blocks_expected_is_projection":  true,
+    "protected_files_checked":  46,
+    "phase025B_started":  false,
+    "concurrency_real":  "DEFERIDA / NAO HOMOLOGADA",
+    "database_tests":  {
+                           "failed":  0,
+                           "skipped":  12,
+                           "total":  598,
+                           "passed":  586
+                       },
+    "classification":  {
+                           "sequence_service_role":  "B",
+                           "rls_auto_enable":  "A",
+                           "sequence_anon":  "B",
+                           "sequence_authenticated":  "B"
+                       },
+    "operational_baseline_from_fixture":  false
+}

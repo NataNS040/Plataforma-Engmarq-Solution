@@ -5,7 +5,15 @@
   "scripts": {
     "test": "node --test user_profiles.test.mjs colaboradores.test.mjs catalogos.test.mjs treinamentos.test.mjs documentos_storage.test.mjs remediation.test.mjs logos_diagnosis.test.mjs logos_storage.test.mjs 023_exames_aso_inventory.test.mjs exames.test.mjs fundacao_024.test.mjs fundacao_024_concurrency.test.mjs fundacao_024_consolidado.test.mjs",
     "test:preflight024": "node --test fundacao_024_consolidado.test.mjs",
-    "test:postflight024": "node --test fundacao_024_postflight.test.mjs"
+    "test:postflight024": "node --test fundacao_024_postflight.test.mjs",
+    "test:025": "node --test --test-concurrency=1 fundacao_025.test.mjs fundacao_025_security.test.mjs fundacao_025_adversarial.test.mjs fundacao_025_harness.test.mjs fundacao_025_concurrency.test.mjs 025_manual_preflight.test.mjs 025_preflight_origin.test.mjs 025_reconciliation.test.mjs 025_baseline_postflight.test.mjs",
+    "generate:025:auditors": "node 025_contract_generate.mjs --auditors-only && node 025_manual_generate.mjs && node 025_baseline_generate.mjs",
+    "generate:025:baseline": "node 025_baseline_generate.mjs",
+    "test:025:baseline": "node --test --test-concurrency=1 025_baseline_postflight.test.mjs fundacao_025.test.mjs fundacao_025_adversarial.test.mjs",
+    "generate:025": "node 025_contract_generate.mjs",
+    "test:concurrency025": "node --test fundacao_025_concurrency.test.mjs",
+    "import:025:baseline": "node 025_import_real_baseline.mjs",
+    "test:025:import": "node --test 025_import_real_baseline.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.14"

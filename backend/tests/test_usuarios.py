@@ -53,7 +53,7 @@ def upstream(app, monkeypatch):
                     "code": "email_exists" if state["create_status"] == 422 else "unexpected_failure"})
             return httpx.Response(200, json={"id": CREATED, "email": PAYLOAD["email"],
                 "aud": "authenticated", "app_metadata": {}, "user_metadata": {}, "created_at": "2026-01-01T00:00:00Z"})
-        assert request.url.path == "/rest/v1/user_profiles"
+        assert request.url.path == "/rest/v1/rpc/provisionar_perfil_interno"
         if state["profile_status"] != 201:
             return httpx.Response(state["profile_status"], json={"message": "private-secret", "code": "23503"})
         return httpx.Response(201, json=[json.loads(request.content)])
@@ -136,8 +136,8 @@ def test_creation_preserves_contract(client, upstream, role, target_role, target
     assert response.headers["cache-control"] == "no-store"
     auth, profile = upstream["admin_requests"]
     assert json.loads(auth.content) == {"email": "new@example.com", "password": PAYLOAD["password"], "email_confirm": True}
-    assert json.loads(profile.content) == {"id": CREATED, "email": "new@example.com",
-        "full_name": "Nome", "role": target_role, "empresa_id": target_company, "active": True}
+    assert json.loads(profile.content) == {"actor_id": USER_ID, "user_id": CREATED,
+        "full_name": "Nome", "user_role": target_role}
     for secret in [PAYLOAD["password"], "sb_secret_test-only", "unused-legacy-secret", "caller-jwt"]:
         assert secret not in response.text
 
@@ -167,7 +167,7 @@ def test_profile_failure_compensates(client, upstream, delete_status, expected, 
 
 @pytest.mark.parametrize("path,code,count", [
     ("/auth/v1/admin/users", "user_creation_unavailable", 1),
-    ("/rest/v1/user_profiles", "profile_creation_failed", 3),
+    ("/rest/v1/rpc/provisionar_perfil_interno", "profile_creation_failed", 3),
 ])
 def test_transport_timeout_never_retries_creation(client, upstream, path, code, count):
     upstream["timeout_path"] = path

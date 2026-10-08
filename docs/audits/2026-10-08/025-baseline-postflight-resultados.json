@@ -1,0 +1,23 @@
+﻿{
+    "date":  "2026-10-08",
+    "migration_sha256_before":  "6d4d696d14f74edec8d5f94f48e192208a9281d3479625a8043e17d781fbc1c5",
+    "migration_sha256_after":  "6d4d696d14f74edec8d5f94f48e192208a9281d3479625a8043e17d781fbc1c5",
+    "migrations001_024_verified":  24,
+    "migrations001_024_changed":  0,
+    "preflight_approved_sha256":  "98ad6566523286e25c3eaf3a677d85786197c45edea803b2235436a455021d86",
+    "export_sha256":  "ab0a44d408198964bf2df2d861a8f3283fccc94f8ae8111dd9ea73b0dc3c7451",
+    "postflight_template_sha256":  "9cc2cf3fd15bab76cbcdaa48c6504737b2193f599497a7f1913a164884ccc637",
+    "tests":  {
+                  "skipped":  0,
+                  "failed":  0,
+                  "passed":  84
+              },
+    "generation_idempotent":  true,
+    "sql_statement_count":  3,
+    "remote_baseline_recovered":  false,
+    "remote_executed":  false,
+    "fixture_data_written_as_remote_baseline":  false,
+    "commit":  false,
+    "push":  false,
+    "verdict":  "BASELINE/POSTFLIGHT AINDA INCOMPLETOS"
+}

@@ -1,4 +1,5 @@
 from uuid import UUID
+from app.core.entitlements import require_feature
 from app.core.errors import AppError
 from app.schemas.dashboard import DashboardAlerta, DashboardKpis
 
@@ -17,6 +18,8 @@ class DashboardService:
             raise AppError(403, 'access_denied', 'Sem acesso a este dashboard.')
         if requested is not None and UUID(str(requested)) != self.actor.empresa_id:
             raise AppError(403, 'access_denied', 'Sem acesso a esta empresa.')
+        for feature in ('relatorios.sst', 'documentos', 'exames', 'treinamentos'):
+            require_feature(self.repository.client, self.actor, feature)
         return self.actor.empresa_id
 
     def kpis(self, requested=None):

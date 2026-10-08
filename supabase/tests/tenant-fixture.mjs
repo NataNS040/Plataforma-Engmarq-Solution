@@ -1,5 +1,5 @@
 // Shared synthetic fixtures through migration 016; no remote access.
-export async function seedTenantBase(db, migration, id) {
+export async function seedTenantBase(db, migration, id, {legacySequenceDefaults=false}={}) {
   await db.exec(`
     CREATE ROLE authenticated NOLOGIN;
     CREATE ROLE anon NOLOGIN;
@@ -14,6 +14,9 @@ export async function seedTenantBase(db, migration, id) {
     CREATE TABLE storage.objects (id uuid PRIMARY KEY, bucket_id text, name text);
     CREATE FUNCTION storage.foldername(text) RETURNS text[] LANGUAGE sql AS $$ SELECT string_to_array($1, '/') $$;
   `)
+  // Optional reproduction of the documented Supabase legacy bootstrap, before
+  // 006 creates SERIAL. This is a local scenario, never a remote baseline.
+  if(legacySequenceDefaults) await db.exec('ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role')
   for (const name of ['001_base_schema.sql', '002_empresas_extra.sql', '003_asos.sql', '004_admin_rls_fix.sql']) await migration(name)
   // Enum additions must commit before policies can refer to the value.
   await db.exec("ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'empresa'")

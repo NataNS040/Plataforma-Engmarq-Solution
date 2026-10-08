@@ -6,6 +6,7 @@ import httpx
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from app.core.entitlements import database_error
 from app.core.errors import AppError
 
 Catalogo = Literal["funcoes", "setores", "ambientes"]
@@ -25,6 +26,7 @@ class CatalogosRepository:
         try:
             return operation().data
         except APIError as exc:
+            database_error(exc)
             errors = {
                 "23505": (409, "catalogo_conflict", "Já existe um item com este nome na empresa, inclusive entre os inativos."),
                 "23503": (409, "catalogo_referenced", "O catálogo possui referências que devem ser preservadas."),

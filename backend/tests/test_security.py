@@ -37,7 +37,7 @@ def test_unconfigured_integration_fails_closed(protected_app, client):
     assert response.json()["error"]["code"] == "supabase_not_configured"
 
 
-def override_supabase(app, handler):
+def override_supabase(app, handler, *, entitlements=True):
     settings = Settings(
         _env_file=None,
         supabase_url="https://project.supabase.co",
@@ -45,8 +45,19 @@ def override_supabase(app, handler):
         supabase_service_role_key="test-service-secret",
     )
 
+    def grants_handler(request):
+        if entitlements and request.url.path == "/rest/v1/empresa_features":
+            assert request.url.params.get("empresa_id", "").startswith("eq.")
+            assert request.url.params.get("feature_key", "").startswith("eq.")
+            assert request.headers["apikey"] == "test-anon-key"
+            return httpx.Response(200, json=[{"enabled": True}])
+        if entitlements and request.url.path == "/rest/v1/rpc/reservar_arquivo_sst":
+            from test_usuarios import COMPANY
+            return httpx.Response(200, json=COMPANY + "/reserved-test.pdf")
+        return handler(request)
+
     def dependency(token: Annotated[str, Depends(get_bearer_token)]) -> Iterator[Client]:
-        with httpx.Client(transport=httpx.MockTransport(handler)) as http_client:
+        with httpx.Client(transport=httpx.MockTransport(grants_handler)) as http_client:
             yield create_user_client(settings, token, http_client)
 
     app.dependency_overrides[get_supabase_client] = dependency
