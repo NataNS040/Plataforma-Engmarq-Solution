@@ -10,20 +10,13 @@
       // SPA redirect restore: reads the path encoded by 404.html and
       // replaces the history state so React Router sees the correct URL.
       (function () {
-        var redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
-        if (redirect && redirect !== location.href) {
-          history.replaceState(null, null, redirect);
-        }
-        var search = location.search;
-        if (search) {
-          var p = new URLSearchParams(search);
-          var path = p.get('p');
-          if (path) {
-            var query = p.get('q');
-            var newUrl = location.pathname.split('/').slice(0, 2).join('/') +
-              path + (query ? '?' + query.replace(/~and~/g, '&') : '') + location.hash;
-            history.replaceState(null, null, newUrl);
+        var base = '/Plataforma-Engmarq-Solution/';
+        var path = new URLSearchParams(location.search).get('__spa');
+        if (path !== null) {
+          var target = new URL(base + path, location.origin);
+          target.hash = location.hash;
+          if (target.origin === location.origin && target.pathname.startsWith(base)) {
+            history.replaceState(null, '', target.pathname + target.search + target.hash);
           }
         }
       })();
@@ -31,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/Plataforma-Engmarq-Solution/assets/index-DyHEecoW.js"></script>
+    <script type="module" crossorigin src="/Plataforma-Engmarq-Solution/assets/index-B9iMmE8K.js"></script>
     <link rel="stylesheet" crossorigin href="/Plataforma-Engmarq-Solution/assets/index-D5KAJGOX.css">
   </head>
   <body>
