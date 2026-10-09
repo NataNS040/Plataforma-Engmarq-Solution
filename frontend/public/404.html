@@ -4,16 +4,16 @@
     <meta charset="UTF-8" />
     <title>Norveo</title>
     <script>
-      // SPA redirect: encodes the current path into a query param and
-      // redirects to index.html so React Router can handle the route.
-      var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 2).join('/') +
-        '/?p=/' + l.pathname.slice(1).replace(/&/g, '~and~') +
-        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+      (function () {
+        var base = '/Plataforma-Engmarq-Solution/';
+        var l = window.location;
+        if (!l.pathname.startsWith(base) || l.pathname === base) return;
+        var target = new URL(base, l.origin);
+        target.searchParams.set('__spa', l.pathname.slice(base.length) + l.search);
+        // Keep fragments (including Auth tokens) out of the HTTP query string.
+        target.hash = l.hash;
+        l.replace(target.href);
+      })();
     </script>
   </head>
   <body></body>

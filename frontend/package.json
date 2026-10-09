@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@supabase/supabase-js": "^2.104.1",
+    "@supabase/supabase-js": "2.104.1",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-query-devtools": "^5.101.2",
     "class-variance-authority": "^0.7.1",
@@ -22,12 +22,17 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.73.1",
-    "react-router-dom": "^7.14.2",
+    "react-router-dom": "7.18.4",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.3.6"
+  },
+  "overrides": {
+    "@supabase/realtime-js": {
+      "ws": "8.22.0"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

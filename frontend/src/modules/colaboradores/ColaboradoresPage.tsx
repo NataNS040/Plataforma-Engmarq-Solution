@@ -27,6 +27,7 @@ import { qk } from "@/lib/queryKeys"
 import { getAvatarColor, getInitials } from "@/lib/theme"
 import { comingSoon } from "@/lib/comingSoon"
 import { downloadCsvRows, exportToCsv } from "@/lib/csvExport"
+import { readSpreadsheetRows } from "@/lib/spreadsheetImport"
 import type { DocStatus, TreinamentoStatus } from "@/types/database"
 
 /* ============================================================
@@ -558,15 +559,12 @@ function AuthorizedAddColabModal({ onClose, empresaId }: { onClose: () => void; 
   }
 
   async function processFile(file: File) {
-    const XLSX = await import('xlsx')
-    const buf = await file.arrayBuffer()
-    const wb = XLSX.read(buf, { type: 'array', raw: false, cellDates: false })
-    const ws = wb.Sheets[wb.SheetNames[0]]
-    const json = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '', raw: false })
-    const normalized = json.map(row =>
-      Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase().trim(), String(v)]))
-    ) as Record<string, string>[]
-    setParsedRows(validateRows(normalized))
+    setParsedRows([])
+    try {
+      setParsedRows(validateRows(await readSpreadsheetRows(file)))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível ler a planilha.')
+    }
   }
 
   function handleFile(file: File | undefined) {
