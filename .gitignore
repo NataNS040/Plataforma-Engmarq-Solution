@@ -4,6 +4,7 @@
 .env.*.local
 .env.*
 !.env.example
+!frontend/.env.production
 
 # Python backend
 .venv/

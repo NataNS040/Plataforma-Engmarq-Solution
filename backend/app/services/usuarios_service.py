@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def create_usuario(data: UsuarioCreate, actor: MeResponse, settings: Settings, client) -> UsuarioResponse:
+    if not settings.internal_user_creation_enabled:
+        raise AppError(503, "user_creation_paused", "A criação de usuários está temporariamente indisponível.")
     if not actor.active or actor.role not in {"gestor", "empresa"}:
         raise AppError(403, "access_denied", "Sem permissão para criar usuários.")
     if data.role == "admin":
@@ -26,7 +28,7 @@ def create_usuario(data: UsuarioCreate, actor: MeResponse, settings: Settings, c
     with httpx.Client(timeout=settings.supabase_timeout_seconds) as http_client:
         repository = UsuariosRepository(create_admin_client(settings, http_client))
         try:
-            user_id = repository.create_auth(data)
+            user_id = repository.create_auth(data, actor.id)
         except AuthApiError as exc:
             if exc.code in {"email_exists", "user_already_exists"}:
                 raise AppError(409, "user_exists", "Já existe um usuário com este e-mail.") from None

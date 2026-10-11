@@ -1,0 +1,9 @@
+api.norveo.com.br {
+    encode zstd gzip
+    # Limit multipart requests while allowing the application's 10 MiB files.
+    request_body {
+        max_size 12MB
+    }
+    # No handle_path/rewrite: /api/v1 must reach FastAPI unchanged.
+    reverse_proxy api:8000
+}

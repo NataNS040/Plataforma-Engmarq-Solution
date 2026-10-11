@@ -72,6 +72,18 @@ it('spreadsheet import uses the same POST for each resolved row and reports part
   }
 })
 
+it('spreadsheet import stops at the backend quota and preserves its clear message', async () => {
+  const message = 'Limite de colaboradores ativos atingido. No plano gratuito, o limite é 100.'
+  const fetchMock = vi.fn().mockResolvedValueOnce(Response.json(row, { status: 201 }))
+    .mockResolvedValueOnce(Response.json({ error: { code: 'collaborator_limit_reached', message } }, { status: 409 }))
+  vi.stubGlobal('fetch', fetchMock)
+  const resolver = vi.fn(async (nome: string) => ({ ...input, nome }))
+  expect(await importarColaboradores(['Último permitido', 'Excedente', 'Não enviado'], resolver))
+    .toEqual({ ok: 1, fail: 2, limitMessage: message })
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+  expect(resolver).toHaveBeenCalledTimes(2)
+})
+
 it.each([401, 403, 404, 409, 422, 503])('API failure %s is propagated without direct database fallback', async status => {
   const fetchMock = vi.fn().mockResolvedValue(Response.json({ error: { code: 'denied', message: 'Falha' } }, { status }))
   vi.stubGlobal('fetch', fetchMock)

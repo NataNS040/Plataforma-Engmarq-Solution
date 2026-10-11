@@ -59,4 +59,12 @@ describe('GitHub Pages SPA fallback', () => {
     url.searchParams.set('__spa', '../../outside')
     expect(restoreURL(url.href)).toBeUndefined()
   })
+
+  it('restores public signup and Auth fragments on the Norveo root domain', () => {
+    const original = 'https://norveo.com.br/cadastro?source=login#access_token=synthetic-token'
+    const intermediate = redirectURL(original)
+    expect(intermediate).toBeDefined()
+    expect(new URL(intermediate!).search).not.toContain('synthetic-token')
+    expect(restoreURL(intermediate!)).toBe(original)
+  })
 })

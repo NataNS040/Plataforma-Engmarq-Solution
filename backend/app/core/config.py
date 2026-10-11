@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     )
 
     cors_origins: list[str] = Field(default_factory=list)
+    internal_user_creation_enabled: bool = True
     supabase_url: HttpUrl | None = None
     supabase_anon_key: SecretStr | None = None
     supabase_secret_key: SecretStr | None = None

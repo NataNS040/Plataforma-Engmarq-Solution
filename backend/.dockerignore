@@ -1,0 +1,9 @@
+# Allowlist: neither local credentials nor audit/backup artifacts enter the build.
+**
+!Dockerfile
+!requirements.lock
+!app/
+!app/**
+app/**/__pycache__/
+app/**/*.py[cod]
+app/**/.env*

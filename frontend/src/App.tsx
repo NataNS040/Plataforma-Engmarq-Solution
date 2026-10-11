@@ -3,6 +3,9 @@ import { AuthProvider } from '@/modules/auth/AuthProvider'
 import { ProtectedRoute } from '@/modules/auth/ProtectedRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import LoginPage from '@/modules/auth/LoginPage'
+import SignupPage from '@/modules/auth/SignupPage'
+import RecoveryPage from '@/modules/auth/RecoveryPage'
+import PasswordResetPage from '@/modules/auth/PasswordResetPage'
 import DashboardPage from '@/modules/dashboard/DashboardPage'
 import ColaboradoresPage from '@/modules/colaboradores/ColaboradoresPage'
 import DocumentosPage from '@/modules/documentos/DocumentosPage'
@@ -15,10 +18,13 @@ import PerfilPage from '@/modules/perfil/PerfilPage'
 
 export default function App() {
   return (
-    <BrowserRouter basename="/Plataforma-Engmarq-Solution/">
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/cadastro" element={<SignupPage />} />
+          <Route path="/recuperar-acesso" element={<RecoveryPage />} />
+          <Route path="/nova-senha" element={<PasswordResetPage />} />
 
           <Route
             element={

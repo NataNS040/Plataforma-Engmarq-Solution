@@ -17,8 +17,16 @@ PAYLOAD = {"email": "new@example.com", "password": "test-password", "full_name":
 HEADERS = {"Authorization": "Bearer caller-jwt"}
 
 
+def test_rollout_pause_rejects_before_any_provisioning():
+    from app.core.errors import AppError
+    with pytest.raises(AppError) as error:
+        usuarios_service.create_usuario(None, None, Settings(_env_file=None, internal_user_creation_enabled=False), None)
+    assert error.value.status_code == 503
+
+
 @pytest.fixture
 def upstream(app, monkeypatch):
+    monkeypatch.setattr("app.repositories.usuarios.uuid4", lambda: __import__("uuid").UUID(CREATED))
     state = {"role": "empresa", "active": True, "company_status": "ativa",
              "auth_status": 200, "create_status": 200, "profile_status": 201,
              "delete_status": 200, "admin_requests": [], "admin_opened": False}
@@ -47,6 +55,8 @@ def upstream(app, monkeypatch):
         if request.method == "DELETE":
             assert request.url.path == f"/auth/v1/admin/users/{CREATED}"
             return httpx.Response(state["delete_status"], json={"msg": "private-secret"})
+        if request.url.path == "/rest/v1/rpc/autorizar_auth_interno":
+            return httpx.Response(state.get("admission_status", 200), json=None if state.get("admission_status", 200) == 200 else {"message": "private-secret", "code": "42501"})
         if request.url.path == "/auth/v1/admin/users":
             if state["create_status"] != 200:
                 return httpx.Response(state["create_status"], headers={"X-Supabase-Api-Version": "2024-01-01"}, json={"msg": "private-secret",
@@ -134,8 +144,10 @@ def test_creation_preserves_contract(client, upstream, role, target_role, target
     assert response.status_code == 201, response.text
     assert response.json() == {"user_id": CREATED}
     assert response.headers["cache-control"] == "no-store"
-    auth, profile = upstream["admin_requests"]
-    assert json.loads(auth.content) == {"email": "new@example.com", "password": PAYLOAD["password"], "email_confirm": True}
+    admission, auth, profile = upstream["admin_requests"]
+    assert json.loads(admission.content) == {"actor_id": USER_ID, "user_id": CREATED, "email": "new@example.com"}
+    assert json.loads(auth.content) == {"email": "new@example.com", "password": PAYLOAD["password"], "email_confirm": True,
+                                      "id": CREATED}
     assert json.loads(profile.content) == {"actor_id": USER_ID, "user_id": CREATED,
         "full_name": "Nome", "user_role": target_role}
     for secret in [PAYLOAD["password"], "sb_secret_test-only", "unused-legacy-secret", "caller-jwt"]:
@@ -148,7 +160,7 @@ def test_auth_failure_is_controlled(client, upstream, status, expected):
     response = client.post("/api/v1/usuarios", headers=HEADERS, json=PAYLOAD)
     assert response.status_code == expected
     assert "private-secret" not in response.text
-    assert len(upstream["admin_requests"]) == 1
+    assert len(upstream["admin_requests"]) == 2
 
 
 @pytest.mark.parametrize("delete_status,expected,code", [
@@ -166,8 +178,8 @@ def test_profile_failure_compensates(client, upstream, delete_status, expected, 
 
 
 @pytest.mark.parametrize("path,code,count", [
-    ("/auth/v1/admin/users", "user_creation_unavailable", 1),
-    ("/rest/v1/rpc/provisionar_perfil_interno", "profile_creation_failed", 3),
+    ("/auth/v1/admin/users", "user_creation_unavailable", 2),
+    ("/rest/v1/rpc/provisionar_perfil_interno", "profile_creation_failed", 4),
 ])
 def test_transport_timeout_never_retries_creation(client, upstream, path, code, count):
     upstream["timeout_path"] = path
@@ -195,3 +207,11 @@ def test_global_admin_cannot_provision_through_functional_endpoint(client, upstr
                            json=PAYLOAD | {"role": target_role})
     assert response.status_code == 403
     assert not upstream["admin_opened"]
+
+
+def test_admission_failure_never_calls_auth(client, upstream):
+    upstream["admission_status"] = 403
+    response = client.post("/api/v1/usuarios", headers=HEADERS, json=PAYLOAD)
+    assert response.status_code == 503
+    assert len(upstream["admin_requests"]) == 1
+    assert "private-secret" not in response.text

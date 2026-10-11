@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
 from postgrest.exceptions import APIError
@@ -17,15 +17,22 @@ class UsuariosRepository:
     def __init__(self, client: Client):
         self.client = client
 
-    def create_auth(self, data: UsuarioCreate) -> UUID:
+    def create_auth(self, data: UsuarioCreate, actor_id: UUID) -> UUID:
+        user_id = uuid4()
+        self.client.rpc("autorizar_auth_interno", {
+            "actor_id": str(actor_id), "user_id": str(user_id), "email": str(data.email),
+        }).execute()
         result = self.client.auth.admin.create_user({
             "email": str(data.email),
             "password": data.password.get_secret_value(),
             "email_confirm": True,
+            "id": str(user_id),
         })
         if result is None or result.user is None:
             raise RuntimeError("Auth returned no user")
-        return UUID(str(result.user.id))
+        if UUID(str(result.user.id)) != user_id:
+            raise RuntimeError("Auth returned an unexpected identity")
+        return user_id
 
     def create_profile(self, user_id: UUID, data: UsuarioCreate, actor_id: UUID) -> None:
         self.client.rpc("provisionar_perfil_interno", {

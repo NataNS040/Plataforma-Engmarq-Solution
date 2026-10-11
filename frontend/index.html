@@ -10,7 +10,7 @@
       // SPA redirect restore: reads the path encoded by 404.html and
       // replaces the history state so React Router sees the correct URL.
       (function () {
-        var base = '/Plataforma-Engmarq-Solution/';
+        var base = location.hostname === 'norveo.com.br' || location.hostname === 'www.norveo.com.br' ? '/' : '/Plataforma-Engmarq-Solution/';
         var path = new URLSearchParams(location.search).get('__spa');
         if (path !== null) {
           var target = new URL(base + path, location.origin);

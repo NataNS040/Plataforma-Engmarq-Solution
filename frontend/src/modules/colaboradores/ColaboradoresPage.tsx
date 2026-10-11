@@ -606,7 +606,7 @@ function AuthorizedAddColabModal({ onClose, empresaId }: { onClose: () => void; 
       return created.id
     }
 
-    const { ok, fail } = await importarColaboradores(valid, async row => {
+    const { ok, fail, limitMessage } = await importarColaboradores(valid, async row => {
         const funcao_id   = await resolveFuncao(row.funcao_nome)
         const setor_id    = await resolveSetor(row.setor_nome)
         const ambiente_id = row.ambiente_nome ? await resolveAmbiente(row.ambiente_nome) : null
@@ -634,8 +634,9 @@ function AuthorizedAddColabModal({ onClose, empresaId }: { onClose: () => void; 
       )
       onClose()
     } else {
-      toast.error('Nenhum colaborador pôde ser importado. Verifique os erros na planilha.')
+      toast.error(limitMessage || 'Nenhum colaborador pôde ser importado. Verifique os erros na planilha.')
     }
+    if (ok > 0 && limitMessage) toast.error(limitMessage)
   }
 
   const validRows  = parsedRows.filter(r => r.errors.length === 0).length

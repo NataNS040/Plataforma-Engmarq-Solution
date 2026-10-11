@@ -1,9 +1,16 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      public_signup:
+        description: 'Open signup UI only after separately approved database/Auth activation'
+        type: boolean
+        default: false
+      captcha_required:
+        description: 'Require configured CAPTCHA token (coordinate with Supabase Auth)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -25,7 +32,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -38,9 +45,15 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_API_URL: https://api.norveo.com.br/api/v1
+          VITE_BASE_PATH: /
+          VITE_PUBLIC_SIGNUP_ENABLED: ${{ inputs.public_signup && 'true' || 'false' }}
+          VITE_AUTH_CAPTCHA_REQUIRED: ${{ inputs.captcha_required && 'true' || 'false' }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+          VITE_SUPPORT_EMAIL: ${{ vars.VITE_SUPPORT_EMAIL }}
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/dist
+          cname: norveo.com.br

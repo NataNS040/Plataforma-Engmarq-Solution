@@ -2,6 +2,7 @@
   getColaboradores, getColaborador, postColaborador, patchColaborador,
   type ColaboradorCreateInput, type ColaboradorUpdateInput,
 } from './api/colaboradores'
+import { AppError } from '@/lib/errors'
 
 export type { ColaboradorComCatalogos, ColaboradorUpdateInput } from './api/colaboradores'
 
@@ -35,11 +36,19 @@ export function desativarColaborador(id: string, data_demissao: string) {
 // contract as individual creation. Partial successes are intentionally preserved.
 export async function importarColaboradores<T>(rows: T[], resolveInput: (row: T) => Promise<ColaboradorInput>) {
   let ok = 0, fail = 0
-  for (const row of rows) {
+  let limitMessage: string | undefined
+  for (const [index, row] of rows.entries()) {
     try {
       await criarColaborador(await resolveInput(row))
       ok++
-    } catch { fail++ }
+    } catch (error) {
+      fail++
+      if (error instanceof AppError && error.code === 'collaborator_limit_reached') {
+        limitMessage = error.message
+        fail += rows.length - index - 1
+        break
+      }
+    }
   }
-  return { ok, fail }
+  return { ok, fail, ...(limitMessage ? { limitMessage } : {}) }
 }

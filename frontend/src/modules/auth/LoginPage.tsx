@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { useAuth } from '@/modules/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
-import { handleSupabaseError } from '@/lib/errors'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, HardHat, Target, ShieldCheck, TrendingUp, Eye as EyeIcon, Compass } from 'lucide-react'
 import { BrandMark } from '@/components/ui/BrandMark'
 import { APP_COPYRIGHT } from '@/config/brand'
-import { comingSoon } from '@/lib/comingSoon'
+import { useCaptcha } from './useCaptcha'
 
 // Os 5 pilares da marca Norveo (manual de marca)
 const PILLARS = [
@@ -32,6 +31,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
+  const { node: captchaNode, token: captchaToken, error: captchaError, required: captchaRequired, reset: resetCaptcha, retry: retryCaptcha } = useCaptcha()
 
   const {
     register,
@@ -48,18 +48,23 @@ export default function LoginPage() {
   }, [session, navigate])
 
   async function onSubmit(values: FormValues) {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    })
-    if (error) {
-      const app = handleSupabaseError(error, 'Não foi possível autenticar.')
-      const msg = error.message?.toLowerCase().includes('invalid')
-        ? 'E-mail ou senha inválidos.'
-        : app.message
+    if (captchaRequired && !captchaToken) return
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email, password: values.password, options: { captchaToken },
+      })
+      if (error) {
+        const msg = error.code === 'captcha_failed' ? 'Verificação de segurança inválida. Tente novamente.'
+          : error.code === 'email_not_confirmed' ? 'Confirme seu e-mail. Você pode reenviar a confirmação em Recuperar acesso.'
+          : error.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos e tente novamente.'
+          : 'Não foi possível entrar. Confira seu e-mail e senha e tente novamente.'
+        setError('password', { message: msg }); toast.error(msg)
+      }
+    } catch {
+      const msg = 'Não foi possível conectar. Tente novamente mais tarde.'
       setError('password', { message: msg })
       toast.error(msg)
-    }
+    } finally { resetCaptcha() }
     // sucesso: AuthProvider detecta sessão, useEffect redireciona
   }
 
@@ -195,11 +200,13 @@ export default function LoginPage() {
                   <input type="checkbox" defaultChecked />
                   Manter conectado
                 </label>
-                <a href="#" className="is-soon" title="Em breve" onClick={e => { e.preventDefault(); comingSoon('Recuperação de senha') }}>Esqueci minha senha</a>
+                <Link to="/recuperar-acesso">Esqueci minha senha / confirmar e-mail</Link>
               </div>
 
               {/* Botão de submit */}
-              <button type="submit" className="btn-primary accent" disabled={isSubmitting}>
+              <div ref={captchaNode} />
+              {captchaError && <p role="alert">{captchaError} <button type="button" onClick={retryCaptcha}>Tentar verificação novamente</button></p>}
+              <button type="submit" className="btn-primary accent" disabled={isSubmitting || (captchaRequired && !captchaToken)}>
                 {isSubmitting
                   ? <Loader2 size={15} className="btn-spinner" />
                   : null}
@@ -209,6 +216,10 @@ export default function LoginPage() {
 
             </form>
 
+            <p style={{ textAlign: 'center', marginTop: 20 }}>
+              <Link to="/cadastro" style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Criar conta gratuitamente</Link>
+            </p>
+
             <p style={{
               textAlign: 'center',
               marginTop: 24,
@@ -216,15 +227,7 @@ export default function LoginPage() {
               color: 'var(--ink-500)',
             }}>
               Primeiro acesso?{' '}
-              <a
-                href="#"
-                className="is-soon"
-                title="Em breve"
-                style={{ color: 'var(--color-accent)', fontWeight: 600, textDecoration: 'none' }}
-                onClick={e => { e.preventDefault(); comingSoon('Solicitação de acesso') }}
-              >
-                Solicite acesso à sua empresa
-              </a>
+              <Link to="/recuperar-acesso" style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Recuperar cadastro ou confirmação</Link>
             </p>
 
           </div>

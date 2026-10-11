@@ -6,7 +6,7 @@ from app.core.errors import AppError
 
 DATABASE_ERRORS = {
     'P2501': (403, 'feature_not_enabled', 'Recurso indisponível para esta conta.'),
-    'P2502': (409, 'collaborator_limit_reached', 'Limite de colaboradores ativos atingido.'),
+    'P2502': (409, 'collaborator_limit_reached', 'Limite de colaboradores ativos atingido. No plano gratuito, o limite é 100. Desative um colaborador ou solicite a alteração do plano.'),
     'P2503': (403, 'tenant_forbidden', 'Sem permissão para esta operação.'),
     'P2504': (403, 'company_inactive', 'Conta empresarial indisponível.'),
     'P2505': (403, 'user_inactive', 'Acesso indisponível.'),

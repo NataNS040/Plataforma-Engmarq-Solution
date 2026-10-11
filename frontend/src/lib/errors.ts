@@ -1,6 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js'
 
 const PG_MESSAGES: Record<string, string> = {
+  'P2502': 'Limite de colaboradores ativos atingido. O plano gratuito permite até 100 colaboradores ativos. Desative um colaborador ou solicite a alteração do plano.',
   '23505': 'Registro duplicado. Já existe um item com estes dados.',
   '23503': 'Não é possível concluir: há registros relacionados.',
   '23502': 'Preencha todos os campos obrigatórios.',
