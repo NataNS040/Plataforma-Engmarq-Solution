@@ -5,8 +5,8 @@
     <title>Norveo</title>
     <script>
       (function () {
-        var base = '/Plataforma-Engmarq-Solution/';
         var l = window.location;
+        var base = l.hostname === 'norveo.com.br' || l.hostname === 'www.norveo.com.br' ? '/' : '/Plataforma-Engmarq-Solution/';
         if (!l.pathname.startsWith(base) || l.pathname === base) return;
         var target = new URL(base, l.origin);
         target.searchParams.set('__spa', l.pathname.slice(base.length) + l.search);
