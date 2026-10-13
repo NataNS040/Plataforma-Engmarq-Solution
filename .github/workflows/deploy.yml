@@ -11,6 +11,10 @@ on:
         description: 'Require configured CAPTCHA token (coordinate with Supabase Auth)'
         type: boolean
         default: false
+      user_invitations:
+        description: 'Expose invitations only after separately approved backend activation'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -48,7 +52,8 @@ jobs:
           VITE_BASE_PATH: /
           VITE_PUBLIC_SIGNUP_ENABLED: ${{ inputs.public_signup && 'true' || 'false' }}
           VITE_AUTH_CAPTCHA_REQUIRED: ${{ inputs.captcha_required && 'true' || 'false' }}
-          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+          VITE_TURNSTILE_SITE_KEY: ${{ inputs.captcha_required && vars.VITE_TURNSTILE_SITE_KEY || '' }}
+          VITE_USER_INVITATIONS_ENABLED: ${{ inputs.user_invitations && 'true' || 'false' }}
           VITE_SUPPORT_EMAIL: ${{ vars.VITE_SUPPORT_EMAIL }}
 
       - name: Deploy to gh-pages branch

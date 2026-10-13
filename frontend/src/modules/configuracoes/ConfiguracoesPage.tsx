@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
+import { Link } from 'react-router-dom'
+import { invitationsEnabled } from '@/services/api/convites'
 import {
   Building2, Users, Shield, LayoutGrid, Star, MapPin,
   Plus, Pencil, CheckCircle2, MoreHorizontal, Ban,
@@ -499,6 +501,7 @@ export default function ConfiguracoesPage() {
           </p>
         </div>
         <div className="toolbar">
+          {invitationsEnabled && (isAdmin || canManageUsers) && <Link className="tbtn" to="/convites">Convites de acesso</Link>}
           {onDataTab && !editing && (
             <button className="tbtn primary" onClick={() => setEditing(true)} disabled={!empresaId}>
               <Pencil size={13}/> Editar dados

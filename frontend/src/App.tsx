@@ -6,6 +6,8 @@ import LoginPage from '@/modules/auth/LoginPage'
 import SignupPage from '@/modules/auth/SignupPage'
 import RecoveryPage from '@/modules/auth/RecoveryPage'
 import PasswordResetPage from '@/modules/auth/PasswordResetPage'
+import AcceptInvitationPage from '@/modules/auth/AcceptInvitationPage'
+import InvitationsPage from '@/modules/configuracoes/InvitationsPage'
 import DashboardPage from '@/modules/dashboard/DashboardPage'
 import ColaboradoresPage from '@/modules/colaboradores/ColaboradoresPage'
 import DocumentosPage from '@/modules/documentos/DocumentosPage'
@@ -25,6 +27,7 @@ export default function App() {
           <Route path="/cadastro" element={<SignupPage />} />
           <Route path="/recuperar-acesso" element={<RecoveryPage />} />
           <Route path="/nova-senha" element={<PasswordResetPage />} />
+          <Route path="/aceitar-convite" element={<AcceptInvitationPage />} />
 
           <Route
             element={
@@ -48,6 +51,7 @@ export default function App() {
               }
             />
             <Route path="configuracoes" element={<ConfiguracoesPage />} />
+            <Route path="convites" element={<ProtectedRoute allowedRoles={['empresa', 'gestor', 'admin']}><InvitationsPage /></ProtectedRoute>} />
             <Route path="perfil" element={<PerfilPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

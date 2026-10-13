@@ -18,6 +18,8 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default_factory=list)
     internal_user_creation_enabled: bool = True
+    user_invitations_enabled: bool = False
+    invitation_callback_url: HttpUrl | None = None
     supabase_url: HttpUrl | None = None
     supabase_anon_key: SecretStr | None = None
     supabase_secret_key: SecretStr | None = None
@@ -55,6 +57,14 @@ class Settings(BaseSettings):
             raise ValueError("SUPABASE_URL requires HTTPS except for local development")
         return url
 
+    @field_validator("invitation_callback_url")
+    @classmethod
+    def validate_invitation_callback(cls, url: HttpUrl | None) -> HttpUrl | None:
+        if url is not None and (url.username or url.password or url.query or url.fragment
+            or (url.scheme != "https" and url.host not in {"127.0.0.1", "localhost", "[::1]"})):
+            raise ValueError("Invitation callback requires HTTPS or loopback, without credentials/query/fragment")
+        return url
+
     @field_validator("supabase_anon_key", "supabase_secret_key", "supabase_service_role_key")
     @classmethod
     def validate_key(cls, key: SecretStr | None) -> SecretStr | None:
@@ -64,6 +74,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_supabase_configuration(self) -> "Settings":
+        if self.user_invitations_enabled and self.invitation_callback_url is None:
+            raise ValueError("Set INVITATION_CALLBACK_URL before enabling invitations")
         if bool(self.supabase_url) != bool(self.supabase_anon_key):
             raise ValueError("Set SUPABASE_URL and SUPABASE_ANON_KEY together")
         if (self.supabase_secret_key or self.supabase_service_role_key) and not self.supabase_url:
