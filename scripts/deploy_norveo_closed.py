@@ -45,7 +45,7 @@ if MODE=='build':
     with tarfile.open(ARCHIVE) as tar:
         for member in tar.getmembers():
             destination=(RELEASE/member.name).resolve()
-            assert RELEASE.resolve() in destination.parents and member.name.startswith('backend/')
+            assert RELEASE.resolve() in destination.parents and (member.name=='backend' or member.name.startswith('backend/'))
             assert member.isfile() or member.isdir()
         tar.extractall(RELEASE,filter='data')
     output=run(['docker','build','--tag',TAG,str(RELEASE/'backend')],timeout=600)
