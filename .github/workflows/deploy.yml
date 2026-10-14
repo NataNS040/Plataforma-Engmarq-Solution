@@ -43,6 +43,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Frontend tests
+        run: npm test
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: synthetic-test-anon-key
+
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Build
         run: npm run build
         env:
@@ -52,7 +61,7 @@ jobs:
           VITE_BASE_PATH: /
           VITE_PUBLIC_SIGNUP_ENABLED: ${{ inputs.public_signup && 'true' || 'false' }}
           VITE_AUTH_CAPTCHA_REQUIRED: ${{ inputs.captcha_required && 'true' || 'false' }}
-          VITE_TURNSTILE_SITE_KEY: ${{ inputs.captcha_required && vars.VITE_TURNSTILE_SITE_KEY || '' }}
+          VITE_TURNSTILE_SITE_KEY: ${{ inputs.captcha_required && '0x4AAAAAAFWHLDhOoEvRZg7I' || '' }}
           VITE_USER_INVITATIONS_ENABLED: ${{ inputs.user_invitations && 'true' || 'false' }}
           VITE_SUPPORT_EMAIL: ${{ vars.VITE_SUPPORT_EMAIL }}
 
