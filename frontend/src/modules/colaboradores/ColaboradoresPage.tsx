@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
   Search, Download, Plus, X, CheckCircle, AlertTriangle, Clock,
-  Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2,
+  Briefcase, MapPin, Calendar, Edit, ChevronRight, Loader2, HardHat,
 } from "lucide-react"
 import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useColaboradores, useCriarColaborador, useAtualizarColaborador, useDesativarColaborador } from "@/hooks/queries/useColaboradores"
@@ -26,6 +26,8 @@ import { toast } from "sonner"
 import { qk } from "@/lib/queryKeys"
 import { getAvatarColor, getInitials } from "@/lib/theme"
 import { comingSoon } from "@/lib/comingSoon"
+import { EPI_DISPONIVEL } from "@/lib/modulos"
+import { SoonPanel } from "@/components/ui/SoonPanel"
 import { downloadCsvRows, exportToCsv } from "@/lib/csvExport"
 import { readSpreadsheetRows } from "@/lib/spreadsheetImport"
 import type { DocStatus, TreinamentoStatus } from "@/types/database"
@@ -306,10 +308,14 @@ function AuthorizedProfileModal({ colab: c, onClose }: ProfileModalProps) {
             <div className="prof-section" style={{ marginTop: 18 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <h4 style={{ margin: 0 }}>Fichas de EPI</h4>
-                {canManageColaboradores && <button className="tbtn sm" onClick={() => setAddingFichaEpi(true)}><Plus size={12} /> Nova ficha</button>}
+                {canManageColaboradores && (EPI_DISPONIVEL
+                  ? <button className="tbtn sm" onClick={() => setAddingFichaEpi(true)}><Plus size={12} /> Nova ficha</button>
+                  : <button className="tbtn sm is-soon" title="Em breve" onClick={() => comingSoon('Fichas de EPI')}><Plus size={12} /> Nova ficha</button>)}
               </div>
               <div className="prof-list">
-                {fichasEpiQuery.isLoading ? (
+                {!EPI_DISPONIVEL ? (
+                  <SoonPanel icon={HardHat} title="Fichas de EPI — em breve" />
+                ) : fichasEpiQuery.isLoading ? (
                   <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Carregando…</div>
                 ) : fichasEpi.length === 0 ? (
                   <div style={{ padding: 16, textAlign: "center", color: "var(--ink-400)", fontSize: 12 }}>Nenhuma ficha de EPI registrada para este colaborador.</div>

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { qk } from '@/lib/queryKeys'
+import { EPI_DISPONIVEL } from '@/lib/modulos'
 import {
   listarFichasEpi,
   listarFichasEpiDoColaborador,
@@ -14,7 +15,7 @@ export function useFichasEpi(empresaId: string | null | undefined) {
   return useQuery({
     queryKey: qk.fichasEpi.list(empresaId ?? ''),
     queryFn: () => listarFichasEpi(empresaId!),
-    enabled: !!empresaId,
+    enabled: EPI_DISPONIVEL && !!empresaId,
   })
 }
 
@@ -22,7 +23,7 @@ export function useFichasEpiDoColaborador(colaboradorId: string | null | undefin
   return useQuery({
     queryKey: qk.fichasEpi.byColaborador(colaboradorId ?? ''),
     queryFn: () => listarFichasEpiDoColaborador(colaboradorId!),
-    enabled: !!colaboradorId,
+    enabled: EPI_DISPONIVEL && !!colaboradorId,
   })
 }
 

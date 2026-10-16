@@ -24,6 +24,9 @@ import { useColaboradores } from '@/hooks/queries/useColaboradores'
 import type { DocStatus as DbDocStatus } from '@/types/database'
 import { getAvatarColor } from '@/lib/theme'
 import { exportToCsv } from '@/lib/csvExport'
+import { comingSoon } from '@/lib/comingSoon'
+import { EPI_DISPONIVEL } from '@/lib/modulos'
+import { SoonPanel } from '@/components/ui/SoonPanel'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -721,7 +724,9 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
             ], rows)}
           ><Download size={14} /> Exportar lista</button>
           {canManageColaboradores && <button className="tbtn" onClick={() => setDateOpen(true)}><Calendar size={14} /> Registrar certificado</button>}
-          {canManageColaboradores && <button className="tbtn" onClick={() => setFichaEpiOpen(true)}><HardHat size={14} /> Nova ficha de EPI</button>}
+          {canManageColaboradores && (EPI_DISPONIVEL
+            ? <button className="tbtn" onClick={() => setFichaEpiOpen(true)}><HardHat size={14} /> Nova ficha de EPI</button>
+            : <button className="tbtn is-soon" title="Em breve" onClick={() => comingSoon('Fichas de EPI')}><HardHat size={14} /> Nova ficha de EPI</button>)}
           <button className="tbtn primary" onClick={() => setNovoOpen(true)}><Plus size={14} /> Novo documento</button>
         </div>
       </div>
@@ -805,6 +810,13 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
             </div>
           </div>
 
+          {cat === 'epi' && !EPI_DISPONIVEL ? (
+            <SoonPanel
+              icon={HardHat}
+              title="Fichas de EPI — em breve"
+              subtitle="O módulo de fichas de EPI com assinatura está sendo migrado para a nova arquitetura e volta em breve."
+            />
+          ) : (
           <div style={{ overflow: 'auto' }}>
             <table className="tbl doc-tbl">
               <thead>
@@ -901,6 +913,7 @@ function DocumentosEmpresa({ empresaIdProp, empresaNome, onBack }: {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </div>
 
