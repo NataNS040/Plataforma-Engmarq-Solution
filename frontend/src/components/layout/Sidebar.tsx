@@ -5,7 +5,7 @@ import { useCurrentProfile } from "@/hooks/useCurrentProfile"
 import { useDashboardKpis } from "@/hooks/queries/useDashboard"
 import {
   LayoutDashboard, Building2, Users, GraduationCap,
-  FileText, Heart, BarChart3, Settings, LogOut, ChevronLeft,
+  FileText, Heart, BarChart3, Settings, LogOut, ChevronLeft, ShieldAlert,
 } from "lucide-react"
 import { BrandMark } from "@/components/ui/BrandMark"
 import { APP_SHORT_NAME } from "@/config/brand"
@@ -65,6 +65,7 @@ const EMPRESA_NAV: NavGroup[] = [
       { to: "/treinamentos", label: "Treinamentos NR", icon: GraduationCap },
       { to: "/documentos", label: "Documentos", icon: FileText },
       { to: "/exames", label: "Exames", icon: Heart },
+      { to: "/acidentes", label: "Acidentes", icon: ShieldAlert },
       { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
     ],
   },

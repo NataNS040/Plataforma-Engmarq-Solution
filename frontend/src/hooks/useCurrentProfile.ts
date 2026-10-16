@@ -23,6 +23,8 @@ export function useCurrentProfile() {
     canManageTreinamentos: !!profile?.active && (role === 'gestor' || role === 'empresa'),
     canReadCatalogos: !!profile?.active && (role === 'gestor' || role === 'empresa' || role === 'operacional'),
     canManageCatalogos: !!profile?.active && (role === 'gestor' || role === 'empresa'),
+    canReadAcidentes: !!profile?.active && (role === 'gestor' || role === 'empresa' || role === 'operacional'),
+    canManageAcidentes: !!profile?.active && (role === 'gestor' || role === 'empresa'),
     isGestor: role === 'gestor',
     isOperacional: role === 'operacional',
     isEmpresa: role === 'empresa',

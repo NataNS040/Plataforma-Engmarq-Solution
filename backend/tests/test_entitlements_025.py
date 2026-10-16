@@ -34,7 +34,7 @@ def test_explicit_grant_with_caller_jwt_and_derived_tenant(rows):
             assert exc.value.code=='feature_not_enabled'
 
 
-@pytest.mark.parametrize('method,path,payload', [('GET',path,None) for path in ['/api/v1/colaboradores','/api/v1/funcoes','/api/v1/treinamentos','/api/v1/exames','/api/v1/usuarios','/api/v1/dashboard/kpis']] + [('POST','/api/v1/usuarios',PAYLOAD)])
+@pytest.mark.parametrize('method,path,payload', [('GET',path,None) for path in ['/api/v1/colaboradores','/api/v1/funcoes','/api/v1/treinamentos','/api/v1/exames','/api/v1/usuarios','/api/v1/dashboard/kpis','/api/v1/acidentes','/api/v1/acidentes/resumo']] + [('POST','/api/v1/usuarios',PAYLOAD)])
 @pytest.mark.parametrize('grant', [False,None])
 def test_existing_endpoints_deny_off_or_missing_before_operational_query(app,client,method,path,payload,grant):
     requests=[]

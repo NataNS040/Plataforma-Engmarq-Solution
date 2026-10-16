@@ -13,6 +13,7 @@ import ColaboradoresPage from '@/modules/colaboradores/ColaboradoresPage'
 import DocumentosPage from '@/modules/documentos/DocumentosPage'
 import TreinamentosPage from '@/modules/treinamentos/TreinamentosPage'
 import ExamesPage from '@/modules/exames/ExamesPage'
+import AcidentesPage from '@/modules/acidentes/AcidentesPage'
 import RelatoriosPage from '@/modules/relatorios/RelatoriosPage'
 import EmpresasPage from '@/modules/empresas/EmpresasPage'
 import ConfiguracoesPage from '@/modules/configuracoes/ConfiguracoesPage'
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="documentos" element={<DocumentosPage />} />
             <Route path="treinamentos" element={<TreinamentosPage />} />
             <Route path="exames" element={<ExamesPage />} />
+            <Route path="acidentes" element={<ProtectedRoute allowedRoles={['empresa', 'gestor', 'operacional']}><AcidentesPage /></ProtectedRoute>} />
             <Route path="relatorios" element={<RelatoriosPage />} />
             <Route
               path="empresas"

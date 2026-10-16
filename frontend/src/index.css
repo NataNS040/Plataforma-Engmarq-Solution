@@ -3057,3 +3057,28 @@ html, body {
 .cfg-plan .tbtn.primary:hover { background: var(--blue-700); border-color: var(--blue-700); }
 .cfg-plan .mp-status-grid .mp-mini-l { color: rgba(255,255,255,.5); }
 .cfg-plan .mp-status-grid .mp-mini-v { color: #fff; }
+
+/* ── Acidentes de trabalho ─────────────────────────────────────────────── */
+.ac-layout { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ac-modal { max-width: 760px; width: 100%; }
+.ac-section { border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px 14px; margin: 0 0 12px; }
+.ac-section legend { font-size: 12px; font-weight: 700; color: var(--ink-600); padding: 0 6px; }
+.ac-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+.ac-span { grid-column: 1 / -1; }
+.ac-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-700); min-height: 36px; }
+.ac-hint { font-size: 11.5px; color: var(--ink-500); line-height: 1.4; }
+.ac-textarea { height: auto; min-height: 84px; padding: 8px 12px; resize: vertical; }
+.ac-anulado { background: var(--bg); border-left: 3px solid var(--ink-400); padding: 8px 12px; border-radius: var(--r-sm); color: var(--ink-700); font-size: 13px; }
+.ac-erro { color: var(--red-600); font-size: 13px; }
+.ac-sub { font-size: 11.5px; color: var(--ink-500); }
+.ac-row-anulado td { color: var(--ink-400); text-decoration: line-through; }
+.ac-row-anulado td:last-child, .ac-row-anulado td:nth-last-child(2) { text-decoration: none; }
+.bird { display: flex; flex-direction: column; gap: 6px; }
+.bird-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px; align-items: center; gap: 12px; }
+.bird-track { display: flex; justify-content: center; }
+.bird-bar { height: 34px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; min-width: 44px; }
+.bird-label { font-size: 12.5px; color: var(--ink-700); font-weight: 600; }
+.bird-label span { display: block; font-size: 11px; font-weight: 400; color: var(--ink-400); }
+.bird-note { font-size: 12px; color: var(--ink-500); margin-top: 6px; }
+@media (max-width: 960px) { .ac-layout { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .ac-grid { grid-template-columns: 1fr; } .bird-row { grid-template-columns: minmax(0, 1fr) 110px; } }

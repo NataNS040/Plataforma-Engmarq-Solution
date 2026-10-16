@@ -28,6 +28,8 @@ def test_only_implemented_routes_are_exposed(client):
         "/api/v1/ambientes", "/api/v1/ambientes/{id}",
         "/api/v1/treinamento-tipos", "/api/v1/matriz-treinamentos", "/api/v1/matriz-treinamentos/{id}",
         "/api/v1/treinamentos", "/api/v1/treinamentos/{id}", "/api/v1/colaboradores/{id}/treinamentos",
+        "/api/v1/acidentes", "/api/v1/acidentes/resumo", "/api/v1/acidentes/{id}",
+        "/api/v1/acidentes/{id}/anular", "/api/v1/colaboradores/{id}/acidentes",
     }
 
 
